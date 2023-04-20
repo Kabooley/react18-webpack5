@@ -679,3 +679,73 @@ client <--> webworker <--> server
 （書籍の方にも載っているかも）
 
 具体的な実装は載っていないから自分で作るしかないねぇ
+
+
+## 本家 monaco-editor + TypeScript + React + webpack
+
+`monaco-editor/sample/monaco-esm-webpack-typescript`のビルドを試す。
+
+結果：ちゃんと動いた！
+
+依存関係：
+
+```JSON
+{
+	"name": "monaco-esm-webpack-typescript",
+	"scripts": {
+		"start": "node ../node_modules/webpack-dev-server/bin/webpack-dev-server.js",
+		"build": "NODE_ENV='production' node ../node_modules/webpack/bin/webpack.js --progress"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@babel/core": "^7.17.0",
+		"@babel/preset-env": "^7.16.11",
+		"@babel/preset-react": "^7.16.7",
+		"@babel/preset-typescript": "^7.16.7",  // 未install
+		"@pmmmwh/react-refresh-webpack-plugin": "^0.5.4",  // 未install
+		"@types/react": "^17.0.39",
+		"@types/react-dom": "^17.0.11",
+		"babel-loader": "^8.2.3",
+		"react": "^17.0.2",
+		"react-dom": "^17.0.2",
+		"react-refresh": "^0.11.0"  // 未install
+	}
+}
+```
+
+現状のpackage.jsonを確認したところ、上記の依存関係が不足していたのでインストール
+
+
+webpack.config.js:
+
+まぁサンプルの通りにするわけだけど
+
+省略
+
+tsconfig.json:
+
+```JSON
+{
+	"compilerOptions": {
+		"sourceMap": true,
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"strict": true,
+		"target": "ES6",
+		"outDir": "./dist",
+    // lib追加
+		"lib": ["dom", "es5", "es2015.collection", "es2015.promise"],
+		"types": [],
+		"baseUrl": "./node_modules",
+		"jsx": "preserve",
+		"esModuleInterop": true,
+    // 以下追加
+		"typeRoots": ["node_modules/@types"]
+	},
+	"include": ["./src/**/*"],
+	"exclude": ["node_modules"]
+}
+```
+
+#### サンプルをいじって各種の設定を導入できるのか試す
+

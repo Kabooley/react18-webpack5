@@ -1,14 +1,21 @@
 const path = require('path');
 const HtmlWebPackahePlugin = require('html-webpack-plugin');
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
+
+const isDevelopment = process.env.NODE_ENV !== 'producton';
 
 module.exports = {
 	mode: 'development',
 	entry: {
 		index: './src/index.tsx',
-		worker: './src/worker/index.ts'
+		'editor.worker': 'monaco-editor/esm/vs/editor/editor.worker.js',
+		'json.worker': 'monaco-editor/esm/vs/language/json/json.worker',
+		'css.worker': 'monaco-editor/esm/vs/language/css/css.worker',
+		'html.worker': 'monaco-editor/esm/vs/language/html/html.worker',
+		'ts.worker': 'monaco-editor/esm/vs/language/typescript/ts.worker'
 	},
 	resolve: {
-		extensions: ['.tsx', '.ts', '.js'],
+		extensions: ['*', '.js', '.jsx', '.tsx', '.ts'],
 	  },
 	output: {
 		globalObject: 'self',
@@ -19,9 +26,17 @@ module.exports = {
 	module: {
 		rules: [
 			{
-				test: /\.tsx?$/,
-				use: 'ts-loader',
+				test: /\.(js|jsx|tsx|ts)$/,
 				exclude: /node_modules/,
+				use: [
+					{
+						loader: require.resolve('babel-loader'),
+						options: {
+							presets: ['@babel/preset-env', '@babel/preset-typescript', '@babel/preset-react'],
+							plugins: [isDevelopment && require.resolve('react-refresh/babel')].filter(Boolean)
+						}
+					}
+				]
 			},
 			{
 				test: /\.css$/,
@@ -39,9 +54,11 @@ module.exports = {
 	 * */ 
 	plugins: [
 		new HtmlWebPackahePlugin({
-			title: 'Output Management'
-		})
-	],
+			title: 'Output Management',
+			template: 'src/index.html'
+		}),
+		isDevelopment && new ReactRefreshWebpackPlugin()
+	].filter(Boolean),
 	devtool: 'inline-source-map',
 	devServer: {
 		static: './dist',
