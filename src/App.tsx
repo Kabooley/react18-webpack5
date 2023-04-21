@@ -22,6 +22,21 @@ self.MonacoEnvironment = {
 	}
 };
 
+const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
+    value: "// First line\nfunction hello() {\n\talert('Hello world!');\n}\n// Last line",
+	language: "javascript",
+
+	lineNumbers: "off",
+	roundedSelection: false,
+	scrollBeyondLastLine: false,
+	readOnly: false,
+	theme: "vs-dark",
+};
+
+const model = monaco.editor.createModel(
+    "// First line\nfunction hello() {\n\talert('Hello world!');\n}\n// Last line","javascript"
+);
+
 
 /***
  * sample:
@@ -59,17 +74,38 @@ const App = () => {
     //     }
     // }, [worker]);
 
+    const validate = () => {
+
+    }
+
     useEffect(() => {
         if (refMonacoDiv.current) {
-			editor = monaco.editor.create(refMonacoDiv.current, {
-				value: ['function x() {', '\tconsole.log("Hello world!");', '}'].join('\n'),
-				language: 'typescript'
-			});
+			editor = monaco.editor.create(refMonacoDiv.current, monacoEditorOptions);
+
+            // 今テキトーにここに空ら伊豆突っ込んだけど
+            // ここに入れても意味ないなぁ初回マウント時にしか使われんから
+            // monaco.editor.colorizeElement(refMonacoDiv.current, {});
+
+            editor.onDidChangeModelContent((e) => {
+                console.log("[onDidChangeModelContent]");
+                console.log(e);
+            });
+
+            // エディタの入力内容が変更されても反応はしない
+            editor.onDidChangeModel((e) => {
+                console.log("[onDidChangeModel]");
+                console.log(e);
+            });
+
 		}
 		return () => {
 			editor.dispose();
 		};
-    }, [])
+    }, []);
+
+    useEffect(() => {
+        console.log("[useEffect() all]");
+    });
 
     return (<div className="Editor" ref={refMonacoDiv} ></div>);
 };

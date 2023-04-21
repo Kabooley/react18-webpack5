@@ -666,21 +666,6 @@ https://developer.mozilla.org/en-US/docs/Web/API/Worker/message_event#examples
 https://web.dev/workers-basics/#handling-errors
 
 
-## メルカリの投稿の件
-
-> トークンを Web ワーカーに保存すると、攻撃者はメイン スレッドでトークンにアクセスできなくなります。また、攻撃者はトークンを使用してサーバーへの API 呼び出しを行うようにワーカー スレッドに指示することはできません。これは、ドメインの検証に失敗するためです。この新しい設計により、クロス サイト スクリプティングの場合の爆発範囲が縮小されますが、完全な保護ではないことに注意してください。攻撃者は JavaScript を実行するためのアクセス権を持っているため、新しいワーカーを登録し、すべての初期化/アクセス トークン生成手順を再度実行できます。 Web Worker を導入することで、攻撃者にとってトークンを盗むプロセスが少し難しくなりました。
-
-ということで防ぎきることはできないけれど抑制にはなるとのこと。
-
-webworkerを使った認証プロセス
-
-client <--> webworker <--> server
-
-（書籍の方にも載っているかも）
-
-具体的な実装は載っていないから自分で作るしかないねぇ
-
-
 ## 本家 monaco-editor + TypeScript + React + webpack
 
 `monaco-editor/sample/monaco-esm-webpack-typescript`のビルドを試す。
@@ -749,3 +734,60 @@ tsconfig.json:
 
 #### サンプルをいじって各種の設定を導入できるのか試す
 
+- monaco-editorのオプションを途中で更新したら、インスタンス.updateOptions()で更新を適用させる
+
+```TypeScript
+import * as monaco from 'monaco-editor';
+
+const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
+    value: "// First line\nfunction hello() {\n\talert('Hello world!');\n}\n// Last line",
+	language: "javascript",
+
+	lineNumbers: "off",
+	roundedSelection: false,
+	scrollBeyondLastLine: false,
+	readOnly: false,
+	theme: "vs-dark",
+};
+
+const editor = monaco.editor.create(document.getElementById('root'), monacoEditorOptions);
+
+editor.updateOptions({
+	// ...options to update
+});
+```
+
+- `model.onDidChange()`でモデルの中身の変更に反応させる
+
+Reactなので...
+
+```TypeScript
+    useEffect(() => {
+        if (refMonacoDiv.current) {
+			editor = monaco.editor.create(refMonacoDiv.current, monacoEditorOptions);
+
+            editor.onDidChangeModelContent((e) => {
+                console.log("[onDidChangeModelContent]");
+                console.log(e);
+            });
+		}
+		return () => {
+			editor.dispose();
+		};
+    }, []);
+```
+
+これでエディタに文字を入力すると、1文字ごとに`editor.onDidChangeModelContent`が反応しているのが確認できた
+
+## monaco-editorのコンポーネント化
+
+動機：@monaco-editor/reactでできることとmonaco-editorでできることがうまくかみ合わないから、自分にとって使いやすい奴にする
+
+`src/components/Editor.tsx`
+
+参考：
+
+https://github.com/satya164/monaco-editor-boilerplate
+
+- webworkerの保持方法：変数として保持する？useMemo()で保持する？
+- editorインスタンスの保持方法：ref vs field
