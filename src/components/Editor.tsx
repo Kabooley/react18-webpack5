@@ -4,22 +4,13 @@
  * 
  * https://github.com/satya164/monaco-editor-boilerplate
  * 
- * クラスコンポーネント内部で頻繁にeditorの
- * インスタンス(monaco.editor.create()した生成物)は
- * componentDidMount()で生成していた
- * で、
- * このインスタンスはクラスコンポーネントのフィールドで保持しているようだ
- * 
- * この、クラスのフィールドで変数を保持する方法は問題ないのか？
- * 
- * まぁ使ってみて問題だったらで
- * 
- * TODO: MonacoEditorのコンポーネント化
- * - いや関数コンポーネントにできない？
- * - editorインスタンスの保持の仕方はclass filedで問題ないのか？
- * - あらゆるeditorの設定更新はcomponentWillMount()やcomponentDidMount()等を使う
+ * TODO:
+ * - install ESLint and apply them.
+ * - learn how to use eslint in typescript
+ * - Define message type.
+ * - Get options from parent component and apply them to editor.
  * *********************************************************/ 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import * as monaco from 'monaco-editor';
 
 const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
@@ -33,15 +24,22 @@ const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions = 
 	theme: "vs-dark",
 };
 
-interface iMonacoEditorProps extends monaco.editor.IStandaloneEditorConstructionOptions {};
-
-
-/****
- * workerのインスタンスの保持方法：useMemoでやってみる
- * 
+/**
+ * Type of props for MonacoEditor component parameter.
  * */ 
+interface iMonacoEditorProps extends monaco.editor.IStandaloneEditorConstructionOptions {
+    onValueChange: (code: string) => void;
+};
+
+interface iParamUpdateMarkers {
+    markers: any; /* TODO: specify type. typeof value returned from ESLint.verify() */
+    version: number;
+};
+
+
 const MonacoEditor = (props: iMonacoEditorProps) => {
     let _editor: monaco.editor.IStandaloneCodeEditor;
+    let _subscription: monaco.IDisposable;
     const refEditor = useRef<HTMLDivElement>(null);
     
     const ESLintWorker: Worker = useMemo(() => new Worker(
@@ -69,64 +67,67 @@ const MonacoEditor = (props: iMonacoEditorProps) => {
 
         if(window.Worker) {
             ESLintWorker.onmessage = ({ data }) => {
-                _lintCode(data);
+
+                // DEBUG:
+                console.log("[MonacoEditor] get message from ESLintworker:");
+
+                _updateMarkers(data);
             };
             
             JSXHighlightWorker.onmessage = ({ data }) => {
-                // TODO: define what to do
+                                
+                // DEBUG:
+                console.log("[MonacoEditor] get message from JSXHighlightworker:");
+
             };
         }
 
         return () => {
             _editor.dispose();
+            _subscription.dispose();
             ESLintWorker.terminate();
             JSXHighlightWorker.terminate();
         }
     }, []);
 
-    /***
-     * Run every rerender
-     * 
-     * - 親コンポーネントからのオプション変更を反映させる
-     * TODO: 実行タイミングは適切か確認
-     * */
+    /**
+     * Component did update
+     * */ 
     useEffect(() => {
-        const { path, value, language, onValueChange, ...options } = props;
-        _editor.updateOptions(options);
-        const model = _editor.getModel();
-  
-        if(model) {
-            if (value !== model.getValue()) {
-            model.pushEditOperations(
-                [],
-                [
-                    {
-                        range: model.getFullModelRange(),
-                        text: value,
-                    },
-                ]
-            );}
-        }
-
+        _updater();
     });
 
     /**
-     * 
-     * - 親コンポーネントからエディタのオプションの変更などを受け取って反映させる
-     * - workerを依存関係にしているけれどマウント時に必要な呼出は完了している...はず
+     * - reset _subscription
+     * - tell change of editor content to parent and let react re-render
+     * - pass latest code to eslint worker
      * */ 
-    useEffect(() => {
-        //
-    }, [ESLintWorker, JSXHighlightWorker]);
+    const _updater = () => {
 
-    // Apply lint to the model
+        // DEBUG:
+        console.log("[MonacoEditor] _updater()");
+
+        _subscription && _subscription.dispose();
+        _subscription = _editor.getModel()!.onDidChangeContent(() => {
+            const value = _editor.getModel()!.getValue();
+            if(value !== undefined) {
+                props.onValueChange(value);
+                _lintCode(value);
+            }
+        })
+    };
+
+    // Pass code to ESlint worker
     const _lintCode = (code: string) => {
+        
+        // DEBUG:
+        console.log("[MonacoEditor] _lintCode()");
+
         const model = _editor.getModel();
 
         if(model) {
             monaco.editor.setModelMarkers(model, 'eslint', []);
             ESLintWorker.postMessage({
-                /* TODO: define message data interface */ 
                 code,
                 version: model.getVersionId()
             });
@@ -139,8 +140,18 @@ const MonacoEditor = (props: iMonacoEditorProps) => {
     };
 
     // Update markers
-    const _updateMarkers = () => {
+    const _updateMarkers = ({ markers, version}: iParamUpdateMarkers) => {
+        
+        // DEBUG:
+        console.log("[MonacoEditor] _updateMarkers()");
 
+        // 
+        // requestAnimationFrame()
+        // 
+        const model = _editor.getModel();
+        if(model && model.getVersionId() === version) {
+            monaco.editor.setModelMarkers(model, 'eslint', markers);
+        }
     };
 
     return (
