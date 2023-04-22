@@ -241,6 +241,106 @@ componentDidMount()とcomponentDidUpdate()の両方で、親コンポーネン�
 - `monaco.editor.getModel().onDidChangeContent()`は何を返すのか
 
 
+## @monaco-editor/reactの分析
+
+これまたReact + monaco-editorをどうやって実現しているのかの参考に。
+
+```TypeScript
+import type * as monaco from '@monaco-editor';
+import MonacoEditor from '@monaco-editor';
+
+const Editor = () => {
+	return (
+		<MonacoEditor 
+			// ...
+			onWillMount={}
+			onDidMount={}
+			onChange={}
+			onValidate={}
+		/>
+	)
+}
+```
+
+- `monaco.OnChange`, `monaco.OnValidate`は内部的にuseEffect()を使って要る模様
+- editorインスタンスやsubscription変数はuseRefで保持している模様
+
+#### OnChange
+
+```TypeScript
+
+  const subscriptionRef = useRef<IDisposable>();
+  // onChange
+  useEffect(() => {
+	// editorは展開済である && propからonChaneを取得してあるなら
+    if (isEditorReady && onChange) {
+		// IDisposable型のサブスクリプションをいったん閉じて
+      subscriptionRef.current?.dispose();
+		// 改めてサブスクリプションをつけなおし
+      subscriptionRef.current = editorRef.current?.onDidChangeModelContent((event) => {
+        if (!preventTriggerChangeEvent.current) {
+			// onChangeの実装を実行する
+          onChange(editorRef.current!.getValue(), event);
+        }
+      });
+    }
+  }, [isEditorReady, onChange]);
+```
+
+- subscriptionはonChangeのためにしか使わない代物の模様
+- やっぱり「一旦subscription.dispose()してから改めつけなおす」のは参考repoと同じ
+- `monaco.editor.onDidChangeModenlContent`を使っているのも参考repoと同じ
+
+#### custom Hooks: useUpdate()
+
+内部的にuseEffect()を呼び出すカスタムフックが定義されていた。
+
+これでReactと連携しているのかも。
+
+updateしている対象は
+
+value, language, line, themeなど、monaco.editor.IStandaloneCodeEditorのオプションである。
+
+valueの更新方法はよく分析しておかないといかん化も。
+
+```TypeScript
+import { useEffect, useRef, type DependencyList, type EffectCallback } from 'react';
+
+function useUpdate(effect: EffectCallback, deps: DependencyList, applyChanges = true) {
+  const isInitialMount = useRef(true);
+
+  useEffect(
+    isInitialMount.current || !applyChanges
+      ? () => {
+          isInitialMount.current = false;
+        }
+      : effect,
+    deps,
+  );
+}
+
+export default useUpdate;
+```
+
+#### useRef
+
+参照しているもの
+
+editorコンポーネントのdivDOM
+editorインスタンス
+subscription
+
+などなど
+
+こちらでも同様にuseRefは使うかというと。。。
+
+useRefはレンダリングをまたいで値を保持してくれる機能で、
+
+コンポーネントは再レンダリング時に再度実行されるので純粋関数でなくてはならない
+
+という2つの条件を鑑みるとつかうべきか。
+
+
 ## monaco-editor
 
 #### `onDidChangeContent()`
