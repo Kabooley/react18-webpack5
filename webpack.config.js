@@ -8,6 +8,10 @@ module.exports = {
 	mode: 'development',
 	entry: {
 		index: './src/index.tsx',
+		ESLintWorker: './src/workers/ESLint.worker.ts',
+		JSXHighlightWorker: './src/workers/JSXHighlight.worker.ts',
+
+		// monaco-editor requirement:
 		'editor.worker': 'monaco-editor/esm/vs/editor/editor.worker.js',
 		'json.worker': 'monaco-editor/esm/vs/language/json/json.worker',
 		'css.worker': 'monaco-editor/esm/vs/language/css/css.worker',

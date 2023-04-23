@@ -13,39 +13,39 @@
  * *********************************************************/ 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import * as monaco from 'monaco-editor';
-import { type editor, type IDisposable } from 'monaco-editor';
+import type * as Monaco from 'monaco-editor';
 
-// TODO: Change to get these options from parent component
-const monacoEditorOptions: editor.IStandaloneEditorConstructionOptions = {
-    value: "// First line\nfunction hello() {\n\talert('Hello world!');\n}\n// Last line",
-	language: "javascript",
-	lineNumbers: "off",
-	roundedSelection: false,
-	scrollBeyondLastLine: false,
-	readOnly: false,
-	theme: "vs-dark",
+export type beforeMount = (monaco: typeof Monaco) => void;
+export type onMount = (editor: typeof Monaco.editor, monaco: typeof Monaco) => void;
+// TODO: change eventも渡すように
+export type onChange = (value: string) => void;
+export type onValidate = (value: string) => void;
+
+
+interface iParamsMonacoEditor extends Monaco.editor.IStandaloneEditorConstructionOptions {
+    beforeMount: beforeMount;
+    onMount: onMount;
+    onChange: onChange; 
+    onValidate: onValidate;
 };
 
-interface iParamsMonacoEditor extends editor.IStandaloneEditorConstructionOptions {
-    onValueChange: (value: string) => void; // @monaco-editor/reactのOnChangeのようなもの
-    onValidate: (value: string) => void;
-    // TODO: 型呼出の改善
-    beforeMount: (monaco: monaco) => void;
-};
 
 const MonacoEditor = ({
-    onValueChange, 
-    onValidate,
     beforeMount,
+    onMount,
+    onChange, 
+    onValidate,
     ...options
 }: iParamsMonacoEditor) => {
     const [isEditorReady, setIsEditorReady] = useState<boolean>(false);
-    const _editor = useRef<editor.IStandaloneCodeEditor | null>(null);
-    const _subscription = useRef<IDisposable>();
+    const _editor = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+    const _subscription = useRef<Monaco.IDisposable>();
     const _refEditorContainer = useRef<HTMLDivElement>(null);
     const _beforeMount = useRef(beforeMount);
-    const esLinteWorker = useMemo(() => new Worker(new URL('../workers/ESLint.worker.ts')), []);
-    const jsxHighlightWorker = useMemo(() => new Worker(new URL('../workers/jsxHighlight.worker.ts')), []);
+    const esLinteWorker = useMemo(() => new Worker(new URL('./ESLint.worker.js', import.meta.url)), []);
+    const jsxHighlightWorker = useMemo(() => new Worker(new URL('./jsxHighlight.worker.js', import.meta.url)), []);
+    // const esLinteWorker = useMemo(() => new Worker(new URL('../workers/ESLint.worker.ts', import.meta.url)), []);
+    // const jsxHighlightWorker = useMemo(() => new Worker(new URL('../workers/jsxHighlight.worker.ts', import.meta.url)), []);
 
     /**
      * 
@@ -117,15 +117,15 @@ const MonacoEditor = ({
      * Initialize and reset on value change listener to _subscription.
      * */ 
     useEffect(() => {
-        if(isEditorReady && onValueChange !== undefined) {
+        if(isEditorReady && onChange !== undefined) {
             _subscription.current!.dispose();
             _subscription.current = _editor.current?.onDidChangeModelContent(() => {
                 const value = _editor.current?.getValue();
-                onValueChange(value === undefined ? "" : value);
+                onChange(value === undefined ? "" : value);
                 // TODO: ESLintworkerへ値を送るのもここで
             });
         }
-    }, [onValueChange, isEditorReady]);
+    }, [onChange, isEditorReady]);
 
     /***
      * On Validate:

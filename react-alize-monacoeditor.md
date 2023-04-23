@@ -2,6 +2,8 @@
 
 ## 参考
 
+https://github.com/suren-atoyan/monaco-react
+
 https://blog.expo.dev/building-a-code-editor-with-monaco-f84b3a06deaf
 
 https://github.com/satya164/monaco-editor-boilerplate
@@ -675,6 +677,16 @@ const MonacoEditor = ({
 
 親コンポーネントでbeforeMountの関数を実装してpropsとして渡すこと
 
+
+#### markers
+
+`monaco.editor.onDidChangeMarkers`: モデルのマーカーが変更されたときに発生します。
+
+https://microsoft.github.io/monaco-editor/docs.html#functions/editor.onDidChangeMarkers.html
+
+- `monaco.editor.getModelMarkers`: 所有者やリソースのマーカーを取得する
+
+
 ## JavaScript Tips
 
 #### `variable && foo()`?
@@ -708,3 +720,28 @@ if (myVariable) {
 変数が真なら関数を実行して、偽なら実行しない
 
 という意味の処理のショートカットである。
+
+## バグ
+
+#### webpackがworkerの相対パスを正しく認識してくれない問題
+
+```bash
+ERROR in ./src/components/Editor2.tsx 51:11-75
+Module not found: Error: Can't resolve './jsxHighlight.worker.js' in '/home/teddy/playground/webpack/src/components'
+Did you miss the leading dot in 'resolve.extensions'? Did you mean '[".*",".js",".jsx",".tsx",".ts"]' instead of '["*",".js",".jsx",".tsx",".ts"]'?
+resolve './jsxHighlight.worker.js' in '/home/teddy/playground/webpack/src/components'
+  using description file: /home/teddy/playground/webpack/package.json (relative path: ./src/components)
+    Field 'browser' doesn't contain a valid alias configuration
+    using description file: /home/teddy/playground/webpack/package.json (relative path: ./src/components/jsxHighlight.worker.js)
+      no extension
+```
+
+ということで、
+
+`$ROOT/src/workers/XXXX.worker.ts`のファイルを参照してほしいのに
+
+なぜか
+
+`$ROOT/src/components/workers/XXX.worker.ts`という存在しないディレクトリを探そうとする
+
+どうしてもsrc/componentsを相対パスの起点としたいみたい。
