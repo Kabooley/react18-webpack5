@@ -206,8 +206,157 @@ https://github.com/surma/use-workerized-reducer
 
 ## 実装：ESLint
 
-## 実装：
+#### 参考repoのlintの適用手順の分析
 
+NOTE: TypeScriptのLintがデフォで導入されているのでそもそも任意である。
+う～ん今のところ必要性を感じないので後回しかなぁ
+
+それでも導入する場合：
+
+- デフォルト設定の無効化
+- `editor.setModelMarkers`を使ってmodelへmarkerを適用する
+- eslint webworkerへ現在のエディタの値をわたしてlintのmarkerを作ってもらう
+- workerから返事が来たらこれらを`editor.setModelMarkers`で適用させる
+TODO:
+- markerはどういうオブジェクトでなくてはならないのか
+- eslintはブラウザをサポートしないので
+
+
+## 実装：JSX Syntax Highlight
+
+## 実装：formatting by prettier
+
+デフォルトでformattingの設定関数は備わっている
+
+`languages.registerDocumentFormattingEditProvider()`
+
+講義で設定していたprettierの設定を導入できるようにする
+
+@monaco-editor/reactではformatの機能は実装なし。
+
+参考repoの方では一度だけ呼び出していた。
+
+講義の方ではmonaco-editorの機能なしで自前で強制的にフォーマットしていた
+
+参考repoの方法を採用してみる。
+
+#### `languages.registerDocumentFormattingEditProvider()`
+
+https://microsoft.github.io/monaco-editor/docs.html#functions/languages.registerDocumentFormattingEditProvider.html
+
+> Register a formatter that can handle only entire models.
+
+```TypeScript
+/**
+ * Register a formatter that can handle only entire models.
+ */
+export function registerDocumentFormattingEditProvider(
+	// `javascript`や`typescript`などの言語
+	languageSelector: LanguageSelector, 
+	// 
+	provider: DocumentFormattingEditProvider
+): IDisposable;
+
+/**
+ * The document formatting provider interface defines the contract between extensions and
+ * the formatting-feature.
+ */
+export interface DocumentFormattingEditProvider {
+	readonly displayName?: string;
+	/**
+	 * Provide formatting edits for a whole document.
+	 */
+	provideDocumentFormattingEdits(model: editor.ITextModel, options: FormattingOptions, token: CancellationToken): ProviderResult<TextEdit[]>;
+};
+
+/**
+ * Interface used to format a model
+ */
+export interface FormattingOptions {
+	/**
+	 * Size of a tab in spaces.
+	 */
+	tabSize: number;
+	/**
+	 * Prefer spaces over tabs.
+	 */
+	insertSpaces: boolean;
+	/**
+	 * The list of multiple ranges to format at once, if the provider supports it.
+	 */
+	ranges?: Range[];
+}
+
+export interface CancellationToken {
+    /**
+     * A flag signalling is cancellation has been requested.
+     */
+    readonly isCancellationRequested: boolean;
+    /**
+     * An event which fires when cancellation is requested. This event
+     * only ever fires `once` as cancellation can only happen once. Listeners
+     * that are registered after cancellation will be called (next event loop run),
+     * but also only once.
+     *
+     * @event
+     */
+    readonly onCancellationRequested: (listener: (e: any) => any, thisArgs?: any, disposables?: IDisposable[]) => IDisposable;
+}
+
+/**
+ * A provider result represents the values a provider, like the {@link HoverProvider},
+ * may return. For once this is the actual result type `T`, like `Hover`, or a thenable that resolves
+ * to that type `T`. In addition, `null` and `undefined` can be returned - either directly or from a
+ * thenable.
+ */
+export type ProviderResult<T> = T | undefined | null | Thenable<T | undefined | null>;
+
+```
+
+#### 実装してみる
+
+[beforemount](#beforemount)より、
+
+@monaco-editor/react同様、親コンポーネントで実行する内容を定義する。
+
+beforeMount()はmonacoAPIインスタンスを引数に取る
+
+
+```TypeScript
+// @親コンポーネント
+import prettier from 'prettier'
+
+const beforeMount: /* TODO: define type*/.beforeMount = (
+	m: monaco
+) => {
+	// Apply format setting
+	monaco.language.registerDocument.FormattingEditProvider(
+		"javascript",　
+		{
+			async provideDocumentFormattingEdits(model) {
+				const formatted = prettier.format(
+					model.getValue(), 
+					{
+						parser: 'babel',
+						plugins: [parser],
+						useTabs: false,
+						semi: true,
+						singleQuote: true,
+					})
+					.replace(/\n$/, '');
+
+				return [{
+					range: model.getFullModelRange(),
+					formatted,
+				}];
+			}
+		}
+	);
+
+	// TODO: 他に、インスタンス生成前に設定すべきものはここで。
+	// eslintを使うならデフォルトのlintの無効化とか
+}
+```
 
 ## 参考repoのwebworkerとreactの連携のさせ方
 
@@ -242,6 +391,8 @@ componentDidMount()とcomponentDidUpdate()の両方で、親コンポーネン�
 
 
 ## @monaco-editor/reactの分析
+
+https://github.com/suren-atoyan/monaco-react
 
 これまたReact + monaco-editorをどうやって実現しているのかの参考に。
 
@@ -322,29 +473,238 @@ function useUpdate(effect: EffectCallback, deps: DependencyList, applyChanges = 
 export default useUpdate;
 ```
 
-#### useRef
+#### useRef保持 vs. 変数保持
 
-参照しているもの
+保持したいもの：
 
 editorコンポーネントのdivDOM
 editorインスタンス
 subscription
-
-などなど
-
-こちらでも同様にuseRefは使うかというと。。。
+etc...
 
 useRefはレンダリングをまたいで値を保持してくれる機能で、
 
 コンポーネントは再レンダリング時に再度実行されるので純粋関数でなくてはならない
 
-という2つの条件を鑑みるとつかうべきか。
+という2つの条件を鑑みるとつかうべきかと。
 
 
-## monaco-editor
+#### beforeMount
 
-#### `onDidChangeContent()`
+- useCallback()を使ったeditorインスタンスの生成
+- そのuseCallback()のコールバックの中でbeforeMount
 
-https://microsoft.github.io/monaco-editor/docs.html#interfaces/editor.ITextModel.html#onDidChangeContent
+propでbeforeMount関数を受け取って
 
-modelの中身が変更されたときに実行されるリスナを登録することができる
+`const beforeMountRef = useRef(beforeMount)`して
+
+`beforeMountRef.current(monacoRef.current)`していた
+
+@monaco-editor/reactでは
+
+```TypeScript
+type BeforeMount = (monaco: Monaco) => void;
+```
+
+と関単に定義されているだけだったが、
+
+要はmonacoインスタンスを引き取る関数を親関数が定義出来て、
+
+その関数をuseCallback()の戻り値の関数が実行されるときに実行されるから
+
+editorが生成される前に定義できるのである。
+
+ということで、
+
+TODO: editorを生成するのは任意のタイミングで行えるように修正が必要
+
+
+#### React useCallback
+
+https://react.dev/reference/react/useCallback
+
+https://ja.legacy.reactjs.org/docs/hooks-reference.html#usecallback
+
+> `useCallback`は再レンダリング間で関数をキャッシュしておいてくれるReact Hooksである
+
+useMemoの戻り値は値で、useCallbackは戻り値が関数という違い。
+
+```TypeScript
+const cachedFunc = useCallback(() => {}, [...depencies])
+```
+
+Parameters:
+
+- fn:
+
+useMemo()と似て、初回マウント時に渡された「関数を返す」。次回レンダリング以降は依存関係が変わっていなければ同じ関数を返す。Reactは関数を呼出すわけではないので注意。
+
+NOTE: 関数の実行結果を返すわけではないので注意。
+
+- dependencies:
+
+fnコードの内部で参照されるリアクティブな値である。
+
+Retuns:
+
+最初のレンダリングで、useCallback は渡された fn 関数を返します。
+
+その後のレンダリングでは、（依存関係が変更されていない場合）前回のレンダリングで既に保存されたfn関数を返すか、このレンダリングで渡されたfn関数を返すかのどちらかになります。
+
+#### monaco-editor: `monaco.editor.create()`
+
+```TypeScript
+    /**
+     * Create a new editor under `domElement`.
+     * `domElement` should be empty (not contain other dom nodes).
+     * The editor will read the size of `domElement`.
+     */
+    export function create(domElement: HTMLElement, options?: IStandaloneEditorConstructionOptions, override?: IEditorOverrideServices): IStandaloneCodeEditor;
+
+	    /**
+     * The options to create an editor.
+     */
+    export interface IStandaloneEditorConstructionOptions extends IEditorConstructionOptions, IGlobalEditorOptions {
+        /**
+         * The initial model associated with this code editor.
+         */
+        model?: ITextModel | null;
+        /**
+         * The initial value of the auto created model in the editor.
+         * To not automatically create a model, use `model: null`.
+         */
+        value?: string;
+        /**
+         * The initial language of the auto created model in the editor.
+         * To not automatically create a model, use `model: null`.
+         */
+        language?: string;
+        /**
+         * Initial theme to be used for rendering.
+         * The current out-of-the-box available themes are: 'vs' (default), 'vs-dark', 'hc-black', 'hc-light.
+         * You can create custom themes via `monaco.editor.defineTheme`.
+         * To switch a theme, use `monaco.editor.setTheme`.
+         * **NOTE**: The theme might be overwritten if the OS is in high contrast mode, unless `autoDetectHighContrast` is set to false.
+         */
+        theme?: string;
+        /**
+         * If enabled, will automatically change to high contrast theme if the OS is using a high contrast theme.
+         * Defaults to true.
+         */
+        autoDetectHighContrast?: boolean;
+        /**
+         * An URL to open when Ctrl+H (Windows and Linux) or Cmd+H (OSX) is pressed in
+         * the accessibility help dialog in the editor.
+         *
+         * Defaults to "https://go.microsoft.com/fwlink/?linkid=852450"
+         */
+        accessibilityHelpUrl?: string;
+        /**
+         * Container element to use for ARIA messages.
+         * Defaults to document.body.
+         */
+        ariaContainerElement?: HTMLElement;
+    }
+
+```
+
+#### 実装してみる
+
+- props.beforeMountはrefで保持
+- editorインスタンス関数はuseCallback()で保持
+- beforeMountはuseCallback()のコールバック内部で呼び出す
+
+```TypeScript
+// ...
+
+const MonacoEditor = ({
+    onValueChange, 
+    onValidate,
+    beforeMount,
+    ...options
+}: iParamsMonacoEditor) => {
+    const [isEditorReady, setIsEditorReady] = useState<boolean>(false);
+    const _editor = useRef<editor.IStandaloneCodeEditor | null>(null);
+    const _subscription = useRef<IDisposable>();
+    const _refEditorContainer = useRef<HTMLDivElement>(null);
+    const _beforeMount = useRef(beforeMount);
+    const esLinteWorker = useMemo(() => new Worker(new URL('../workers/ESLint.worker.ts')), []);
+    const jsxHighlightWorker = useMemo(() => new Worker(new URL('../workers/jsxHighlight.worker.ts')), []);
+
+    /**
+     * 
+     * - Create editor and pass instance to _editor.current
+     * - Run beforeMount.current() before editor generated
+     * */ 
+    const _createEditor = useCallback(() => {
+        if(!_refEditorContainer.current) return;
+
+        // Run beforeMount() before create editor instance
+        if(_beforeMount.current) _beforeMount.current(monaco);
+
+        _editor.current = monaco.editor.create(
+            _refEditorContainer.current, 
+            options
+            // overrideSerivces
+        );
+
+        setIsEditorReady(true);
+    }, [
+        // TODO: 何を依存関係にすべきかはさっぱり。動かしてみてから決めるべき
+        // editorインスタンスの生成にかかわるオプションなどは含めるべきかと
+        options,
+    ]);
+    
+
+    /**
+     * Generate editor and pass it ref.
+     * */ 
+    useEffect(() => {
+        !isEditorReady && _createEditor();
+    }, [isEditorReady, _createEditor]);
+
+	// ...
+
+    return (
+        <div className="" ref={_refEditorContainer}></div>
+    );
+};
+```
+
+ということで、editorインスタンスを生成する前に必要な設定は
+
+親コンポーネントでbeforeMountの関数を実装してpropsとして渡すこと
+
+## JavaScript Tips
+
+#### `variable && foo()`?
+
+https://dev.to/winstonpuckett/js-variable-function-37o7
+
+https://stackoverflow.com/questions/6970346/what-is-x-foo
+
+ポイントは
+
+`変数 && 関数呼び出し`ということ。
+
+`変数 && 関数名`ではないので注意。その場合只の変数同士の比較である。
+
+意味は
+
+```JavaScript
+myVariable && myFunction();
+
+// Which is equivalent to:
+
+if (myVariable) {
+    myFunction()
+}
+```
+
+つまり、
+
+&&は実際は左の比較対象（変数）の方しか真偽値を検査しない。
+
+変数が真なら関数を実行して、偽なら実行しない
+
+という意味の処理のショートカットである。
