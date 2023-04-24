@@ -1,5 +1,10 @@
 # Make monaco-editor a React Component
 
+## TODO
+
+- TODO: 情報の整理
+- TODO: ノートの整理
+
 ## 参考
 
 https://github.com/suren-atoyan/monaco-react
@@ -10,37 +15,55 @@ https://github.com/satya164/monaco-editor-boilerplate
 
 webworker + React:
 
+## 目次
+
+- [monaco-editorのReactコンポーネント化にあたって](#monaco-editorのReactコンポーネント化にあたって)
+- [機能実装](#機能実装)
+- [](#)
+- [](#)
+- [](#)
 
 
-## React化するにあたって
+## monaco-editorのReactコンポーネント化にあたって
 
-monaco-editor標準機能の`monaco.editor.onDidChange()`などのイベントリスは使わない
+React公式はwebworkerと連携する手段を公開していない。手探りで、ハチャメチャな(hackyな)方法をとるしかないかも。
 
-Reactの機能と衝突する可能性があるため。
+#### Reactコンポーネント基本
 
-基本的にuseEffect()とuseRef()とインスタンス変数保持で対応する
+純粋関数でなくてはならない。
 
-#### ReactとuseEffect()しか使わないコンポーネントの連携
+コンポーネントは再レンダリング時に再度実行される。
 
-https://blog.expo.dev/building-a-code-editor-with-monaco-f84b3a06deaf/Using the editor as a React Component
+再レンダリング間で保持しておかなくてはならない変数や関数は`useRef`や`useMemo`, `useCalback`を使うこと。そうでないと通常の変数は消える可能性あるかも。
 
-propsの更新があったときにエディタのコンテンツも更新する必要がある
-
-#### webworkerとreactコンポーネントの連携
+#### webworkerはreactコンポーネントと連携するのか？
 
 結論：webworkerのonmessageはuseEffect()等の機能と関係なく独立している
 
-まぁ当たりまえなんですが。
+当然ですが。
+
+そのためwebworkerに任せた処理結果を変数の更新などで反映させたとしても、
+
+Reactは更新を検知して再レンダリングなどを起こさない。
+
+理由はすべてのプロセスがReactのメカニズム外の処理だからである。
+
+そのためReactに認識させる方法を用意しなくてはならない。
+
+以下検証内容。
+
+検証：webworkerを依存関係としたuseEffect()は反応するか。
+
+参考サイトを基に作成してみた。
+
+https://blog.logrocket.com/web-workers-react-typescript/
 
 ```TypeScript
 // a component that works with webworker
-	// const refEditor = useRef<monaco.editor.IStandaloneCodeEditor>();
+
 	const ESLintWorker = useMemo(() => new Worker(new URL('../../../worker/eslint.worker.ts', import.meta.url)), []);
 	const SyntaxHighlightWorker = useMemo(() => new Worker(new URL('../../../worker/jsx-highlight.worker.ts', import.meta.url)), []);
 
-	// Initialize and clean up workers.
-	// 
-	// NOTE: useEffect()はMonacoEditor.OnBeforeMount, MonacoEditor.OnMountよりも先に実行される
 	useEffect(() => {
 		// DEBUG:
 		console.log("[CodeEditor] Component did mount.");
@@ -56,6 +79,17 @@ propsの更新があったときにエディタのコンテンツも更新する
 				error: ""
 			});
 
+			return () => {
+				ESLintWorker.terminate();
+				SyntaxHighlightWorker.terminate();
+			}
+		}
+	}, []);
+
+	useEffect(() => {
+		console.log("[CodeEditor] useEffect():");
+		if(window.Worker) {
+			
 			ESLintWorker.onmessage = (e: MessageEvent<iMessage>) => {
 				const { signal, error } = e.data;
 				if(error.length) {
@@ -70,73 +104,28 @@ propsの更新があったときにエディタのコンテンツも更新する
 				}
 				console.log(signal);
 			};
-
-			return () => {
-				// DEBUG:
-				console.log("[CodeEditor] unmount.");
-				// clean up code
-				ESLintWorker.terminate();
-				SyntaxHighlightWorker.terminate();
-			}
 		}
-	}, []);
-
-	// worker message receiver
-	// 
-	// NOTE: useEffect()はMonacoEditor.OnBeforeMount, MonacoEditor.OnMountよりも先に実行される
-	useEffect(() => {
-		console.log("[CodeEditor] useEffect():");
-		// if(window.Worker) {
-			
-		// 	ESLintWorker.onmessage = (e: MessageEvent<iMessage>) => {
-		// 		const { signal, error } = e.data;
-		// 		if(error.length) {
-		// 			console.error(error);
-		// 		}
-		// 		console.log(signal);
-		// 	};
-		// 	SyntaxHighlightWorker.onmessage = (e: MessageEvent<iMessage>) => {
-		// 		const { signal, error } = e.data;
-		// 		if(error.length) {
-		// 			console.error(error);
-		// 		}
-		// 		console.log(signal);
-		// 	};
-		// }
 	}, [ESLintWorker, SyntaxHighlightWorker]);
 ```
 
-上記の通り、
+結果：
 
-- `useEffect([webworker])`としてもこのuseEffect()は機能しない。そのため`useEffect([webworker])`の中身の定義は意味がない。
+- workerインスタンスを依存関係にしているuseEffect()は永遠に実行されない。理由はuseMemo()で依存関係なしで発行したため生成物はおそらく永遠に変わらないから。
 - `worker.onmessega`はReactコンポーネントのリレンダリングに関連しないためコンポーネントの更新を起こさない
-- `worker.onmessega`はReactコンポーネントのリレンダリングに関連しないためリアクトのメカニズムと関係せずメッセージを取得する
-
+- `worker.onmessega`はReactコンポーネントのリレンダリングに関連しないためリアクトのメカニズムから独立している
 
 ということでメッセージを受信するタイミングは（Reactのメカニズムとシンクロするようにという意味では）制御できない。
 
-メッセージを送信するタイミングとしてなら使えるかも。
+万が一、useMemo()が再レンダリング時に変更したwebworkerのインスタンスを返したときに、前のインスタンスが消えるからonmessage登録しなおすという保険的な役割なら意味のある処理かも。
 
-conclusion:
+#### webworkerをreactコンポーネントと連携させる
 
-- webworkerのonmessageは初めのuseEffect()(conponentDidMount()タイミング)で設定すればよい
-- webworkerが関連する値が変更されたら、そのレンダリング後にpostMessage()すればよい。
-
-参考：
+参考その１：
 
 https://github.com/satya164/monaco-editor-boilerplate/blob/master/src/Editor.js
 
-eslintするワーカとの連携は
-
-componentDidMount時にworkerのインスタンス化をして、そのタイミングで`messega`イベントリスナを登録し、リスナはlintコードを反映させる関数を呼び出す
-
-関数はリアクトのメカニズムと関係なくeditorの変更を反映させる
-
-う～んReactとwebworkerの非同期処理の同期はできないのか？しなくていいのか？
-
-たとえばformattingをworkerに任せるとしてformat済のコードをいざコンポーネントの値へ反映させるときに、
-
-Reactのメカニズムを通さないと再レンダリングが発生しなくてREactと衝突することになりそうで怖い。
+- componentDidMount()でESLint workerにmessageイベントリスナを登録する
+- リスナには
 
 #### React + webworker同期その１：Custom Hooks
 
@@ -205,6 +194,19 @@ https://blog.logrocket.com/react-usereducer-hooks-web-workers/
 useReducer-like reduer works in worker:
 
 https://github.com/surma/use-workerized-reducer
+
+## 機能実装
+
+実装する機能：
+
+- beforeMount
+- didMount
+- onChange
+- onValidate
+- formatting
+- jsxHighlight
+- ESLint
+
 
 ## 実装：ESLint
 

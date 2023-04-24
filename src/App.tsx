@@ -31,24 +31,35 @@ const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions = 
 	scrollBeyondLastLine: false,
 	readOnly: false,
 	theme: "vs-dark",
+    
 };
 
 const App = () => {
 
     const beforeMount: beforeMount = (m) => {
         // format setting
+        // DEBUG:
+        console.log("[App] Before Mount:");
+        console.log(m);
     };
 
     const onDidMount: onMount = (e, m) => {
-
+        // DEBUG:
+        console.log("[App] Did Mount:");
+        console.log(e);
+        console.log(m);
     };
 
     const onChange: onChange = (value) => {
-
+        // DEBUG:
+        console.log("[App] onChange:");
+        console.log(value);
     };
 
     const onValidate: onValidate = (value) => {
-
+        // DEBUG:
+        console.log("[App] onValidate:");
+        console.log(value);
     };
 
     return (

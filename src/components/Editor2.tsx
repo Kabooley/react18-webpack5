@@ -42,8 +42,7 @@ const MonacoEditor = ({
     const _subscription = useRef<Monaco.IDisposable>();
     const _refEditorContainer = useRef<HTMLDivElement>(null);
     const _beforeMount = useRef(beforeMount);
-
-    // 絶対パスを渡してもダメ。
+    // Workers
     const esLinteWorker = useMemo(() => new Worker(new URL('/src/workers/ESLint.worker.ts', import.meta.url)), []);
     const jsxHighlightWorker = useMemo(() => new Worker(new URL('/src/workers/JSXHighlight.worker.ts', import.meta.url)), []);
 
@@ -134,6 +133,8 @@ const MonacoEditor = ({
         if(isEditorReady && onChange !== undefined) {
             if(_subscription.current) _subscription.current.dispose();
             _subscription.current = _editor.current?.onDidChangeModelContent(() => {
+                // DEBUG:
+                console.log("[CodeEditor] _subscription callback:");
                 const value = _editor.current?.getValue();
                 onChange(value === undefined ? "" : value);
                 // TODO: ESLintworkerへ値を送るのもここで
@@ -166,7 +167,13 @@ const MonacoEditor = ({
 
 
     return (
-        <div className="" ref={_refEditorContainer}></div>
+        <section style={{width: "100%", height: "90vh"}}>
+            <div 
+                className="monaco-container" 
+                ref={_refEditorContainer}
+                style={{width: "100%", height: "100%"}}
+            ></div>
+        </section>
     );
 };
 
