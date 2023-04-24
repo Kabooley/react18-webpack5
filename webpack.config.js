@@ -19,7 +19,7 @@ module.exports = {
 		'ts.worker': 'monaco-editor/esm/vs/language/typescript/ts.worker'
 	},
 	resolve: {
-		extensions: ['*', '.js', '.jsx', '.tsx', '.ts'],
+		extensions: ['.*', '.js', '.jsx', '.tsx', '.ts'],
 	  },
 	output: {
 		globalObject: 'self',

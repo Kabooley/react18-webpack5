@@ -723,7 +723,9 @@ if (myVariable) {
 
 ## バグ
 
-#### webpackがworkerの相対パスを正しく認識してくれない問題
+#### [解決済] webpackがworkerの相対パスを正しく認識してくれない問題
+
+普通にpathに含めていたファイル名を間違えていた。修正したら治った。
 
 ```bash
 ERROR in ./src/components/Editor2.tsx 51:11-75
@@ -735,13 +737,93 @@ resolve './jsxHighlight.worker.js' in '/home/teddy/playground/webpack/src/compon
     using description file: /home/teddy/playground/webpack/package.json (relative path: ./src/components/jsxHighlight.worker.js)
       no extension
 ```
+誤: `jsxHighlight.worker.js`
 
-ということで、
+正： `JSXHighlight.worker.js`
 
-`$ROOT/src/workers/XXXX.worker.ts`のファイルを参照してほしいのに
+publicPathを設定したりとかはする必要なし。
 
-なぜか
 
-`$ROOT/src/components/workers/XXX.worker.ts`という存在しないディレクトリを探そうとする
+#### undefinedにdispose()なんてメソッドないよのエラー
 
-どうしてもsrc/componentsを相対パスの起点としたいみたい。
+```bash
+index.js:485 [webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.
+log.js:24 [HMR] Waiting for update signal from WDS...
+react-dom.development.js:29840 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+reportWebVitals.ts:6 [reportWebVitals]
+Editor2.tsx:95 [CodeEditor] Generate editor:
+Editor2.tsx:58 [CodeEditor] _createEditor:
+Editor2.tsx:107 [CodeEditor] component did mount:
+Editor2.tsx:132 [CodeEditor] onChange useEffect:
+Editor2.tsx:159 [CodeEditor] _cleanup()
+react-dom.development.js:22839 Uncaught TypeError: Cannot read properties of undefined (reading 'dispose')
+    at _cleanUp (Editor2.tsx:162:32)
+    at Editor2.tsx:121:13
+    at safelyCallDestroy (react-dom.development.js:22932:1)
+    at commitHookEffectListUnmount (react-dom.development.js:23100:1)
+    at invokePassiveEffectUnmountInDEV (react-dom.development.js:25207:1)
+    at invokeEffectsInDev (react-dom.development.js:27351:1)
+    at commitDoubleInvokeEffectsInDEV (react-dom.development.js:27324:1)
+    at flushPassiveEffectsImpl (react-dom.development.js:27056:1)
+    at flushPassiveEffects (react-dom.development.js:26984:1)
+    at react-dom.development.js:26769:1
+Editor2.tsx:95 [CodeEditor] Generate editor:
+Editor2.tsx:58 [CodeEditor] _createEditor:
+Editor2.tsx:107 [CodeEditor] component did mount:
+Editor2.tsx:132 [CodeEditor] onChange useEffect:
+react-dom.development.js:18687 The above error occurred in the <MonacoEditor> component:
+
+    at MonacoEditor (http://localhost:8080/index.bundle.js:622:26)
+    at div
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18687
+react-dom.development.js:12056 Uncaught TypeError: Cannot read properties of undefined (reading 'dispose')
+    at _cleanUp (Editor2.tsx:162:32)
+    at Editor2.tsx:121:13
+    at safelyCallDestroy (react-dom.development.js:22932:1)
+    at commitHookEffectListUnmount (react-dom.development.js:23100:1)
+    at invokePassiveEffectUnmountInDEV (react-dom.development.js:25207:1)
+    at invokeEffectsInDev (react-dom.development.js:27351:1)
+    at commitDoubleInvokeEffectsInDEV (react-dom.development.js:27324:1)
+    at flushPassiveEffectsImpl (react-dom.development.js:27056:1)
+    at flushPassiveEffects (react-dom.development.js:26984:1)
+    at react-dom.development.js:26769:1
+Editor2.tsx:159 [CodeEditor] _cleanup()
+react-dom.development.js:22839 Uncaught TypeError: Cannot read properties of undefined (reading 'dispose')
+    at _cleanUp (Editor2.tsx:162:32)
+    at Editor2.tsx:121:13
+    at safelyCallDestroy (react-dom.development.js:22932:1)
+    at commitHookEffectListUnmount (react-dom.development.js:23100:1)
+    at commitPassiveUnmountInsideDeletedTreeOnFiber (react-dom.development.js:25098:1)
+    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (react-dom.development.js:25048:1)
+    at commitPassiveUnmountEffects_begin (react-dom.development.js:24956:1)
+    at commitPassiveUnmountEffects (react-dom.development.js:24941:1)
+    at flushPassiveEffectsImpl (react-dom.development.js:27038:1)
+    at flushPassiveEffects (react-dom.development.js:26984:1)
+react-dom.development.js:18687 The above error occurred in the <MonacoEditor> component:
+
+    at MonacoEditor (http://localhost:8080/index.bundle.js:622:26)
+    at div
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18687
+react-dom.development.js:12056 Uncaught TypeError: Cannot read properties of undefined (reading 'dispose')
+    at _cleanUp (Editor2.tsx:162:32)
+    at Editor2.tsx:121:13
+    at safelyCallDestroy (react-dom.development.js:22932:1)
+    at commitHookEffectListUnmount (react-dom.development.js:23100:1)
+    at commitPassiveUnmountInsideDeletedTreeOnFiber (react-dom.development.js:25098:1)
+    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (react-dom.development.js:25048:1)
+    at commitPassiveUnmountEffects_begin (react-dom.development.js:24956:1)
+    at commitPassiveUnmountEffects (react-dom.development.js:24941:1)
+    at flushPassiveEffectsImpl (react-dom.development.js:27038:1)
+    at flushPassiveEffects (react-dom.development.js:26984:1)
+DevTools failed to load source map: Could not load content for chrome-extension://cfhdojbkjhnklbpkdaibdccddilifddb/browser-polyfill.js.map: System error: net::ERR_FILE_NOT_FOUND
+```
+どうやら`_cleanUp()`での_editorと_subscriptionがundefinedであるようだ
+

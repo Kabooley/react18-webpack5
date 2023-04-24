@@ -42,10 +42,10 @@ const MonacoEditor = ({
     const _subscription = useRef<Monaco.IDisposable>();
     const _refEditorContainer = useRef<HTMLDivElement>(null);
     const _beforeMount = useRef(beforeMount);
-    const esLinteWorker = useMemo(() => new Worker(new URL('./ESLint.worker.js', import.meta.url)), []);
-    const jsxHighlightWorker = useMemo(() => new Worker(new URL('./jsxHighlight.worker.js', import.meta.url)), []);
-    // const esLinteWorker = useMemo(() => new Worker(new URL('../workers/ESLint.worker.ts', import.meta.url)), []);
-    // const jsxHighlightWorker = useMemo(() => new Worker(new URL('../workers/jsxHighlight.worker.ts', import.meta.url)), []);
+
+    // 絶対パスを渡してもダメ。
+    const esLinteWorker = useMemo(() => new Worker(new URL('/src/workers/ESLint.worker.ts', import.meta.url)), []);
+    const jsxHighlightWorker = useMemo(() => new Worker(new URL('/src/workers/JSXHighlight.worker.ts', import.meta.url)), []);
 
     /**
      * 
@@ -53,6 +53,10 @@ const MonacoEditor = ({
      * - Run beforeMount.current() before editor generated
      * */ 
     const _createEditor = useCallback(() => {
+        
+        // DEBUG:
+        console.log("[CodeEditor] _createEditor:");
+        
         if(!_refEditorContainer.current) return;
 
         // Run beforeMount()
@@ -86,6 +90,10 @@ const MonacoEditor = ({
      * Generate editor and pass it ref.
      * */ 
     useEffect(() => {
+        
+        // DEBUG:
+        console.log("[CodeEditor] Generate editor:");
+
         !isEditorReady && _createEditor();
     }, [isEditorReady, _createEditor]);
 
@@ -95,6 +103,9 @@ const MonacoEditor = ({
      * - Set cleaner runs when unmount
      * */ 
     useEffect(() => {
+        // DEBUG:
+        console.log("[CodeEditor] component did mount:");
+        
         if(window.Worker) {
             esLinteWorker.addEventListener('message', (e) => {
                 // Invoke updater
@@ -117,8 +128,11 @@ const MonacoEditor = ({
      * Initialize and reset on value change listener to _subscription.
      * */ 
     useEffect(() => {
+        // DEBUG:
+        console.log("[CodeEditor] onChange useEffect:");
+
         if(isEditorReady && onChange !== undefined) {
-            _subscription.current!.dispose();
+            if(_subscription.current) _subscription.current.dispose();
             _subscription.current = _editor.current?.onDidChangeModelContent(() => {
                 const value = _editor.current?.getValue();
                 onChange(value === undefined ? "" : value);
@@ -141,8 +155,11 @@ const MonacoEditor = ({
 
     // Clean up code
     const _cleanUp = (): void => {
-        _editor.current!.dispose();
-        _subscription.current!.dispose();
+        // DEBUG:
+        console.log("[CodeEditor] _cleanup()");
+
+        if(_editor.current) _editor.current.dispose();
+        if(_subscription.current) _subscription.current.dispose();
         esLinteWorker.terminate();
         jsxHighlightWorker.terminate();
     };
