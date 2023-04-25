@@ -19,8 +19,8 @@ webworker + React:
 
 - [monaco-editorのReactコンポーネント化にあたって](#monaco-editorのReactコンポーネント化にあたって)
 - [機能実装](#機能実装)
-- [](#)
-- [](#)
+- [@monaco-editor/react](#@monaco-editor/react)
+- [JavaScript Tips](#JavaScript_Tips)
 - [](#)
 
 
@@ -35,6 +35,18 @@ React公式はwebworkerと連携する手段を公開していない。手探り
 コンポーネントは再レンダリング時に再度実行される。
 
 再レンダリング間で保持しておかなくてはならない変数や関数は`useRef`や`useMemo`, `useCalback`を使うこと。そうでないと通常の変数は消える可能性あるかも。
+
+#### monaco-editorとReactメカニズムの連携
+
+参考：TODO: @monaco-editor/reactのurl貼り付け
+
+- 親コンポーネントからハンドラ関数をprops経由で取得する
+- useRefでハンドラ関数を保持しておく（monaco-editorはReactコンポーネントではないためハンドラ関数を直接渡すことはできないから）
+- monaco-editorの`IDispose`型イベントハンドラ関数のコールバックの中で親関数から取得したハンドラ関数を呼び出す
+(monaco-editorのハンドラ関数はReactメカニズムと一切関係ないためハンドラ関数が呼び出されてもReactは反応しない)
+- ハンドラ関数がその呼び出しによって、親コンポーネント内で何かしら反応させればReactが再レンダリングされる
+
+たとえばハンドラ関数が内部でuseState()の値を変更したら、再レンダリングが発生する
 
 #### webworkerはreactコンポーネントと連携するのか？
 
@@ -127,6 +139,8 @@ https://github.com/satya164/monaco-editor-boilerplate/blob/master/src/Editor.js
 - componentDidMount()でESLint workerにmessageイベントリスナを登録する
 - リスナには
 
+
+
 #### React + webworker同期その１：Custom Hooks
 
 NOTE: ここでいう「同期」とはReactのメカニズムにwebworkerを合わせること。
@@ -207,8 +221,15 @@ https://github.com/surma/use-workerized-reducer
 - jsxHighlight
 - ESLint
 
+#### 実装：befoerMount
 
-## 実装：ESLint
+#### 実装：didMount
+
+#### 実装：onChange
+
+#### 実装：onValidate
+
+#### 実装：ESLint
 
 #### 参考repoのlintの適用手順の分析
 
@@ -228,7 +249,9 @@ TODO:
 
 ## 実装：JSX Syntax Highlight
 
-## 実装：formatting by prettier
+## 実装：format
+
+prettierにする。
 
 デフォルトでformattingの設定関数は備わっている
 
@@ -364,8 +387,6 @@ const beforeMount: /* TODO: define type*/.beforeMount = (
 
 ## 参考repoのwebworkerとreactの連携のさせ方
 
-ESLint機能：
-
 componentDidMount():
     webworkerの生成
     webworkerのmessageイベントリスナの登録
@@ -389,12 +410,9 @@ componentDidMount()とcomponentDidUpdate()の両方で、親コンポーネン�
 
 親コンポーネントに変更を伝え、それによってReactを再レンダリングさせるきっかけを与えている
 
-疑問・わからんところ：
+## @monaco-editor/react
 
-- `monaco.editor.getModel().onDidChangeContent()`は何を返すのか
-
-
-## @monaco-editor/reactの分析
+分析
 
 https://github.com/suren-atoyan/monaco-react
 
@@ -828,4 +846,3 @@ react-dom.development.js:12056 Uncaught TypeError: Cannot read properties of und
 DevTools failed to load source map: Could not load content for chrome-extension://cfhdojbkjhnklbpkdaibdccddilifddb/browser-polyfill.js.map: System error: net::ERR_FILE_NOT_FOUND
 ```
 どうやら`_cleanUp()`での_editorと_subscriptionがundefinedであるようだ
-
