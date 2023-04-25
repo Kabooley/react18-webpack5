@@ -221,7 +221,20 @@ https://github.com/surma/use-workerized-reducer
 - jsxHighlight
 - ESLint
 
-#### 実装：befoerMount
+#### 実装：beforeMount
+
+beforeMountがマウント前に一度だけ呼ばれるような仕組み：
+
+問題：useEffectで呼出した関数の中で実行したsetIsEditorReady(true)が反映されていないかも
+
+TODO: useEffect()についておさらいしよう
+
+```TypeScript
+
+```
+```bash
+```
+
 
 #### 実装：didMount
 

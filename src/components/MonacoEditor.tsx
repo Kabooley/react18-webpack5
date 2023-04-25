@@ -41,7 +41,10 @@ const MonacoEditor = ({
     const _editor = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
     const _subscription = useRef<Monaco.IDisposable>();
     const _refEditorContainer = useRef<HTMLDivElement>(null);
+    // Refs each handler
     const _beforeMount = useRef(beforeMount);
+    // Flag that expresses beforeMount is already invoked.
+    const _preventBeforeMount = useRef<boolean>(false);
     // Workers
     const esLinteWorker = useMemo(() => new Worker(new URL('/src/workers/ESLint.worker.ts', import.meta.url)), []);
     const jsxHighlightWorker = useMemo(() => new Worker(new URL('/src/workers/JSXHighlight.worker.ts', import.meta.url)), []);
@@ -59,7 +62,8 @@ const MonacoEditor = ({
         if(!_refEditorContainer.current) return;
 
         // Run beforeMount()
-        if(_beforeMount.current) _beforeMount.current(monaco);
+        // if _preventBeforeMount.current is false
+        if(!_preventBeforeMount.current) _beforeMount.current(monaco);
 
         _editor.current = monaco.editor.create(
             _refEditorContainer.current, 
@@ -75,6 +79,7 @@ const MonacoEditor = ({
         // monaco.editor.setTheme(theme);
 
         setIsEditorReady(true);
+        _preventBeforeMount.current = true;
     }, [
         // TODO: 何を依存関係にすべきかはさっぱり。動かしてみてから決めるべき
         // editorインスタンスの生成にかかわるオプションなどは含めるべきかと

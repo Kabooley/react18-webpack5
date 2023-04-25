@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import * as monaco from 'monaco-editor';
-import MonacoEditor from './components/Editor2';
-import type { beforeMount, onMount, onChange, onValidate } from "./components/Editor2";
+import MonacoEditor from './components/MonacoEditor';
+import type { beforeMount, onMount, onChange, onValidate } from "./components/MonacoEditor";
 
 // @ts-ignore
 self.MonacoEnvironment = {
