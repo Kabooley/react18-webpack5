@@ -66,6 +66,7 @@ module.exports = {
 	devtool: 'inline-source-map',
 	devServer: {
 		static: './dist',
+		hot: true
 	},
 	/**
 	 * https://webpack.js.org/guides/code-splitting/#splitchunksplugin

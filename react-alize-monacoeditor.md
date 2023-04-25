@@ -227,6 +227,186 @@ https://github.com/surma/use-workerized-reducer
 
 #### 実装：onChange
 
+Reactの再レンダリングメカニズムと連携するためには、
+
+親コンポーネントから取得したハンドラをuseEffect()内で呼び出し、
+
+そのハンドラがReactの再レンダリングのトリガーを引くことである。
+
+ここでは、
+
+MonacoEditorは親コンポーネントから`onChange`という、
+
+内部的に`setValue`を呼び出すハンドラをuseEffect()内部で呼び出す。
+
+```TypeScript
+// Editro.tsx
+
+interface iParamsMonacoEditor extends Monaco.editor.IStandaloneEditorConstructionOptions {
+    beforeMount: beforeMount;
+    onMount: onMount;
+    onChange: onChange; 
+    onValidate: onValidate;
+};
+
+
+const MonacoEditor = ({
+    beforeMount,
+    onMount,
+    onChange, 
+    onValidate,
+    ...options
+}: iParamsMonacoEditor) => {
+    const [isEditorReady, setIsEditorReady] = useState<boolean>(false);
+    const _editor = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+    const _subscription = useRef<Monaco.IDisposable>();
+    const _refEditorContainer = useRef<HTMLDivElement>(null);
+    const _beforeMount = useRef(beforeMount);
+
+    /**
+     * On Value Change:
+     * 
+     * Initialize and reset on value change listener to _subscription.
+     * */ 
+    useEffect(() => {
+        // DEBUG:
+        console.log("[CodeEditor] onChange useEffect:");
+
+    /**
+     * Generate editor and pass it ref. 
+     * 
+     * Invoke _createEditor() when isEditor returns false.
+     * */ 
+    useEffect(() => {
+            
+            // DEBUG:
+            console.log("[CodeEditor] Generate editor?:" + isEditorReady);
+
+            !isEditorReady && _createEditor();
+        }, [isEditorReady, _createEditor]);
+
+
+        if(isEditorReady && onChange !== undefined) {
+            if(_subscription.current) _subscription.current.dispose();
+            _subscription.current = _editor.current?.onDidChangeModelContent(() => {
+                // DEBUG:
+                console.log("[CodeEditor] _subscription callback:");
+                const value = _editor.current?.getValue();
+                onChange(value === undefined ? "" : value);
+                // TODO: ESLintworkerへ値を送るのもここで
+            });
+        }
+    }, [onChange, isEditorReady]);
+
+    
+    // DEBUG:
+    useEffect(() => {
+        console.log("[MonacoEditor] component did update");
+    });
+
+    // ...
+};
+```
+
+親コンポーネント：
+
+```TypeScript
+import React, { useState } from "react";
+import * as monaco from 'monaco-editor';
+import MonacoEditor from './components/Editor2';
+import type { beforeMount, onMount, onChange, onValidate } from "./components/Editor2";
+
+const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
+    value: "// First line\nfunction hello() {\n\talert('Hello world!');\n}\n// Last line",
+	language: "javascript",
+
+	lineNumbers: "off",
+	roundedSelection: false,
+	scrollBeyondLastLine: false,
+	readOnly: false,
+	theme: "vs-dark",
+    
+};
+
+const App = () => {
+    const [value, setValue] = useState<string>("");
+
+    const onChange: onChange = (v) => {
+        // DEBUG:
+        console.log("[App] onChange:");
+        console.log(v);
+        setValue(v);
+    };
+
+    return (
+        <div className="app">
+            <MonacoEditor 
+                beforeMount={beforeMount}
+                onMount={onDidMount}
+                onChange={onChange}
+                onValidate={onValidate}
+                {...monacoEditorOptions}
+            />
+        </div>
+    );
+};
+
+```
+
+この状態でエディタを編集すると...
+
+```bash
+[CodeEditor] _subscription callback:
+21:44:22.546 App.tsx:56 [App] onChange:
+21:44:22.547 App.tsx:57 // First line
+function hello() {
+	alert('Hello world!');
+};
+// Last line
+21:44:22.558 Editor2.tsx:96 [CodeEditor] Generate editor?:true
+21:44:22.559 Editor2.tsx:133 [CodeEditor] onChange useEffect:
+21:44:22.559 Editor2.tsx:161 [MonacoEditor] component did update
+21:44:29.514 Editor2.tsx:139 [CodeEditor] _subscription callback:
+21:44:29.515 App.tsx:56 [App] onChange:
+21:44:29.515 App.tsx:57 // First line
+function hello() {
+	alert('Hello world!');
+};
+
+// Last line
+21:44:29.524 Editor2.tsx:96 [CodeEditor] Generate editor?:true
+21:44:29.525 Editor2.tsx:133 [CodeEditor] onChange useEffect:
+21:44:29.526 Editor2.tsx:161 [MonacoEditor] component did update
+21:44:30.943 Editor2.tsx:139 [CodeEditor] _subscription callback:
+21:44:30.944 App.tsx:56 [App] onChange:
+21:44:30.944 App.tsx:57 // First line
+function hello() {
+	alert('Hello world!');
+};
+
+
+// Last line
+21:44:30.953 Editor2.tsx:96 [CodeEditor] Generate editor?:true
+21:44:30.954 Editor2.tsx:133 [CodeEditor] onChange useEffect:
+21:44:30.955 Editor2.tsx:161 [MonacoEditor] component did update
+21:44:34.720 Editor2.tsx:139 [CodeEditor] _subscription callback:
+21:44:34.721 App.tsx:56 [App] onChange:
+21:44:34.725 App.tsx:57 // First line
+# ...
+```
+
+- _subscription --> onChange --> setValue --> 再レンダリング
+
+の流れが出来上がっているのが確認できる。
+
+ちなみに、親コンポーネントでsetValue()を呼び出さなかった場合、
+
+`[MonacoEditor] component did update`が出力されていなかったので、
+
+再レンダリングが起きていないことので、
+
+setValue()が再レンダリングを引き起こしているのが確認できる。
+
 #### 実装：onValidate
 
 #### 実装：ESLint
@@ -846,3 +1026,27 @@ react-dom.development.js:12056 Uncaught TypeError: Cannot read properties of und
 DevTools failed to load source map: Could not load content for chrome-extension://cfhdojbkjhnklbpkdaibdccddilifddb/browser-polyfill.js.map: System error: net::ERR_FILE_NOT_FOUND
 ```
 どうやら`_cleanUp()`での_editorと_subscriptionがundefinedであるようだ
+
+
+## webpack
+
+メモ。あとでwebpackのノートに転記すること。
+
+#### `[webpack-dev-server] app hot update`
+
+webpack-dev-serverで開発中、コンソールに上記のようなものが出た。
+
+https://webpack.js.org/guides/hot-module-replacement/
+
+> ホットモジュールリプレイスメント (または HMR) は、webpack が提供する最も便利な機能の 1 つです。これにより、すべての種類のモジュールを実行時に完全に更新することなく更新できます。
+
+> HMRはproductionモードで使ってはならず、開発モードでのみ使われるべきです。
+
+有効化するには：
+
+```JavaScript
+devServer: {
+		static: './dist',
+		hot: true
+	},
+```

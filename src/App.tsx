@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import * as monaco from 'monaco-editor';
 import MonacoEditor from './components/Editor2';
 import type { beforeMount, onMount, onChange, onValidate } from "./components/Editor2";
@@ -35,6 +35,7 @@ const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions = 
 };
 
 const App = () => {
+    const [value, setValue] = useState<string>("");
 
     const beforeMount: beforeMount = (m) => {
         // format setting
@@ -50,10 +51,11 @@ const App = () => {
         console.log(m);
     };
 
-    const onChange: onChange = (value) => {
+    const onChange: onChange = (v) => {
         // DEBUG:
         console.log("[App] onChange:");
-        console.log(value);
+        console.log(v);
+        // setValue(v);
     };
 
     const onValidate: onValidate = (value) => {

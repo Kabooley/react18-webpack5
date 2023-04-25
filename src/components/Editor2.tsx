@@ -87,11 +87,13 @@ const MonacoEditor = ({
 
     /**
      * Generate editor and pass it ref.
+     * 
+     * Invoke _createEditor() when isEditor returns false.
      * */ 
     useEffect(() => {
         
         // DEBUG:
-        console.log("[CodeEditor] Generate editor:");
+        console.log("[CodeEditor] Generate editor?:" + isEditorReady);
 
         !isEditorReady && _createEditor();
     }, [isEditorReady, _createEditor]);
@@ -153,6 +155,11 @@ const MonacoEditor = ({
         }
 
     }, [onValidate, isEditorReady]);
+
+    // DEBUG:
+    useEffect(() => {
+        console.log("[MonacoEditor] component did update");
+    });
 
     // Clean up code
     const _cleanUp = (): void => {
