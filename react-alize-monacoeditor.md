@@ -229,11 +229,91 @@ beforeMountがマウント前に一度だけ呼ばれるような仕組み：
 
 TODO: useEffect()についておさらいしよう
 
-```TypeScript
-
-```
 ```bash
+[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.
+index.bundle.js:sourcemap:235512 [HMR] Waiting for update signal from WDS...
+index.bundle.js:sourcemap:930 [reportWebVitals]
+index.bundle.js:sourcemap:720 [CodeEditor] Generate editor?:false
+index.bundle.js:sourcemap:684 [CodeEditor] _createEditor:
+index.bundle.js:sourcemap:535 [App] Before Mount:
+index.bundle.js:sourcemap:536 Module
+index.bundle.js:sourcemap:731 [CodeEditor] component did mount:
+# 
+# ここまででマウント完了
+# 
+index.bundle.js:sourcemap:755 [CodeEditor] onChange useEffect:
+index.bundle.js:sourcemap:785 [MonacoEditor] component did update
+# 
+# 再レンダリング完了？
+# 
+# ここで_cleanup()が呼び出されている理由がわからん
+index.bundle.js:sourcemap:791 [CodeEditor] _cleanup()
+# このuseEffect()が反応している理由は？
+# 先の_createEditor()でsetIsEditor(true)したがまだ反映されていない
+index.bundle.js:sourcemap:720 [CodeEditor] Generate editor?:false
+index.bundle.js:sourcemap:684 [CodeEditor] _createEditor:
+# どうしてまたdidMountのuseEffect()が反応しているの？
+index.bundle.js:sourcemap:731 [CodeEditor] component did mount:
+index.bundle.js:sourcemap:755 [CodeEditor] onChange useEffect:
+index.bundle.js:sourcemap:785 [MonacoEditor] component did update
+index.bundle.js:sourcemap:720 [CodeEditor] Generate editor?:true
+index.bundle.js:sourcemap:755 [CodeEditor] onChange useEffect:
+index.bundle.js:sourcemap:759 [CodeEditor] reset _subscription
+index.bundle.js:sourcemap:785 [MonacoEditor] component did update
+index.bundle.js:sourcemap:233986 [webpack-dev-server] Disconnected!
+index.bundle.js:sourcemap:233986 [webpack-dev-server] Trying to reconnect...
 ```
+
+#### useEffect
+
+#### react docs: useEffect
+
+- React外部のシステムと同期をとる処理をしないならuseEffect()はそのコンポーネントに必要ないかもしれない
+
+- strict modeが有効な時は、**Reactは、最初の実際のセットアップの前に、追加の開発のみのセットアップとクリーンアップサイクルを1回実行します。**
+
+これは、クリーンアップ ロジックがセットアップ ロジックを "ミラーリング" し、セットアップが行っていることをすべて停止または元に戻すことを確認するストレス テストです。これが問題になる場合は、クリーンアップ機能を実装してください。
+
+- useEffectの依存関係に、コンポーネント内部で定義した変数や関数を含めることは、本来よりも余計な再レンダリングを引き起こすリスクがある。
+
+これやっちゃっているかも...
+
+```TypeScript
+// isEditorReadyはstate管理
+// _createEditor()はuseCallback生成
+useEffect(() => {
+
+    !isEditorReady && _createEditor();
+}, [isEditorReady, _createEditor]);
+```
+
+Reactは必要であれば何度もuseEffect()のsetup関数とcleanup関数を呼び出します。
+
+setup関数はマウント時に
+
+毎レンダリング時に依存関係が変更されていれば、
+
+- まず古いpropsとstateを基にcleanupコードが実行される
+- それからsetupコードが新しいpropsとstateを基に実行される
+
+unmount時にコンポーネントが取り除かれるときにcleanupコードが実行される
+
+TODO: つづきを。
+
+#### You might not need an Effect.
+
+https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state
+
+**既存のpropsとstateで再計算できる物事は、stateへ入れるべきでない。かわりに再レンダリング中に再計算せよ**
+
+再レンダリング中の再計算とは：
+
+Reactコンポーネントは再レンダリング時にファイル全体が再実行されるので
+
+Reactメカニズムでない関数や変数がサイド呼出されることになるため
+
+それ等を利用することである。
+
 
 
 #### 実装：didMount

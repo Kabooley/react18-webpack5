@@ -138,10 +138,16 @@ const MonacoEditor = ({
         console.log("[CodeEditor] onChange useEffect:");
 
         if(isEditorReady && onChange !== undefined) {
+
+            // DEBUG:
+            console.log("[CodeEditor] reset _subscription");
+
             if(_subscription.current) _subscription.current.dispose();
             _subscription.current = _editor.current?.onDidChangeModelContent(() => {
+
                 // DEBUG:
                 console.log("[CodeEditor] _subscription callback:");
+                
                 const value = _editor.current?.getValue();
                 onChange(value === undefined ? "" : value);
                 // TODO: ESLintworkerへ値を送るのもここで
