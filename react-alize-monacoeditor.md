@@ -223,98 +223,179 @@ https://github.com/surma/use-workerized-reducer
 
 #### 実装：beforeMount
 
-beforeMountがマウント前に一度だけ呼ばれるような仕組み：
+beforeMountがマウント前に一度だけ呼ばれるような仕組みと、
 
-問題：useEffectで呼出した関数の中で実行したsetIsEditorReady(true)が反映されていないかも
+MonacoEditorのマウントが問題なく実行されるように実装する。
 
-TODO: useEffect()についておさらいしよう
-
-```bash
-[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.
-index.bundle.js:sourcemap:235512 [HMR] Waiting for update signal from WDS...
-index.bundle.js:sourcemap:930 [reportWebVitals]
-index.bundle.js:sourcemap:720 [CodeEditor] Generate editor?:false
-index.bundle.js:sourcemap:684 [CodeEditor] _createEditor:
-index.bundle.js:sourcemap:535 [App] Before Mount:
-index.bundle.js:sourcemap:536 Module
-index.bundle.js:sourcemap:731 [CodeEditor] component did mount:
-# 
-# ここまででマウント完了
-# 
-index.bundle.js:sourcemap:755 [CodeEditor] onChange useEffect:
-index.bundle.js:sourcemap:785 [MonacoEditor] component did update
-# 
-# 再レンダリング完了？
-# 
-# ここで_cleanup()が呼び出されている理由がわからん
-index.bundle.js:sourcemap:791 [CodeEditor] _cleanup()
-# このuseEffect()が反応している理由は？
-# 先の_createEditor()でsetIsEditor(true)したがまだ反映されていない
-index.bundle.js:sourcemap:720 [CodeEditor] Generate editor?:false
-index.bundle.js:sourcemap:684 [CodeEditor] _createEditor:
-# どうしてまたdidMountのuseEffect()が反応しているの？
-index.bundle.js:sourcemap:731 [CodeEditor] component did mount:
-index.bundle.js:sourcemap:755 [CodeEditor] onChange useEffect:
-index.bundle.js:sourcemap:785 [MonacoEditor] component did update
-index.bundle.js:sourcemap:720 [CodeEditor] Generate editor?:true
-index.bundle.js:sourcemap:755 [CodeEditor] onChange useEffect:
-index.bundle.js:sourcemap:759 [CodeEditor] reset _subscription
-index.bundle.js:sourcemap:785 [MonacoEditor] component did update
-index.bundle.js:sourcemap:233986 [webpack-dev-server] Disconnected!
-index.bundle.js:sourcemap:233986 [webpack-dev-server] Trying to reconnect...
-```
-
-#### useEffect
-
-#### react docs: useEffect
-
-- React外部のシステムと同期をとる処理をしないならuseEffect()はそのコンポーネントに必要ないかもしれない
-
-- strict modeが有効な時は、**Reactは、最初の実際のセットアップの前に、追加の開発のみのセットアップとクリーンアップサイクルを1回実行します。**
-
-これは、クリーンアップ ロジックがセットアップ ロジックを "ミラーリング" し、セットアップが行っていることをすべて停止または元に戻すことを確認するストレス テストです。これが問題になる場合は、クリーンアップ機能を実装してください。
-
-- useEffectの依存関係に、コンポーネント内部で定義した変数や関数を含めることは、本来よりも余計な再レンダリングを引き起こすリスクがある。
-
-これやっちゃっているかも...
+`useEffect.md`を参考に。
 
 ```TypeScript
-// isEditorReadyはstate管理
-// _createEditor()はuseCallback生成
-useEffect(() => {
 
-    !isEditorReady && _createEditor();
-}, [isEditorReady, _createEditor]);
+const MonacoEditor = ({
+    beforeMount,
+    onMount,
+    onChange, 
+    onValidate,
+    ...options
+}: iParamsMonacoEditor) => {
+    const [isEditorReady, setIsEditorReady] = useState<boolean>(false);
+    const _editor = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+    const _subscription = useRef<Monaco.IDisposable>();
+    const _refEditorContainer = useRef<HTMLDivElement>(null);
+    // Refs each handler
+    const _beforeMount = useRef(beforeMount);
+    // Flag that expresses beforeMount is already invoked.
+    const _preventBeforeMount = useRef<boolean>(false);
+    // Workers
+    const esLinteWorker = useMemo(() => new Worker(new URL('/src/workers/ESLint.worker.ts', import.meta.url)), []);
+    const jsxHighlightWorker = useMemo(() => new Worker(new URL('/src/workers/JSXHighlight.worker.ts', import.meta.url)), []);
+
+    /**
+     * 
+     * - Create editor and pass instance to _editor.current
+     * - Run beforeMount.current() before editor generated
+     * */ 
+    const _createEditor = useCallback(() => {
+        
+        // DEBUG:
+        console.log("[CodeEditor] _createEditor:");
+        
+        if(!_refEditorContainer.current) return;
+
+        // Run beforeMount()
+        // if _preventBeforeMount.current is false
+        if(!_preventBeforeMount.current) _beforeMount.current(monaco);
+
+        _editor.current = monaco.editor.create(
+            _refEditorContainer.current, 
+            options
+        );
+
+        setIsEditorReady(true);
+        _preventBeforeMount.current = true;
+    }, [options]);
+    
+    useEffect(() => {
+        
+        // DEBUG:
+        console.log("[CodeEditor] Generate editor?:" + isEditorReady);
+
+        !isEditorReady && _createEditor();
+    }, [isEditorReady, _createEditor]);
+
+    useEffect(() => {
+        // DEBUG:
+        console.log("[CodeEditor] component did mount:");
+        
+        if(window.Worker) {
+            esLinteWorker.addEventListener('message', (e) => {
+                // Invoke updater
+            }, false);
+            jsxHighlightWorker.addEventListener('message', (e) => {
+                // Invoke updater
+            }, false);
+        }
+
+        return () => {
+            _cleanUp();
+        }
+    }, []);
+
+    useEffect(() => {
+        // DEBUG:
+        console.log("[CodeEditor] onChange useEffect:");
+
+        if(isEditorReady && onChange !== undefined) {
+
+            // DEBUG:
+            console.log("[CodeEditor] reset _subscription");
+
+            if(_subscription.current) _subscription.current.dispose();
+            _subscription.current = _editor.current?.onDidChangeModelContent(() => {
+
+                // DEBUG:
+                console.log("[CodeEditor] _subscription callback:");
+                
+                const value = _editor.current?.getValue();
+                onChange(value === undefined ? "" : value);
+                // TODO: ESLintworkerへ値を送るのもここで
+            });
+        }
+    }, [onChange, isEditorReady]);
+
+    useEffect(() => {
+        if(isEditorReady) {
+            // TODO: makerに関しては何をするのか理解
+        }
+
+    }, [onValidate, isEditorReady]);
+
+    // DEBUG:
+    useEffect(() => {
+        console.log("[MonacoEditor] component did update");
+    });
+
+    // Clean up code
+    const _cleanUp = (): void => {
+        // DEBUG:
+        console.log("[CodeEditor] _cleanup()");
+
+        if(_editor.current) _editor.current.dispose();
+        if(_subscription.current) _subscription.current.dispose();
+        esLinteWorker.terminate();
+        jsxHighlightWorker.terminate();
+    };
+
+
+    return (
+        // ...
+    );
+};
 ```
 
-Reactは必要であれば何度もuseEffect()のsetup関数とcleanup関数を呼び出します。
+```bash
+# -- strict mode --
+# 
+# そのため、すべてのuseEffectはstress-testのため一度実行される
+[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.
+[HMR] Waiting for update signal from WDS...
+[reportWebVitals]
+# 
+# useEffect([isEditorReady, _createEditor])
+[CodeEditor] Generate editor?:false
+# _createEditor()
+[CodeEditor] _createEditor:
+[App] Before Mount:
+Module
+# useEffect([])
+[CodeEditor] component did mount:
 
-setup関数はマウント時に
+[CodeEditor] onChange useEffect:
+[MonacoEditor] component did update
+[CodeEditor] _cleanup()
+# 
+# 多分ここまでで開発モード中のuseEffectのstress-testは終了したはず...
+# 
+[CodeEditor] Generate editor?:false
+[CodeEditor] _createEditor:
+# 
+# しかし、Reactive valueは同じ値で実行されるならここで再度beforeMount()を呼び出さなくてはならないが、呼び出されていない...
+# 
+[CodeEditor] component did mount:
+[CodeEditor] onChange useEffect:
+[MonacoEditor] component did update
+[webpack-dev-server] Disconnected!
+[webpack-dev-server] Trying to reconnect...
+[CodeEditor] Generate editor?:true
+[CodeEditor] onChange useEffect:
+[CodeEditor] reset _subscription
+[MonacoEditor] component did update
+```
+問題：BeforeMountがstress-testの後のuseEffectの実行時に呼び出されていない
 
-毎レンダリング時に依存関係が変更されていれば、
+理由は_preventBeforeMountはrefで参照している値であるため、Reactive valueでないことからstress-testの前後で違う値でuseEffectのコードが実行されているからである。
 
-- まず古いpropsとstateを基にcleanupコードが実行される
-- それからsetupコードが新しいpropsとstateを基に実行される
-
-unmount時にコンポーネントが取り除かれるときにcleanupコードが実行される
-
-TODO: つづきを。
-
-#### You might not need an Effect.
-
-https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state
-
-**既存のpropsとstateで再計算できる物事は、stateへ入れるべきでない。かわりに再レンダリング中に再計算せよ**
-
-再レンダリング中の再計算とは：
-
-Reactコンポーネントは再レンダリング時にファイル全体が再実行されるので
-
-Reactメカニズムでない関数や変数がサイド呼出されることになるため
-
-それ等を利用することである。
-
-
+これはcleanupコード次第でどうにかなるのか？
 
 #### 実装：didMount
 

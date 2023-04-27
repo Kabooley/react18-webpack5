@@ -99,6 +99,8 @@ const MonacoEditor = ({
         
         // DEBUG:
         console.log("[CodeEditor] Generate editor?:" + isEditorReady);
+        console.log("isEditorReady:" + isEditorReady);
+        console.log("_preventBeforeMount.current:" + _preventBeforeMount.current);
 
         !isEditorReady && _createEditor();
     }, [isEditorReady, _createEditor]);
@@ -141,6 +143,8 @@ const MonacoEditor = ({
 
             // DEBUG:
             console.log("[CodeEditor] reset _subscription");
+            console.log("isEditorReady:" + isEditorReady);
+            console.log("_preventBeforeMount.current:" + _preventBeforeMount.current);
 
             if(_subscription.current) _subscription.current.dispose();
             _subscription.current = _editor.current?.onDidChangeModelContent(() => {
@@ -170,6 +174,8 @@ const MonacoEditor = ({
     // DEBUG:
     useEffect(() => {
         console.log("[MonacoEditor] component did update");
+        console.log("isEditorReady:" + isEditorReady);
+        console.log("_preventBeforeMount.current:" + _preventBeforeMount.current);
     });
 
     // Clean up code
@@ -181,6 +187,12 @@ const MonacoEditor = ({
         if(_subscription.current) _subscription.current.dispose();
         esLinteWorker.terminate();
         jsxHighlightWorker.terminate();
+    };
+
+    // To DEBUG: purpose only
+    const _log = () => {
+        console.log("isEditorReady:" + isEditorReady);
+        console.log("_preventBeforeMount.current:" + _preventBeforeMount.current);
     };
 
 
