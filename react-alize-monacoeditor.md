@@ -4,6 +4,7 @@
 
 - TODO: 情報の整理
 - TODO: ノートの整理
+- TODO: 処理が重すぎるのか動作が遅い
 
 ## 参考
 
@@ -399,6 +400,82 @@ Module
 
 #### 実装：didMount
 
+以下の条件の時にOnMountを実行させる
+
+```TypeScript
+const _isMounted = useRef<boolean>(false);
+
+/**
+ * Mount時にのみ発火させたいので
+ * 依存関係は空にしなくてはならない
+ * */ 
+useEffect(() => {
+    // ...
+}, []);
+
+
+useEffect(() => {
+    if(!_isMounted.current && isEditorReady && _editor.current) {
+        onMount(_editor.current, monaco);
+        _isMounted.current = true;
+    }
+    // refは依存関係に含める必要がない
+}, [isEditorReady]);
+```
+
+結果：
+
+```bash
+reportWebVitals.ts:6 [reportWebVitals]
+MonacoEditor.tsx:102 [CodeEditor] Generate editor?:false
+MonacoEditor.tsx:103 isEditorReady:false
+MonacoEditor.tsx:104 _preventBeforeMount.current:false
+MonacoEditor.tsx:61 [CodeEditor] _createEditor:
+App.tsx:43 [App] Before Mount:
+App.tsx:44 Module
+MonacoEditor.tsx:116 [CodeEditor] component did mount:(Not about Monaco-Editor)
+MonacoEditor.tsx:156 [CodeEditor] onChange useEffect:
+MonacoEditor.tsx:192 [MonacoEditor] component did update
+MonacoEditor.tsx:193 isEditorReady:false
+MonacoEditor.tsx:194 _preventBeforeMount.current:true
+MonacoEditor.tsx:200 [CodeEditor] _cleanup()
+#)
+# Done stress-test:
+# 
+# 以下、stress-test終了後のマウント実行
+# isEditorReady: false かつ _preventBeforeMount: true
+# 
+MonacoEditor.tsx:102 [CodeEditor] Generate editor?:false
+MonacoEditor.tsx:103 isEditorReady:false
+MonacoEditor.tsx:104 _preventBeforeMount.current:true
+MonacoEditor.tsx:61 [CodeEditor] _createEditor:
+MonacoEditor.tsx:116 [CodeEditor] component did mount:(Not about Monaco-Editor)
+# isEditorReady: falseのままなのでonMountは実行されない
+MonacoEditor.tsx:156 [CodeEditor] onChange useEffect:
+MonacoEditor.tsx:192 [MonacoEditor] component did update
+MonacoEditor.tsx:193 isEditorReady:false
+MonacoEditor.tsx:194 _preventBeforeMount.current:true
+# 
+# 以下、マウント実行後にisEditorReady: trueに変更されたため再度実行
+# 
+MonacoEditor.tsx:102 [CodeEditor] Generate editor?:true
+MonacoEditor.tsx:103 isEditorReady:true
+MonacoEditor.tsx:104 _preventBeforeMount.current:true
+# OnMountは実行されているみたい
+MonacoEditor.tsx:141 [MonacoEditor] On Mount
+App.tsx:49 [App] Did Mount:
+App.tsx:50 StandaloneEditor
+App.tsx:51 Module
+MonacoEditor.tsx:156 [CodeEditor] onChange useEffect:
+MonacoEditor.tsx:161 [CodeEditor] reset _subscription
+MonacoEditor.tsx:162 isEditorReady:true
+MonacoEditor.tsx:163 _preventBeforeMount.current:true
+MonacoEditor.tsx:192 [MonacoEditor] component did update
+MonacoEditor.tsx:193 isEditorReady:true
+MonacoEditor.tsx:194 _preventBeforeMount.current:true
+```
+
+
 #### 実装：onChange
 
 Reactの再レンダリングメカニズムと連携するためには、
@@ -583,6 +660,45 @@ setValue()が再レンダリングを引き起こしているのが確認でき�
 
 #### 実装：onValidate
 
+```TypeScript
+/***
+ * On Validate: 
+ * 
+ * modelに対してmarkerが変更されたらonValidate()を実行する
+ * 
+ * - リスナの生成
+ * - リスナのクリーンアップコードの登録
+ * 
+ * たとえば、
+ * monaco.editor.setModelMarkers()でmodelに対してmarkerをリセットしたら、
+ * そのリセットが発生したuriをonValidateへ伝える。
+ * */
+useEffect(() => {
+    if(isEditorReady) {
+        const didChangeMarkerListener = monaco.editor.onDidChangeMarkers(
+            (uris) => {
+                const editorUri = _editor.current!.getModel()?.uri;
+
+                if(editorUri !== undefined) {
+                    const currentEditorHasMarkerChanges = uris.find((uri) => uri.path === editorUri.path);
+                    if (currentEditorHasMarkerChanges) {
+                        const markers = monaco.editor.getModelMarkers({
+                        resource: editorUri,
+                        });
+                        onValidate(markers);
+                    }
+                }
+            }
+        );
+
+        return () => {
+            didChangeMarkerListener?.dispose();
+        }
+    }
+}, [onValidate, isEditorReady]);
+
+```
+
 #### 実装：ESLint
 
 #### 参考repoのlintの適用手順の分析
@@ -621,87 +737,23 @@ prettierにする。
 
 参考repoの方法を採用してみる。
 
-#### `languages.registerDocumentFormattingEditProvider()`
+#### 一度登録すれ常にformattingしてくれるってこと？
 
-https://microsoft.github.io/monaco-editor/docs.html#functions/languages.registerDocumentFormattingEditProvider.html
+そこがわからん。
 
-> Register a formatter that can handle only entire models.
+https://stackoverflow.com/questions/73970692/not-working-in-prettier-formatting-using-monaco-editor
 
-```TypeScript
-/**
- * Register a formatter that can handle only entire models.
- */
-export function registerDocumentFormattingEditProvider(
-	// `javascript`や`typescript`などの言語
-	languageSelector: LanguageSelector, 
-	// 
-	provider: DocumentFormattingEditProvider
-): IDisposable;
+無効化を忘れているかも？
 
-/**
- * The document formatting provider interface defines the contract between extensions and
- * the formatting-feature.
- */
-export interface DocumentFormattingEditProvider {
-	readonly displayName?: string;
-	/**
-	 * Provide formatting edits for a whole document.
-	 */
-	provideDocumentFormattingEdits(model: editor.ITextModel, options: FormattingOptions, token: CancellationToken): ProviderResult<TextEdit[]>;
-};
-
-/**
- * Interface used to format a model
- */
-export interface FormattingOptions {
-	/**
-	 * Size of a tab in spaces.
-	 */
-	tabSize: number;
-	/**
-	 * Prefer spaces over tabs.
-	 */
-	insertSpaces: boolean;
-	/**
-	 * The list of multiple ranges to format at once, if the provider supports it.
-	 */
-	ranges?: Range[];
-}
-
-export interface CancellationToken {
-    /**
-     * A flag signalling is cancellation has been requested.
-     */
-    readonly isCancellationRequested: boolean;
-    /**
-     * An event which fires when cancellation is requested. This event
-     * only ever fires `once` as cancellation can only happen once. Listeners
-     * that are registered after cancellation will be called (next event loop run),
-     * but also only once.
-     *
-     * @event
-     */
-    readonly onCancellationRequested: (listener: (e: any) => any, thisArgs?: any, disposables?: IDisposable[]) => IDisposable;
-}
-
-/**
- * A provider result represents the values a provider, like the {@link HoverProvider},
- * may return. For once this is the actual result type `T`, like `Hover`, or a thenable that resolves
- * to that type `T`. In addition, `null` and `undefined` can be returned - either directly or from a
- * thenable.
- */
-export type ProviderResult<T> = T | undefined | null | Thenable<T | undefined | null>;
-
-```
+TODO: 無効化を試す
 
 #### 実装してみる
 
-[beforemount](#beforemount)より、
+monaco react boilerplateでは一度の登録で済んでいるみたい。
 
-@monaco-editor/react同様、親コンポーネントで実行する内容を定義する。
+講義みたいにuseEffectで毎度呼び出す必要がない（はず）
 
-beforeMount()はmonacoAPIインスタンスを引数に取る
-
+- `languages.registerDocumentFormattingEditProvider()`はモデルの中身をフォーマッティングしてくれるフォーマッタを登録する。
 
 ```TypeScript
 // @親コンポーネント
@@ -711,7 +763,7 @@ const beforeMount: /* TODO: define type*/.beforeMount = (
 	m: monaco
 ) => {
 	// Apply format setting
-	monaco.language.registerDocument.FormattingEditProvider(
+	monaco.language.registerDocumentFormattingEditProvider(
 		"javascript",　
 		{
 			async provideDocumentFormattingEdits(model) {

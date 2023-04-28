@@ -16,10 +16,10 @@ import * as monaco from 'monaco-editor';
 import type * as Monaco from 'monaco-editor';
 
 export type beforeMount = (monaco: typeof Monaco) => void;
-export type onMount = (editor: typeof Monaco.editor, monaco: typeof Monaco) => void;
+export type onMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => void;
 // TODO: change eventも渡すように
 export type onChange = (value: string) => void;
-export type onValidate = (value: string) => void;
+export type onValidate = (markers: monaco.editor.IMarker[]) => void;
 
 
 interface iParamsMonacoEditor extends Monaco.editor.IStandaloneEditorConstructionOptions {
@@ -45,6 +45,7 @@ const MonacoEditor = ({
     const _beforeMount = useRef(beforeMount);
     // Flag that expresses beforeMount is already invoked.
     const _preventBeforeMount = useRef<boolean>(false);
+    const _isMounted = useRef<boolean>(false);
     // Workers
     const esLinteWorker = useMemo(() => new Worker(new URL('/src/workers/ESLint.worker.ts', import.meta.url)), []);
     const jsxHighlightWorker = useMemo(() => new Worker(new URL('/src/workers/JSXHighlight.worker.ts', import.meta.url)), []);
@@ -99,8 +100,8 @@ const MonacoEditor = ({
         
         // DEBUG:
         console.log("[CodeEditor] Generate editor?:" + isEditorReady);
-        console.log("isEditorReady:" + isEditorReady);
-        console.log("_preventBeforeMount.current:" + _preventBeforeMount.current);
+        // console.log("isEditorReady:" + isEditorReady);
+        // console.log("_preventBeforeMount.current:" + _preventBeforeMount.current);
 
         !isEditorReady && _createEditor();
     }, [isEditorReady, _createEditor]);
@@ -112,7 +113,7 @@ const MonacoEditor = ({
      * */ 
     useEffect(() => {
         // DEBUG:
-        console.log("[CodeEditor] component did mount:");
+        console.log("[CodeEditor] component did mount:(Not about Monaco-Editor)");
         
         if(window.Worker) {
             esLinteWorker.addEventListener('message', (e) => {
@@ -130,6 +131,21 @@ const MonacoEditor = ({
         }
     }, []);
 
+    /***
+     * Run onMount()
+     * 
+     * */
+    useEffect(() => {
+        if(!_isMounted.current && isEditorReady && _editor.current) {
+            // DEBUG: 
+            console.log("[MonacoEditor] On Mount");
+
+            onMount(_editor.current, monaco);
+            _isMounted.current = true;
+        }
+        // refは依存関係に含める必要がない
+    }, [isEditorReady]); 
+
     /**
      * On Value Change:
      * 
@@ -143,8 +159,8 @@ const MonacoEditor = ({
 
             // DEBUG:
             console.log("[CodeEditor] reset _subscription");
-            console.log("isEditorReady:" + isEditorReady);
-            console.log("_preventBeforeMount.current:" + _preventBeforeMount.current);
+            // console.log("isEditorReady:" + isEditorReady);
+            // console.log("_preventBeforeMount.current:" + _preventBeforeMount.current);
 
             if(_subscription.current) _subscription.current.dispose();
             _subscription.current = _editor.current?.onDidChangeModelContent(() => {
@@ -160,13 +176,38 @@ const MonacoEditor = ({
     }, [onChange, isEditorReady]);
 
     /***
-     * On Validate:
+     * On Validate: 
      * 
-     * Update marker
+     * modelに対してmarkerが変更されたらonValidate()を実行する
+     * 
+     * - リスナの生成
+     * - リスナのクリーンアップコードの登録
+     * 
+     * たとえば、
+     * monaco.editor.setModelMarkers()でmodelに対してmarkerをリセットしたら、
+     * そのリセットが発生したuriをonValidateへ伝える。
      * */
     useEffect(() => {
         if(isEditorReady) {
-            // TODO: makerに関しては何をするのか理解
+            const didChangeMarkerListener = monaco.editor.onDidChangeMarkers(
+                (uris) => {
+                    const editorUri = _editor.current!.getModel()?.uri;
+
+                    if(editorUri !== undefined) {
+                        const currentEditorHasMarkerChanges = uris.find((uri) => uri.path === editorUri.path);
+                        if (currentEditorHasMarkerChanges) {
+                          const markers = monaco.editor.getModelMarkers({
+                            resource: editorUri,
+                          });
+                          onValidate(markers);
+                        }
+                    }
+                }
+            );
+
+            return () => {
+                didChangeMarkerListener?.dispose();
+            }
         }
 
     }, [onValidate, isEditorReady]);
@@ -174,8 +215,8 @@ const MonacoEditor = ({
     // DEBUG:
     useEffect(() => {
         console.log("[MonacoEditor] component did update");
-        console.log("isEditorReady:" + isEditorReady);
-        console.log("_preventBeforeMount.current:" + _preventBeforeMount.current);
+        // console.log("isEditorReady:" + isEditorReady);
+        // console.log("_preventBeforeMount.current:" + _preventBeforeMount.current);
     });
 
     // Clean up code
@@ -188,13 +229,6 @@ const MonacoEditor = ({
         esLinteWorker.terminate();
         jsxHighlightWorker.terminate();
     };
-
-    // To DEBUG: purpose only
-    const _log = () => {
-        console.log("isEditorReady:" + isEditorReady);
-        console.log("_preventBeforeMount.current:" + _preventBeforeMount.current);
-    };
-
 
     return (
         <section style={{width: "100%", height: "90vh"}}>

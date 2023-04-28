@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import * as monaco from 'monaco-editor';
 import MonacoEditor from './components/MonacoEditor';
 import type { beforeMount, onMount, onChange, onValidate } from "./components/MonacoEditor";
+import prettier from 'prettier';
+import parser from 'prettier/parser-babel';
 
 // @ts-ignore
 self.MonacoEnvironment = {
@@ -34,8 +36,37 @@ const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions = 
     
 };
 
+const setFormatter = (m: typeof monaco): void => {
+    m.languages.registerDocumentFormattingEditProvider(
+		"javascript",　
+		{
+			async provideDocumentFormattingEdits(
+                model, options, token) {
+				const formatted = await prettier.format(
+					model.getValue(), 
+					{
+						parser: 'babel',
+						plugins: [parser],
+						useTabs: false,
+						semi: true,
+						singleQuote: true,
+					})
+					.replace(/\n$/, '');
+
+                    // DEBUG:
+                    console.log(formatted);
+
+				return [{
+					range: model.getFullModelRange(),
+					text: formatted,
+				}];
+			}
+		})
+};
+
 const App = () => {
-    const [value, setValue] = useState<string>("");
+    // const [value, setValue] = useState<string>("");
+    const _monacoRef = useRef<typeof monaco>();
 
     const beforeMount: beforeMount = (m) => {
         // format setting
@@ -49,6 +80,9 @@ const App = () => {
         console.log("[App] Did Mount:");
         console.log(e);
         console.log(m);
+
+        _monacoRef.current = m;
+        setFormatter(m);
     };
 
     const onChange: onChange = (v) => {
@@ -56,12 +90,13 @@ const App = () => {
         console.log("[App] onChange:");
         console.log(v);
         // setValue(v);
+        if(_monacoRef.current) setFormatter(_monacoRef.current!);
     };
 
-    const onValidate: onValidate = (value) => {
+    const onValidate: onValidate = (markers) => {
         // DEBUG:
         console.log("[App] onValidate:");
-        console.log(value);
+        console.log(markers);
     };
 
     return (
