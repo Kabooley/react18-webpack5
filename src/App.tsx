@@ -37,6 +37,9 @@ const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions = 
 };
 
 const setFormatter = (m: typeof monaco): void => {
+    // DEBUG:
+    console.log("[App] setFormatter");
+
     m.languages.registerDocumentFormattingEditProvider(
 		"javascript",　
 		{
@@ -50,6 +53,7 @@ const setFormatter = (m: typeof monaco): void => {
 						useTabs: false,
 						semi: true,
 						singleQuote: true,
+                        tabWidth: 2
 					})
 					.replace(/\n$/, '');
 
@@ -72,25 +76,19 @@ const App = () => {
         // format setting
         // DEBUG:
         console.log("[App] Before Mount:");
-        console.log(m);
+        setFormatter(m);
     };
 
     const onDidMount: onMount = (e, m) => {
         // DEBUG:
         console.log("[App] Did Mount:");
-        console.log(e);
-        console.log(m);
 
         _monacoRef.current = m;
-        setFormatter(m);
     };
 
     const onChange: onChange = (v) => {
         // DEBUG:
         console.log("[App] onChange:");
-        console.log(v);
-        // setValue(v);
-        if(_monacoRef.current) setFormatter(_monacoRef.current!);
     };
 
     const onValidate: onValidate = (markers) => {

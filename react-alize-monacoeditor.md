@@ -721,39 +721,23 @@ TODO:
 
 ## 実装：format
 
-prettierにする。
+- monaco-editorでは言語ごとにformat内容を登録しなくてはならない
+- `languages.registerDocumentFormattingEditProvider()`を使って対象言語とformat処理するコールバックを登録する
+- udemyの講義の方とは異なり、一度登録すればuseEffect()などで何度も呼出す必要がない
 
-デフォルトでformattingの設定関数は備わっている
+#### formatは自動でしてくれる？
 
-`languages.registerDocumentFormattingEditProvider()`
+いいえ。
 
-講義で設定していたprettierの設定を導入できるようにする
+UI上のeditorを右クリックしたときに現れるコンテキストメニューに
 
-@monaco-editor/reactではformatの機能は実装なし。
+formatのメニューがあるのでそれをクリックするとformatしてくれる。
 
-参考repoの方では一度だけ呼び出していた。
-
-講義の方ではmonaco-editorの機能なしで自前で強制的にフォーマットしていた
-
-参考repoの方法を採用してみる。
-
-#### 一度登録すれ常にformattingしてくれるってこと？
-
-そこがわからん。
-
-https://stackoverflow.com/questions/73970692/not-working-in-prettier-formatting-using-monaco-editor
-
-無効化を忘れているかも？
-
-TODO: 無効化を試す
 
 #### 実装してみる
 
-monaco react boilerplateでは一度の登録で済んでいるみたい。
-
-講義みたいにuseEffectで毎度呼び出す必要がない（はず）
-
 - `languages.registerDocumentFormattingEditProvider()`はモデルの中身をフォーマッティングしてくれるフォーマッタを登録する。
+- 設定はbeforeMountで呼出す
 
 ```TypeScript
 // @親コンポーネント
@@ -790,6 +774,8 @@ const beforeMount: /* TODO: define type*/.beforeMount = (
 	// eslintを使うならデフォルトのlintの無効化とか
 }
 ```
+
+正常に動いているみたい。
 
 ## 参考repoのwebworkerとreactの連携のさせ方
 
