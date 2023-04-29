@@ -25,8 +25,8 @@ self.MonacoEnvironment = {
 };
 
 const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
-    value: "// First line\nfunction hello() {\n\talert('Hello world!');\n}\n// Last line",
-	language: "javascript",
+    value: "// First line\nfunction hello(): void {\n\talert('Hello world!');\n}\n// Last line",
+	language: "typescript",
 
 	lineNumbers: "off",
 	roundedSelection: false,
@@ -36,6 +36,10 @@ const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions = 
     
 };
 
+/**
+ * Set formatting rules.
+ * 
+ * */ 
 const setFormatter = (m: typeof monaco): void => {
     // DEBUG:
     console.log("[App] setFormatter");
@@ -68,6 +72,33 @@ const setFormatter = (m: typeof monaco): void => {
 		})
 };
 
+/***JSX Highlight setup
+ * 
+ * https://github.com/cancerberoSgx/jsx-alone/blob/master/jsx-explorer/HOWTO_JSX_MONACO.md
+ * 
+ * これとmonaco.editor.createの組み合わせ
+ * */ 
+const setJSXHighlighting = (m: typeof monaco) => {
+    m.languages.typescript.typescriptDefaults.setCompilerOptions({
+        target: m.languages.typescript.ScriptTarget.ES2016,
+        allowNonTsExtensions: true,
+        moduleResolution: m.languages.typescript.ModuleResolutionKind.NodeJs,
+        module: m.languages.typescript.ModuleKind.CommonJS,
+        noEmit: true,
+        typeRoots: ["node_modules/@types"],
+        jsx: m.languages.typescript.JsxEmit.React,
+        jsxFactory: 'JSXAlone.createElement',
+      })
+      
+    //   editor = m.editor.create(containerEl, {
+    //     model: m.editor.createModel(code, "typescript", m.Uri.parse("file:///main.tsx")),
+    //     language: 'typescript',
+    //   })
+      
+    //   m.editor.createModel(jsxDefinitionsCode, "typescript", m.Uri.parse("file:///index.d.ts"))
+};
+
+
 const App = () => {
     // const [value, setValue] = useState<string>("");
     const _monacoRef = useRef<typeof monaco>();
@@ -77,6 +108,8 @@ const App = () => {
         // DEBUG:
         console.log("[App] Before Mount:");
         setFormatter(m);
+        // add condition if language is typescript or not.
+        setJSXHighlighting(m);
     };
 
     const onDidMount: onMount = (e, m) => {

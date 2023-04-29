@@ -719,6 +719,191 @@ TODO:
 
 ## 実装：JSX Syntax Highlight
 
+参考：
+
+https://github.com/microsoft/monaco-editor/issues/264
+
+参考にならん！
+
+https://blog.expo.dev/building-a-code-editor-with-monaco-f84b3a06deaf
+
+#Fixing syntax highlighting for JSX
+
+上によると...
+
+`editor.ITextModel.deltaDecorations()`
+`editor.ICodeEditor.deltaDecorations()`
+
+を使ってjsxの色付けを反映させる模様。
+
+#### `editor.ICodeEditor.deltaDecorations()`
+
+NOTE: deprecated.
+
+https://microsoft.github.io/monaco-editor/docs.html#interfaces/editor.ICodeEditor.html#deltaDecorations
+
+代わりに`createDecorationsCollection`を使えとのこと。
+
+#### `createDecorationsCollection`
+
+https://microsoft.github.io/monaco-editor/docs.html#interfaces/editor.IStandaloneCodeEditor.html#createDecorationsCollection
+
+> 装飾のコレクションを作成します。このコレクションを通じて追加されたすべての装飾は、エディターの ownerId を取得します (つまり、他のエディターには表示されません)。これらの装飾は、エディターのモデルが変更されると自動的にクリアされます。
+
+TODO: わからんところ。createDecorationsCollection()は呼出すだけでいいのか
+
+```TypeScript
+// https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IModelDecorationOptions.html
+const options: IModelDecorationOptions = {
+    // cssファイルを用意すれば独自のスタイリングを適用できる模様
+};
+
+// https://microsoft.github.io/monaco-editor/typedoc/interfaces/IRange.html
+const range: IRange = /*  */;
+
+// Syntax
+const decorationCollection: IEditorDecorationsCollection = editorInstance.createDecorationsCollection({
+    options,    // どういうデコレーションを指定するのか
+    range       // どの範囲に適用するのか
+});
+
+// decorationCollectionはどうすればいいのだ？
+```
+```TypeScript
+    /**
+     * Options for a model decoration.
+     */
+    export interface IModelDecorationOptions {
+        /**
+         * Customize the growing behavior of the decoration when typing at the edges of the decoration.
+         * Defaults to TrackedRangeStickiness.AlwaysGrowsWhenTypingAtEdges
+         */
+        stickiness?: TrackedRangeStickiness;
+        /**
+         * CSS class name describing the decoration.
+         */
+        className?: string | null;
+        blockClassName?: string | null;
+        /**
+         * Indicates if this block should be rendered after the last line.
+         * In this case, the range must be empty and set to the last line.
+         */
+        blockIsAfterEnd?: boolean | null;
+        blockDoesNotCollapse?: boolean | null;
+        blockPadding?: [top: number, right: number, bottom: number, left: number] | null;
+        /**
+         * Message to be rendered when hovering over the glyph margin decoration.
+         */
+        glyphMarginHoverMessage?: IMarkdownString | IMarkdownString[] | null;
+        /**
+         * Array of MarkdownString to render as the decoration message.
+         */
+        hoverMessage?: IMarkdownString | IMarkdownString[] | null;
+        /**
+         * Should the decoration expand to encompass a whole line.
+         */
+        isWholeLine?: boolean;
+        /**
+         * Always render the decoration (even when the range it encompasses is collapsed).
+         */
+        showIfCollapsed?: boolean;
+        /**
+         * Specifies the stack order of a decoration.
+         * A decoration with greater stack order is always in front of a decoration with
+         * a lower stack order when the decorations are on the same line.
+         */
+        zIndex?: number;
+        /**
+         * If set, render this decoration in the overview ruler.
+         */
+        overviewRuler?: IModelDecorationOverviewRulerOptions | null;
+        /**
+         * If set, render this decoration in the minimap.
+         */
+        minimap?: IModelDecorationMinimapOptions | null;
+        /**
+         * If set, the decoration will be rendered in the glyph margin with this CSS class name.
+         */
+        glyphMarginClassName?: string | null;
+        /**
+         * If set, the decoration will be rendered in the lines decorations with this CSS class name.
+         */
+        linesDecorationsClassName?: string | null;
+        /**
+         * If set, the decoration will be rendered in the lines decorations with this CSS class name, but only for the first line in case of line wrapping.
+         */
+        firstLineDecorationClassName?: string | null;
+        /**
+         * If set, the decoration will be rendered in the margin (covering its full width) with this CSS class name.
+         */
+        marginClassName?: string | null;
+        /**
+         * If set, the decoration will be rendered inline with the text with this CSS class name.
+         * Please use this only for CSS rules that must impact the text. For example, use `className`
+         * to have a background color decoration.
+         */
+        inlineClassName?: string | null;
+        /**
+         * If there is an `inlineClassName` which affects letter spacing.
+         */
+        inlineClassNameAffectsLetterSpacing?: boolean;
+        /**
+         * If set, the decoration will be rendered before the text with this CSS class name.
+         */
+        beforeContentClassName?: string | null;
+        /**
+         * If set, the decoration will be rendered after the text with this CSS class name.
+         */
+        afterContentClassName?: string | null;
+        /**
+         * If set, text will be injected in the view after the range.
+         */
+        after?: InjectedTextOptions | null;
+        /**
+         * If set, text will be injected in the view before the range.
+         */
+        before?: InjectedTextOptions | null;
+    }
+
+
+    /**
+     * A collection of decorations
+     */
+    export interface IEditorDecorationsCollection {
+        /**
+         * An event emitted when decorations change in the editor,
+         * but the change is not caused by us setting or clearing the collection.
+         */
+        onDidChange: IEvent<IModelDecorationsChangedEvent>;
+        /**
+         * Get the decorations count.
+         */
+        length: number;
+        /**
+         * Get the range for a decoration.
+         */
+        getRange(index: number): Range | null;
+        /**
+         * Get all ranges for decorations.
+         */
+        getRanges(): Range[];
+        /**
+         * Determine if a decoration is in this collection.
+         */
+        has(decoration: IModelDecoration): boolean;
+        /**
+         * Replace all previous decorations with `newDecorations`.
+         */
+        set(newDecorations: IModelDeltaDecoration[]): void;
+        /**
+         * Remove all previous decorations.
+         */
+        clear(): void;
+    }
+
+```
+
+
 ## 実装：format
 
 - monaco-editorでは言語ごとにformat内容を登録しなくてはならない
