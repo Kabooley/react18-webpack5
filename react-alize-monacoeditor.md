@@ -717,7 +717,7 @@ TODO:
 - eslintはブラウザをサポートしないので
 
 
-## 実装：JSX Syntax Highlight
+#### 実装：JSX Syntax Highlight
 
 参考：
 
@@ -903,8 +903,50 @@ const decorationCollection: IEditorDecorationsCollection = editorInstance.create
 
 ```
 
+#### 参考サイト分析
 
-## 実装：format
+https://blog.expo.dev/building-a-code-editor-with-monaco-f84b3a06deaf
+
+https://github.com/codesandbox/codesandbox-client/blob/196301c919dd032dccc08cbeb48cf8722eadd36b/packages/app/src/app/components/CodeEditor/Monaco/workers/syntax-highlighter.js
+
+- workerは`IModelDecoration`と`IRange`の各プロパティを含む独自のオブジェクトである`classification`を生成する
+- `classfication`をworkerが生成して、メインスレッドはそれを受け取って`createDecorationCollection`へわたすことでハイライトを適用させる
+
+ということで、classificationの型は`IModelDelateDecoration`...ではなく、
+
+`IModelDelateDecoration`のプロパティになるデータからなるおぶじぇくとである。
+
+`classification.type`,`classification.kind`,`classification.parentKind`は、
+`IModelDelateDecoration.inlineClassName`に渡す値に使われるので
+必然的にstring型になる...はず
+
+
+```TypeScript
+
+interface iClassification {
+    // IRange:
+    startColumn: number;
+    endColumn: number;
+    startLineNumber: number;
+    endLineNumber: number;
+
+    // Related to IModelDecorationOptions:
+    type: string;   // わからんけどinline classnameあるかどうかみたいな？
+    kind: string;   // わからんけどclassNameの命名規則かも
+    parentKind: string;     // わからんけどわからん
+};
+```
+
+たぶんだけど、
+
+- compileroptionの設定
+
+
+わからんところ：
+
+- workerからdecorationを受け取る方法は分かったけど、workerへ渡すのはどんなタイミングならいいんだ？
+
+#### 実装：format
 
 - monaco-editorでは言語ごとにformat内容を登録しなくてはならない
 - `languages.registerDocumentFormattingEditProvider()`を使って対象言語とformat処理するコールバックを登録する

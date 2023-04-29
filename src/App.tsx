@@ -1,9 +1,27 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import * as monaco from 'monaco-editor';
 import MonacoEditor from './components/MonacoEditor';
 import type { beforeMount, onMount, onChange, onValidate } from "./components/MonacoEditor";
 import prettier from 'prettier';
 import parser from 'prettier/parser-babel';
+
+interface iClassification {
+    // IRange:
+    startColumn: number;
+    endColumn: number;
+    startLineNumber: number;
+    endLineNumber: number;
+    
+    // Related to IModelDecorationOptions:
+    type: string;   // わからんけどinline classnameあるかどうかみたいな？
+    kind: string;   // わからんけどclassNameの命名規則かも
+    parentKind: string;     // わからんけどわからん
+};
+
+interface iWorkerMessageData {
+    version: number;
+    classifications: iClassification[];
+};
 
 // @ts-ignore
 self.MonacoEnvironment = {
@@ -72,50 +90,70 @@ const setFormatter = (m: typeof monaco): void => {
 		})
 };
 
-/***JSX Highlight setup
- * 
- * https://github.com/cancerberoSgx/jsx-alone/blob/master/jsx-explorer/HOWTO_JSX_MONACO.md
- * 
- * これとmonaco.editor.createの組み合わせ
- * */ 
-const setJSXHighlighting = (m: typeof monaco) => {
-    m.languages.typescript.typescriptDefaults.setCompilerOptions({
-        target: m.languages.typescript.ScriptTarget.ES2016,
-        allowNonTsExtensions: true,
-        moduleResolution: m.languages.typescript.ModuleResolutionKind.NodeJs,
-        module: m.languages.typescript.ModuleKind.CommonJS,
-        noEmit: true,
-        typeRoots: ["node_modules/@types"],
-        jsx: m.languages.typescript.JsxEmit.React,
-        jsxFactory: 'JSXAlone.createElement',
-      })
-      
-    //   editor = m.editor.create(containerEl, {
-    //     model: m.editor.createModel(code, "typescript", m.Uri.parse("file:///main.tsx")),
-    //     language: 'typescript',
-    //   })
-      
-    //   m.editor.createModel(jsxDefinitionsCode, "typescript", m.Uri.parse("file:///index.d.ts"))
-};
-
 
 const App = () => {
     // const [value, setValue] = useState<string>("");
     const _monacoRef = useRef<typeof monaco>();
+    const _editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+    // Workers
+    const esLinteWorker = useMemo(() => new Worker(new URL('/src/workers/ESLint.worker.ts', import.meta.url)), []);
+    const jsxHighlightWorker = useMemo(() => new Worker(new URL('/src/workers/JSXHighlight.worker.ts', import.meta.url)), []);
+
+    useEffect(() => {
+        if(window.Worker) {
+            esLinteWorker.addEventListener('message', (e) => {}, false);
+
+            jsxHighlightWorker.addEventListener(
+                'message', 
+                ({ data }: { data: iWorkerMessageData }) => {
+                const { classifications, version } = data;
+                const model = _editorRef.current?.getModel();
+
+                if(model && model.getVersionId() !== version) return;
+
+                const decorations: monaco.editor.IModelDeltaDecoration[] = classifications.map(classification => {
+                    return {
+                        range: new monaco.Range(
+                            classification.startColumn,
+                            classification.startLineNumber,
+                            classification.endColumn,
+                            classification.endLineNumber,
+                        ),
+                        options: {
+                            inlineClassName: classification.type
+                            ? `${classification.kind} ${classification.type}-of-${
+                                classification.parentKind}`
+                            : classification.kind
+                        }
+                    }
+                });
+
+                _editorRef.current?.createDecorationsCollection(
+                    // model.decorations || [],
+                    decorations
+                );
+            }, false);
+        }
+
+
+        return () => {
+            _cleanUp();
+        }
+    }, []);
+    
 
     const beforeMount: beforeMount = (m) => {
         // format setting
         // DEBUG:
         console.log("[App] Before Mount:");
         setFormatter(m);
-        // add condition if language is typescript or not.
-        setJSXHighlighting(m);
     };
 
     const onDidMount: onMount = (e, m) => {
         // DEBUG:
         console.log("[App] Did Mount:");
 
+        _editorRef.current = e;
         _monacoRef.current = m;
     };
 
@@ -128,6 +166,11 @@ const App = () => {
         // DEBUG:
         console.log("[App] onValidate:");
         console.log(markers);
+    };
+
+    const _cleanUp = () => {
+        esLinteWorker.terminate();
+        jsxHighlightWorker.terminate();
     };
 
     return (

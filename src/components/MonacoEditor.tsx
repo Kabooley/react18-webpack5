@@ -46,9 +46,6 @@ const MonacoEditor = ({
     // Flag that expresses beforeMount is already invoked.
     const _preventBeforeMount = useRef<boolean>(false);
     const _isMounted = useRef<boolean>(false);
-    // Workers
-    const esLinteWorker = useMemo(() => new Worker(new URL('/src/workers/ESLint.worker.ts', import.meta.url)), []);
-    const jsxHighlightWorker = useMemo(() => new Worker(new URL('/src/workers/JSXHighlight.worker.ts', import.meta.url)), []);
 
     /**
      * 
@@ -114,17 +111,6 @@ const MonacoEditor = ({
     useEffect(() => {
         // DEBUG:
         console.log("[CodeEditor] component did mount:(Not about Monaco-Editor)");
-        
-        if(window.Worker) {
-            esLinteWorker.addEventListener('message', (e) => {
-                // Invoke updater
-            }, false);
-            jsxHighlightWorker.addEventListener('message', (e) => {
-                // Invoke updater
-            }, false);
-
-            // TODO: Send message to workers if needed.
-        }
 
         return () => {
             _cleanUp();
@@ -226,8 +212,6 @@ const MonacoEditor = ({
 
         if(_editor.current) _editor.current.dispose();
         if(_subscription.current) _subscription.current.dispose();
-        esLinteWorker.terminate();
-        jsxHighlightWorker.terminate();
     };
 
     return (
