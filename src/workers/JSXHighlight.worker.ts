@@ -38,9 +38,11 @@
 /***
  * https://github.com/codesandbox/codesandbox-client/blob/196301c919dd032dccc08cbeb48cf8722eadd36b/packages/app/src/app/components/CodeEditor/Monaco/workers/syntax-highlighter.js
  * 
+ * 
+ * https://cdnjs.com/libraries/typescript
  * */ 
 self.importScripts(
-  'https://cdnjs.cloudflare.com/ajax/libs/typescript/2.4.2/typescript.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/typescript/5.0.4/typescript.min.js',
 );
 
 function getLineNumberAndOffset(start, lines) {

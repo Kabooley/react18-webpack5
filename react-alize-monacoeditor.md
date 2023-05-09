@@ -946,6 +946,106 @@ interface iClassification {
 
 - workerからdecorationを受け取る方法は分かったけど、workerへ渡すのはどんなタイミングならいいんだ？
 
+#### importScripts('typescript.min.js')でimportしたインスタンスが参照できない
+
+worker.tsにimportScriptsしたモジュールのインスタンスは参照できない。
+
+```TypeScript
+/***
+ * https://github.com/codesandbox/codesandbox-client/blob/196301c919dd032dccc08cbeb48cf8722eadd36b/packages/app/src/app/components/CodeEditor/Monaco/workers/syntax-highlighter.js
+ * 
+ * 
+ * https://cdnjs.com/libraries/typescript
+ * */ 
+self.importScripts(
+  'https://cdnjs.cloudflare.com/ajax/libs/typescript/5.0.4/typescript.min.js',
+);
+
+// 。。。
+
+function addChildNodes(node, lines, classifications) {
+    // ERROR: 
+    // Property 'ts' does not exist on type 'Window & typeof globalThis'
+  const parentKind = ts.SyntaxKind[node.kind];
+
+  self.ts.forEachChild(node, id => {
+    const type = getNodeType(node, id);
+
+    classifications.push(
+      ...getParentRanges(id).map(({ start, end }) => {
+        const { offset, line: startLine } = getLineNumberAndOffset(
+          start,
+          lines
+        );
+        const { line: endLine } = getLineNumberAndOffset(end, lines);
+
+        return {
+          start: start + 1 - offset,
+          end: end + 1 - offset,
+          kind: ts.SyntaxKind[id.kind],
+          parentKind,
+          type,
+          startLine,
+          endLine,
+        };
+      })
+    );
+
+    addChildNodes(id, lines, classifications);
+  });
+}
+
+// Respond to message from parent thread
+self.addEventListener('message', event => {
+  const { code, title, version } = event.data;
+  try {
+    const classifications: iClassification[] = [];
+    
+    // ERROR: 
+    // Property 'ts' does not exist on type 'Window & typeof globalThis'
+    const sourceFile = self.ts.createSourceFile(
+      title,
+      code,
+      self.ts.ScriptTarget.ES6,
+      true
+    );
+    const lines = code.split('\n').map(line => line.length);
+
+    addChildNodes(sourceFile, lines, classifications);
+
+    self.postMessage({ classifications, version });
+  } catch (e) {
+    /* Ignore error */
+  }
+});
+```
+
+要は、動的にimportするからtypescript.min.jsのインタフェイスを認識できないのである。
+
+- .jsファイルをtsファイルにインポートするのが悪いのか？
+
+それはないはず。頻繁に.jsファイルをimportしているが問題にはなっていない。
+tsconfig.jsonにも`"allowJs: true`は設定してある。
+
+- declareすればいい？
+
+https://stackoverflow.com/questions/56457935/typescript-error-property-x-does-not-exist-on-type-window
+
+
+selfはすでに宣言済であるから変更してはまずいのでは？
+
+- cdn経由のモジュールを使う方法を模索
+
+http://once-and-only.com/programing/%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83/typescript%E3%81%A7cdn%E3%81%AE%E3%83%A9%E3%82%A4%E3%83%96%E3%83%A9%E3%83%AA%E3%82%92%E4%BD%BF%E3%81%86%EF%BC%88javascript%EF%BC%89/
+
+https://stackoverflow.com/questions/44877904/how-do-you-import-a-javascript-package-from-a-cdn-script-tag-in-react
+
+つまり、
+
+index.htmlにそのCDNで取り込むモジュールのURLをscript srcで追加しておけば
+
+globalから
+
 #### 実装：format
 
 - monaco-editorでは言語ごとにformat内容を登録しなくてはならない
