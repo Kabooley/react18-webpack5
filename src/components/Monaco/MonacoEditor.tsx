@@ -1,15 +1,5 @@
 /***********************************************************
- * @monaco-editor/reactのソースを参考に
- * webworkerと連携するReactコンポーネントを作る。
  * 
- * monaco-editorをラッピングしてReactコンポーネント化する。
- * 
- * TODO:
- * - onChangeの実装
- * - onValidateの実装
- * - beforeMountの実装
- * - onDidMountの実装
- * - webworkerとReactコンポーネントの連動
  * *********************************************************/ 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import * as monaco from 'monaco-editor';

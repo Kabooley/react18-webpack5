@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import * as monaco from 'monaco-editor';
-import MonacoEditor from './components/MonacoEditor';
-import type { beforeMount, onMount, onChange, onValidate } from "./components/MonacoEditor";
+import MonacoEditor from './components/Monaco/MonacoEditor';
+import type { beforeMount, onMount, onChange, onValidate } from "./components/Monaco/MonacoEditor";
 import prettier from 'prettier';
 import parser from 'prettier/parser-babel';
 
@@ -63,7 +63,7 @@ const setFormatter = (m: typeof monaco): void => {
     console.log("[App] setFormatter");
 
     m.languages.registerDocumentFormattingEditProvider(
-		"javascript",　
+		"javascript",
 		{
 			async provideDocumentFormattingEdits(
                 model, options, token) {
@@ -98,43 +98,14 @@ const App = () => {
     // Workers
     const esLinteWorker = useMemo(() => new Worker(new URL('/src/workers/ESLint.worker.ts', import.meta.url)), []);
     const jsxHighlightWorker = useMemo(() => new Worker(new URL('/src/workers/JSXHighlight.worker.ts', import.meta.url)), []);
+    const fetchLibsWorker = useMemo(() => new Worker(new URL('/src/workers/FetchLibs.worker.ts', import.meta.url)), []);
 
     useEffect(() => {
         if(window.Worker) {
-            esLinteWorker.addEventListener('message', (e) => {}, false);
-
-            jsxHighlightWorker.addEventListener(
-                'message', 
-                ({ data }: { data: iWorkerMessageData }) => {
-                const { classifications, version } = data;
-                const model = _editorRef.current?.getModel();
-
-                if(model && model.getVersionId() !== version) return;
-
-                const decorations: monaco.editor.IModelDeltaDecoration[] = classifications.map(classification => {
-                    return {
-                        range: new monaco.Range(
-                            classification.startColumn,
-                            classification.startLineNumber,
-                            classification.endColumn,
-                            classification.endLineNumber,
-                        ),
-                        options: {
-                            inlineClassName: classification.type
-                            ? `${classification.kind} ${classification.type}-of-${
-                                classification.parentKind}`
-                            : classification.kind
-                        }
-                    }
-                });
-
-                _editorRef.current?.createDecorationsCollection(
-                    // model.decorations || [],
-                    decorations
-                );
-            }, false);
+            esLinteWorker.addEventListener('message', _cbLinter, false);
+            jsxHighlightWorker.addEventListener('message', _cbSyntaxHilighter, false);
+            fetchLibsWorker.addEventListener('message', _cbAddLibs, false);
         }
-
 
         return () => {
             _cleanUp();
@@ -169,9 +140,17 @@ const App = () => {
     };
 
     const _cleanUp = () => {
+        esLinteWorker.removeEventListener('message', _cbLinter, false);
+        jsxHighlightWorker.removeEventListener('message', _cbSyntaxHilighter, false);
+        fetchLibsWorker.removeEventListener('message', _cbAddLibs, false);
         esLinteWorker.terminate();
         jsxHighlightWorker.terminate();
+        fetchLibsWorker.terminate();
     };
+
+    const _cbLinter = () => {};
+    const _cbSyntaxHilighter = () => {};
+    const _cbAddLibs = () => {};
 
     return (
         <div className="app">
