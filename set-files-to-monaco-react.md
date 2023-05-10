@@ -127,3 +127,71 @@ console.log(editorInstance.getModel().uri);
 など。
 
 fileをネット上から拾ってきてほしい場合はアプローチが異なるかも。
+
+
+#### fileで必要とするmoduleをaddEtraLibsする
+
+多分だけどこれをしない限り、import文で何そのモジュールってエラー必ず出る。
+
+https://github.com/satya164/monaco-editor-boilerplate/blob/master/src/workers/typings.worker.js
+
+https://stackoverflow.com/questions/43058191/how-to-use-addextralib-in-monaco-with-an-external-type-definition
+
+https://stackoverflow.com/questions/63310682/how-to-load-npm-module-type-definition-in-monaco-using-webpack-and-react-create/63349650#63349650
+
+https://github.com/microsoft/monaco-editor/issues/667
+
+```TypeScript
+/**
+* Add an additional source file to the language service. Use this
+* for typescript (definition) files that won't be loaded as editor
+* documents, like `jquery.d.ts`.
+*
+* @param content The file content
+* @param filePath An optional file path
+* @returns A disposable which will remove the file from the
+* language service upon disposal.
+*/
+addExtraLib(content: string, filePath?: string): IDisposable;
+```
+
+ひとまず、
+
+`react`と`react-dom`をネット上から取得する。
+
+多分重たい処理なのでworkerに任せる。
+
+`worker/FetchLibs.worker.ts`
+
+多分丸っとここが参考になるかも？:
+
+https://github.com/satya164/monaco-editor-boilerplate/blob/master/src/workers/typings.worker.js
+
+#### 公式playgroundでテスト
+
+```JavaScript
+const files = {
+    // TODO: 
+};
+
+for (const fileName in files) {
+  const path = `file:///node_modules/@types/${fileName}`;
+
+  monaco.languages.typescript.typescriptDefaults.addExtraLib(
+    files[fileName],
+    fakePath
+  );
+}
+
+const model = monaco.editor.createModel(
+  ``,   // TODO: テストしたいエディタに入力しておきたいコード
+  "typescript",
+  monaco.Uri.parse("file:///main.tsx")
+);
+
+monaco.editor.create(document.getElementById("container"), { model });
+```
+```HTML
+<div id="container" style="height: 100%"></div>
+```
+#### autocomplete suggestionsを出す

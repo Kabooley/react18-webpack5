@@ -1,27 +1,9 @@
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import * as monaco from 'monaco-editor';
 import MonacoEditor from './components/Monaco/MonacoEditor';
-import type { beforeMount, onMount, onChange, onValidate } from "./components/Monaco/MonacoEditor";
-import prettier from 'prettier';
-import parser from 'prettier/parser-babel';
+import { files } from "./components/Monaco/files";
+import type { iFiles, iFile } from "./components/Monaco/files";
 
-interface iClassification {
-    // IRange:
-    startColumn: number;
-    endColumn: number;
-    startLineNumber: number;
-    endLineNumber: number;
-    
-    // Related to IModelDecorationOptions:
-    type: string;   // わからんけどinline classnameあるかどうかみたいな？
-    kind: string;   // わからんけどclassNameの命名規則かも
-    parentKind: string;     // わからんけどわからん
-};
-
-interface iWorkerMessageData {
-    version: number;
-    classifications: iClassification[];
-};
 
 // @ts-ignore
 self.MonacoEnvironment = {
@@ -42,59 +24,37 @@ self.MonacoEnvironment = {
 	}
 };
 
-const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
-    value: "// First line\nfunction hello(): void {\n\talert('Hello world!');\n}\n// Last line",
-	language: "typescript",
+const defaultValue = "import { createRoot } from 'react-dom/client';\r\nimport React from 'react';\r\nimport 'bulma/css/bulma.css';\r\n\r\nconst App = () => {\r\n    return (\r\n        <div className=\"container\">\r\n          <span>REACT</span>\r\n        </div>\r\n    );\r\n};\r\n\r\nconst root = createRoot(document.getElementById('root'));\r\nroot.render(<App />);";
 
+
+/***
+ * IStandaloneEditorConstructionOptions: {
+ *  model, value, language, theme, 
+ * }
+ * IEditorOptions: {
+ *  isDiffEditor,
+ *  tabIndex,
+ *  lineNumbers,
+ *  scrollbar,
+ *  minimap,
+ *  ...many props
+ * }
+ * 
+ * */ 
+const editorConstructOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
+    value: defaultValue,
+	language: "typescript",
 	lineNumbers: "off",
 	roundedSelection: false,
 	scrollBeyondLastLine: false,
 	readOnly: false,
 	theme: "vs-dark",
-    
 };
 
-/**
- * Set formatting rules.
- * 
- * */ 
-const setFormatter = (m: typeof monaco): void => {
-    // DEBUG:
-    console.log("[App] setFormatter");
-
-    m.languages.registerDocumentFormattingEditProvider(
-		"javascript",
-		{
-			async provideDocumentFormattingEdits(
-                model, options, token) {
-				const formatted = await prettier.format(
-					model.getValue(), 
-					{
-						parser: 'babel',
-						plugins: [parser],
-						useTabs: false,
-						semi: true,
-						singleQuote: true,
-                        tabWidth: 2
-					})
-					.replace(/\n$/, '');
-
-                    // DEBUG:
-                    console.log(formatted);
-
-				return [{
-					range: model.getFullModelRange(),
-					text: formatted,
-				}];
-			}
-		})
-};
 
 
 const App = () => {
-    // const [value, setValue] = useState<string>("");
-    const _monacoRef = useRef<typeof monaco>();
-    const _editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+    const [value, setValue] = useState<string>("");
     // Workers
     const esLinteWorker = useMemo(() => new Worker(new URL('/src/workers/ESLint.worker.ts', import.meta.url)), []);
     const jsxHighlightWorker = useMemo(() => new Worker(new URL('/src/workers/JSXHighlight.worker.ts', import.meta.url)), []);
@@ -108,38 +68,29 @@ const App = () => {
         }
 
         return () => {
-            _cleanUp();
+            _onUnmount();
         }
     }, []);
     
-
-    const beforeMount: beforeMount = (m) => {
-        // format setting
+    const onWillMount = () => {
         // DEBUG:
-        console.log("[App] Before Mount:");
-        setFormatter(m);
+        console.log("[App] Will mount.");
+    };
+    
+    const onDidMount = () => {
+        // DEBUG:
+        console.log("[App] Did mount.");
     };
 
-    const onDidMount: onMount = (e, m) => {
+    const onValueChange = (v: string) => {
         // DEBUG:
-        console.log("[App] Did Mount:");
+        console.log("[App] On value change.");
 
-        _editorRef.current = e;
-        _monacoRef.current = m;
+        setValue(v);
     };
 
-    const onChange: onChange = (v) => {
-        // DEBUG:
-        console.log("[App] onChange:");
-    };
 
-    const onValidate: onValidate = (markers) => {
-        // DEBUG:
-        console.log("[App] onValidate:");
-        console.log(markers);
-    };
-
-    const _cleanUp = () => {
+    const _onUnmount = () => {
         esLinteWorker.removeEventListener('message', _cbLinter, false);
         jsxHighlightWorker.removeEventListener('message', _cbSyntaxHilighter, false);
         fetchLibsWorker.removeEventListener('message', _cbAddLibs, false);
@@ -155,11 +106,12 @@ const App = () => {
     return (
         <div className="app">
             <MonacoEditor 
-                beforeMount={beforeMount}
-                onMount={onDidMount}
-                onChange={onChange}
-                onValidate={onValidate}
-                {...monacoEditorOptions}
+                file={files['react-typescript']}
+                path={files['react-typescript'].path}
+                onWillMount={onWillMount}
+                onValueChange={onValueChange}
+                onDidMount={onDidMount}
+                {...editorConstructOptions}
             />
         </div>
     );
