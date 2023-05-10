@@ -6,7 +6,7 @@ import * as monaco from 'monaco-editor';
 import type * as Monaco from 'monaco-editor';
 
 import willMountMonacoProcess from './monacoWillMountProcess';
-
+import type { iFile, iFiles } from './files';
 
 /**
  * iProps contains...
@@ -17,7 +17,7 @@ import willMountMonacoProcess from './monacoWillMountProcess';
  * */ 
 interface iProps 
     extends Monaco.editor.IStandaloneEditorConstructionOptions {
-    files: { [path: string]: string }
+    file: iFile;
     path: string;
     onValueChange: (v: string) => void;
     onWillMount: () => void;
@@ -45,7 +45,7 @@ const MonacoEditor = (props: iProps): JSX.Element => {
         if(!_refEditorNode.current) throw new Error("Error: monaco-container dom is not exist.");
 
         const { 
-            files, path, onDidMount, onWillMount, onValueChange, 
+            file, path, onDidMount, onWillMount, onValueChange, 
             ...options 
         } = props;
 
@@ -62,9 +62,10 @@ const MonacoEditor = (props: iProps): JSX.Element => {
         );
 
         // Generate models according to files prop
-        Object.keys(files).forEach(path => {
-            _initializeFiles(path, files[path], files.language);
-        });
+        // Object.keys(files).forEach(path => {
+        //     _initializeFiles(path, files[path], files.language);
+        // });
+        _initializeFiles(path, file.value, file.language);
 
         // Apply file to editor according to path and value
         _applyFile(path);
@@ -84,12 +85,12 @@ const MonacoEditor = (props: iProps): JSX.Element => {
     });
 
     /**
-     * TODO: valueがなんなのか定まっていない
+     * 
      * */
     const _initializeFiles = (path: string, value: string, language: string) => {
         let model = monaco.editor.getModels()?.find(m => m.uri.path === path);
         if(model) {
-            // apply latest state to the model
+            // TODO: apply latest state to the model
         }
         else {
             model = monaco.editor.createModel(
@@ -109,7 +110,9 @@ const MonacoEditor = (props: iProps): JSX.Element => {
      * */
     const _applyFile = (path: string) => {
         if(!_refEditor.current) return;
-        const model = monaco.editor.getModels()?.find(m => m.uri.path === path);
+        const model = monaco.editor.getModels()?.find(
+            m => m.uri.path === path
+        );
         model && _refEditor.current.setModel(model);
     };
 
@@ -140,6 +143,10 @@ const MonacoEditor = (props: iProps): JSX.Element => {
     const _onUnmount = () => {
         _subOnDidChangeModel.current && _subOnDidChangeModel.current.dispose();
         _subOnDidChangeContent.current && _subOnDidChangeContent.current.dispose();
+
+        // NOTE: fixed error 
+        monaco.editor.getModels().forEach(m => m.dispose());
+
         _refEditor.current && _refEditor.current.dispose();
     };
 
@@ -155,3 +162,14 @@ const MonacoEditor = (props: iProps): JSX.Element => {
 };
 
 export default MonacoEditor;
+
+/***
+ * Temporary Memo
+ * 
+ * Error ModelService: Cannot add model because it already exists!
+ * 
+ *  https://stackoverflow.com/a/62466612
+ *  
+ *  
+ * 
+ * */ 

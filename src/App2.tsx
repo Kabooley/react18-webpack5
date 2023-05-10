@@ -1,6 +1,8 @@
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import * as monaco from 'monaco-editor';
 import MonacoEditor from './components/Monaco/MonacoEditor2';
+import { files } from "./components/Monaco/files";
+import type { iFiles, iFile } from "./components/Monaco/files";
 
 
 // @ts-ignore
@@ -69,11 +71,24 @@ const App = () => {
             _onUnmount();
         }
     }, []);
+    
+    const onWillMount = () => {
+        // DEBUG:
+        console.log("[App] Will mount.");
+    };
+    
+    const onDidMount = () => {
+        // DEBUG:
+        console.log("[App] Did mount.");
+    };
 
     const onValueChange = (v: string) => {
+        // DEBUG:
+        console.log("[App] On value change.");
+
         setValue(v);
-    }
-    
+    };
+
 
     const _onUnmount = () => {
         esLinteWorker.removeEventListener('message', _cbLinter, false);
@@ -91,11 +106,11 @@ const App = () => {
     return (
         <div className="app">
             <MonacoEditor 
-                files={}
-                path={}
-                onWillMount={}
+                file={files['react-typescript']}
+                path={files['react-typescript'].path}
+                onWillMount={onWillMount}
                 onValueChange={onValueChange}
-                onDidMount={}
+                onDidMount={onDidMount}
                 {...editorConstructOptions}
             />
         </div>
