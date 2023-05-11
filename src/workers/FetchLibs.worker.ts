@@ -52,20 +52,28 @@ const ROOT_URL = `https://cdn.jsdelivr.net/`;
 const store = new Store('typescript-definitions-cache-v1');
 const fetchCache = new Map();
 
-const doFetch = url => {
+interface iFetchedPath {
+  [path: string]: string
+};
+
+// type iFetchedPath = Array<string>;
+/**** 
+ * 
+ * */
+const doFetch = (url: string): Promise<string> => {
   const cached = fetchCache.get(url);
 
   if (cached) {
     return cached;
   }
 
-  const promise = fetch(url)
+  const promise: Promise<string> = fetch(url)
     .then(response => {
       if (response.status >= 200 && response.status < 300) {
         return Promise.resolve(response);
       }
 
-      const error = new Error(response.statusText || response.status);
+      const error = new Error(response.statusText || String(response.status));
 
       return Promise.reject(error);
     })
@@ -76,7 +84,12 @@ const doFetch = url => {
   return promise;
 };
 
-const fetchFromDefinitelyTyped = (dependency, version, fetchedPaths) =>
+
+
+/**** 
+ * 
+ * */
+const fetchFromDefinitelyTyped = (dependency: string, version: string, fetchedPaths: iFetchedPath) =>
   doFetch(
     `${ROOT_URL}npm/@types/${dependency
       .replace('@', '')
@@ -85,8 +98,12 @@ const fetchFromDefinitelyTyped = (dependency, version, fetchedPaths) =>
     fetchedPaths[`node_modules/${dependency}/index.d.ts`] = typings;
   });
 
+  
+/**** 
+ * 
+ * */
 const getRequireStatements = (title: string, code: string) => {
-  const requires = [];
+  const requires: string[] = [];
 
   const sourceFile = ts.createSourceFile(
     title,
@@ -118,7 +135,11 @@ const getRequireStatements = (title: string, code: string) => {
   return requires;
 };
 
-const tempTransformFiles = files => {
+
+/**** 
+ * 
+ * */
+const tempTransformFiles = (files) => {
   const finalObj = {};
 
   files.forEach(d => {
@@ -128,6 +149,10 @@ const tempTransformFiles = files => {
   return finalObj;
 };
 
+
+/**** 
+ * 
+ * */
 const transformFiles = dir =>
   dir.files
     ? dir.files.reduce((prev, next) => {
@@ -139,12 +164,20 @@ const transformFiles = dir =>
       }, {})
     : {};
 
-const getFileMetaData = (dependency, version, depPath) =>
+    
+/**** 
+ * 
+ * */
+interface iFileHasName {
+  name: string;
+};
+
+const getFileMetaData = (dependency: string, version: string, depPath: string) =>
   doFetch(
     `https://data.jsdelivr.com/v1/package/npm/${dependency}@${version}/flat`
   )
     .then(response => JSON.parse(response))
-    .then(response => response.files.filter(f => f.name.startsWith(depPath)))
+    .then(response => response.files.filter((f: iFileHasName) => f.name.startsWith(depPath)))
     .then(tempTransformFiles);
 
 const resolveAppropiateFile = (fileMetaData, relativePath) => {
@@ -159,23 +192,30 @@ const resolveAppropiateFile = (fileMetaData, relativePath) => {
   return relativePath;
 };
 
+
+/**** 
+ * 
+ * */
 const getFileTypes = (
-  depUrl,
-  dependency,
-  depPath,
-  fetchedPaths,
-  fileMetaData
+  depUrl: string,
+  dependency: string,
+  depPath: string,
+  fetchedPaths: iFetchedPath,
+  fileMetaData: any
 ) => {
-  const virtualPath = path.join('node_modules', dependency, depPath);
+  const virtualPath: string = path.join('node_modules', dependency, depPath);
 
-  if (fetchedPaths[virtualPath]) return null;
+  // キャッシュ済なら戻る
+  if (fetchedPaths.hasOwnProperty(virtualPath) && fetchedPaths[virtualPath]) return null;
 
-  return doFetch(`${depUrl}/${depPath}`).then(typings => {
-    if (fetchedPaths[virtualPath]) return null;
+  return doFetch(`${depUrl}/${depPath}`).then((typings: string) => {
+    if (fetchedPaths.hasOwnProperty(virtualPath) && fetchedPaths[virtualPath]) return null;
 
     fetchedPaths[virtualPath] = typings;
 
     // Now find all require statements, so we can download those types too
+    // 
+    // 再帰呼び出し
     return Promise.all(
       getRequireStatements(depPath, typings)
         .filter(
@@ -197,12 +237,18 @@ const getFileTypes = (
   });
 };
 
-function fetchFromMeta(dependency, version, fetchedPaths) {
+
+/**** 
+ * 
+ * */
+function fetchFromMeta(dependency: string, version: string, fetchedPaths: iFetchedPath) {
   const depUrl = `https://data.jsdelivr.com/v1/package/npm/${dependency}@${version}/flat`;
 
   return doFetch(depUrl)
-    .then(response => JSON.parse(response))
-    .then(meta => {
+    // JSON.parse() converts text to JS Object
+    .then((response: string) => JSON.parse(response))
+    // 
+    .then((meta) => {
       const filterAndFlatten = (files, filter) =>
         files.reduce((paths, file) => {
           if (filter.test(file.name)) {
@@ -231,20 +277,42 @@ function fetchFromMeta(dependency, version, fetchedPaths) {
     });
 }
 
-function fetchFromTypings(dependency, version, fetchedPaths) {
+
+/**** 
+ * Phase 1:
+ * 
+ * `ROOT_URL`npm/`dependency`@`version`でモジュールをfetchする
+ * 要約：
+ * fetch(`https://cdn.jsdelivr.net/npm/react@18.2.0`)
+ * .then(json => {
+ *  fetchedPathsへjsonをキャッシュ
+ *  
+ * })
+ * 
+ * */
+function fetchFromTypings(
+  dependency: string, 
+  version: string, 
+  fetchedPaths: iFetchedPath) 
+{
   const depUrl = `${ROOT_URL}npm/${dependency}@${version}`;
 
   return doFetch(`${depUrl}/package.json`)
-    .then(response => JSON.parse(response))
-    .then(packageJSON => {
+    .then((response: string) => JSON.parse(response))
+    // packageJSON: JS Object
+    .then((packageJSON) => {
       const types = packageJSON.typings || packageJSON.types;
       if (types) {
         // Add package.json, since this defines where all types lie
+        // 
+        // 正しいJSONファイルだった場合、fetchedPathsへキャッシュする
         fetchedPaths[
           `node_modules/${dependency}/package.json`
         ] = JSON.stringify(packageJSON);
 
         // get all files in the specified directory
+        // 
+        // 
         return getFileMetaData(
           dependency,
           version,
@@ -266,26 +334,36 @@ function fetchFromTypings(dependency, version, fetchedPaths) {
     });
 }
 
+
+/**** 
+ * モジュールの定義を返す大元。
+ * */
 function fetchDefinitions(name: string, version: string) {
   if (!version) {
     return Promise.reject(new Error(`No version specified for ${name}`));
   }
 
   // Query cache for the defintions
-  const key = `${name}@${version}`;
+  const key: string = `${name}@${version}`;
 
+  // get a value by its key
   return getItem(key, store)
     .catch(e => {
       console.error('An error occurred when getting definitions from cache', e);
     })
-    .then(result => {
+    .then((result: string) => {
+      // If it's cached, then return.
       if (result) {
         return result;
       }
 
       // If result is empty, fetch from remote
-      const fetchedPaths = {};
+      const fetchedPaths: iFetchedPath = {};
 
+      /**** 
+       * 
+       * 
+       * */ 
       return fetchFromTypings(name, version, fetchedPaths)
         .catch(() =>
           // not available in package.json, try checking meta for inline .d.ts files
