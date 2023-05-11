@@ -38,7 +38,7 @@ self.onmessage = (e: MessageEvent<iMessageFetchLibs>) => {
  */
 
 import path from 'path';
-import { Store, set as setItem, get as getItem } from 'idb-keyval';
+import { createStore, set as setItem, get as getItem } from 'idb-keyval';
 import type * as TypeScriptType from 'typescript';
 
 self.importScripts(
@@ -49,7 +49,7 @@ declare const ts: typeof TypeScriptType;
 
 const ROOT_URL = `https://cdn.jsdelivr.net/`;
 
-const store = new Store('typescript-definitions-cache-v1');
+const store = createStore('typescript-definitions-cache-v1', 'typescript-definitions-cache-storename-v1');
 const fetchCache = new Map();
 
 interface iFetchedPath {
