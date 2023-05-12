@@ -355,9 +355,14 @@ const getFileMetaData = (dependency, version, depPath) =>
     `https://data.jsdelivr.com/v1/package/npm/${dependency}@${version}/flat`
   )
     .then((response) => JSON.parse(response))
-    .then((response) =>
-      response.files.filter((f) => f.name.startsWith(depPath))
-    )
+    .then((response) => {
+      
+      // DEBUG:
+      console.log("[getFileMetaData] JSON.pars(response):");
+      console.log(response);
+
+      return response.files.filter((f) => f.name.startsWith(depPath))
+    })
     .then(tempTransformFiles);
 
 /****
@@ -952,29 +957,34 @@ import ts from "typescript";
 
 /***
  * interface for `fetchedPaths`.
- * 
- * key [modulePath: string] - type definition path of the module 
- * value - definitions of the type definition file
- * 
+ *
+ * key [modulePath: string] - path of the module type definition. 
+ * value - type definitions of the module. 
+ *
  * この組み合わせは、最終的に、
  * monaco.language.typescript.typescriptDefaults.addExtraLIibs()へ
  * 渡す引数である。
- * 
+ *
  * modulePath is like ...
  * `node_modules/${dependency}/index.d.ts`,
  * path.join("node_modules", dependency, depPath),
  * or
  * `node_modules/${dependency}/package.json`
- * 
+ *
  * つまり、
- * 
+ *
  * .d.ts, .tsファイルか、もしくは`types`または`typings`を含むpackage.jsonの
  * pathである。
- * 
- * */ 
+ *
+ * */
+
 interface iFetchedPaths {
   [modulePath: string]: string;
-};
+}
+
+interface iObject {
+  [name: string]: string;
+}
 
 const ROOT_URL = `https://cdn.jsdelivr.net/`;
 
@@ -986,7 +996,7 @@ const store = createStore(
 const fetchCache = new Map<string, Promise<string>>();
 
 /****
- * 
+ *
  *  */
 const doFetch = (url: string): Promise<string> => {
   const cached = fetchCache.get(url);
@@ -1013,16 +1023,19 @@ const doFetch = (url: string): Promise<string> => {
 };
 
 /****
- * 
+ *
  *  */
 const fetchFromDefinitelyTyped = (
-  dependency: string, version: string, 
+  dependency: string,
+  version: string,
   fetchedPaths: iFetchedPaths
-): Promise<void> => {  
+): Promise<void> => {
   // DEBUG:
-  console.log(`[fetchFromDefinitleTyped] fetch ${ROOT_URL}npm/@types/${dependency
-    .replace("@", "")
-    .replace(/\//g, "__")}/index.d.ts`);
+  console.log(
+    `[fetchFromDefinitleTyped] fetch ${ROOT_URL}npm/@types/${dependency
+      .replace("@", "")
+      .replace(/\//g, "__")}/index.d.ts`
+  );
 
   return doFetch(
     `${ROOT_URL}npm/@types/${dependency
@@ -1034,7 +1047,7 @@ const fetchFromDefinitelyTyped = (
 };
 
 /****
- * 
+ *
  * TODO: Fix: node.moduleSpecifier does not exists on ts.node.
  * TODO: define requires type.
  *  */
@@ -1073,10 +1086,26 @@ const getRequireStatements = (title: string, code: string) => {
 };
 
 /****
- * 
+ *
+ * {
+			"name": "/cjs/react.development.js",
+			"hash": "RExoLmiwhFhFg/8AijehFwbixo0UpP6014HMOZqtw8c=",
+			"time": "1985-10-26T08:15:00.000Z",
+			"size": 46528
+    }
+    こうする
+    {
+      "/cjs/react.development.js": {
+        "name": "/cjs/react.development.js",
+        "hash": "RExoLmiwhFhFg/8AijehFwbixo0UpP6014HMOZqtw8c=",
+        "time": "1985-10-26T08:15:00.000Z",
+        "size": 46528
+      }
+    }
+    
  *  */
-const tempTransformFiles = (files) => {
-  const finalObj = {};
+const tempTransformFiles = (files: iMetaFile[]): { [path: string]: iMetaFile } => {
+  const finalObj: { [path: string]: iMetaFile } = {};
 
   files.forEach((d) => {
     finalObj[d.name] = d;
@@ -1086,7 +1115,7 @@ const tempTransformFiles = (files) => {
 };
 
 /****
- * 
+ *
  *  */
 const transformFiles = (dir) =>
   dir.files
@@ -1100,29 +1129,28 @@ const transformFiles = (dir) =>
     : {};
 
 /****
- * 
- * Invoked from fetchFromTypeings()
- * 
- * response.filesがどういう値になるのか確認できないため
- * 型を付けられない。
+ *
  *  */
-const getFileMetaData = (dependency: string, version: string, depPath: string) =>
+const getFileMetaData = (
+  dependency: string,
+  version: string,
+  depPath: string
+) =>
   doFetch(
     `https://data.jsdelivr.com/v1/package/npm/${dependency}@${version}/flat`
   )
     .then((response: string) => JSON.parse(response))
-    .then((response) => {
-      console.log("[getFileMetaData] JSON.pars(response):");
-      console.log(response);
-      return response.files.filter((f) => f.name.startsWith(depPath))
-    })
+    .then((response: iMeta) => 
+      response.files.filter((f) => f.name.startsWith(depPath))
+    )
     .then(tempTransformFiles);
 
 /****
  * Invoked from getFileTypes(),fetchFromTypings().
- *  
+ *
+ * Returns appropriate relative path of '.d.ts' or '.ts' file.
  *  */
-const resolveAppropiateFile = (fileMetaData, relativePath: string) => {
+const resolveAppropiateFile = (fileMetaData: { [path: string]: iMetaFile }, relativePath: string): string => {
   const absolutePath = `/${relativePath}`;
 
   if (fileMetaData[`${absolutePath}.d.ts`]) return `${relativePath}.d.ts`;
@@ -1135,14 +1163,14 @@ const resolveAppropiateFile = (fileMetaData, relativePath: string) => {
 };
 
 /****
- * 
+ * Invoked from fetchFromTypings()
  *  */
 const getFileTypes = (
-  depUrl,
-  dependency,
-  depPath,
-  fetchedPaths,
-  fileMetaData
+  depUrl: string,
+  dependency: string,
+  depPath: string,
+  fetchedPaths: iFetchedPaths,
+  fileMetaData: { [path: string]: iMetaFile }
 ) => {
   const virtualPath = path.join("node_modules", dependency, depPath);
 
@@ -1177,10 +1205,26 @@ const getFileTypes = (
   });
 };
 
+interface iMetaFile {
+  name: string;
+  hash: string;
+  time: string;
+  size: number;
+}
+
+interface iMeta {
+  defualt: string; // path
+  files: iMetaFile[];
+}
+
 /****
- * 
+ *
  *  */
-function fetchFromMeta(dependency, version, fetchedPaths) {
+function fetchFromMeta(
+  dependency: string,
+  version: string,
+  fetchedPaths: iFetchedPaths
+) {
   const depUrl = `https://data.jsdelivr.com/v1/package/npm/${dependency}@${version}/flat`;
 
   // DEBUG:
@@ -1188,20 +1232,26 @@ function fetchFromMeta(dependency, version, fetchedPaths) {
 
   return doFetch(depUrl)
     .then((response) => JSON.parse(response))
-    .then((meta) => {
-      
+    .then((meta: iMeta) => {
       // DEBUG:
       console.log(`[fetchFromMeta] meta:`);
       console.log(meta);
 
-      const filterAndFlatten = (files, filter) =>
-        files.reduce((paths, file) => {
+      /***
+       * @files.reduce
+       *  @param {} paths - previous value that concist of array contains file.name
+       *  @param {} file - current file of files.
+       * */
+
+      const filterAndFlatten = (files: iMetaFile[], filter: RegExp) =>
+        files.reduce((paths: string[], file: iMetaFile) => {
           if (filter.test(file.name)) {
             paths.push(file.name);
           }
           return paths;
         }, []);
 
+      // Search for file which extensions is '.d.ts' or '.ts'
       let dtsFiles = filterAndFlatten(meta.files, /\.d\.ts$/);
       if (dtsFiles.length === 0) {
         // if no .d.ts files found, fallback to .ts files
@@ -1212,6 +1262,7 @@ function fetchFromMeta(dependency, version, fetchedPaths) {
         throw new Error(`No inline typings found for ${dependency}@${version}`);
       }
 
+      // Again fetch '.d.ts' or '.ts' and save them.
       dtsFiles.forEach((file) => {
         doFetch(`https://cdn.jsdelivr.net/npm/${dependency}@${version}${file}`)
           .then((dtsFile) => {
@@ -1222,11 +1273,36 @@ function fetchFromMeta(dependency, version, fetchedPaths) {
     });
 }
 
-/****
- * 
- *  */
-function fetchFromTypings(dependency, version, fetchedPaths) {
+interface iPackageJson {
+  name: string;
+  version: string;
+  description: string;
+  main: string;
+  bin: Object;
+  files: any;
+  scripts: Object;
+  jest: Object;
+  eslintConfig: Object;
+  repository: Object;
+  keywords: any;
+  author: string;
+  license: string;
+  bugs: Object;
+  homepage: string;
+  dependencies: Object;
+  devDependencies: Object;
+  types?: string;
+  typings?: string;
+}
 
+/****
+ * dependencyのpackage.jsonから`types`または`typings`を探してそれらをfetchedPathsへ保存する。
+ *  */
+function fetchFromTypings(
+  dependency: string,
+  version: string,
+  fetchedPaths: iFetchedPaths
+) {
   const depUrl = `${ROOT_URL}npm/${dependency}@${version}`;
 
   // DEBUG:
@@ -1234,7 +1310,7 @@ function fetchFromTypings(dependency, version, fetchedPaths) {
 
   return doFetch(`${depUrl}/package.json`)
     .then((response) => JSON.parse(response))
-    .then((packageJSON) => {
+    .then((packageJSON: iPackageJson) => {
       // DEBUG:
       console.log("[fetchFromTypings] packageJSON: ");
       console.log(packageJSON);
@@ -1251,7 +1327,7 @@ function fetchFromTypings(dependency, version, fetchedPaths) {
           dependency,
           version,
           path.join("/", path.dirname(types))
-        ).then((fileData) =>
+        ).then((fileData: { [path: string]: iMetaFile }) =>
           getFileTypes(
             depUrl,
             dependency,
@@ -1269,9 +1345,10 @@ function fetchFromTypings(dependency, version, fetchedPaths) {
 }
 
 /****
- * 
- *  */ 
-function fetchDefinitions(name, version) {
+ *
+ *  */
+
+function fetchDefinitions(name: string, version: string) {
   if (!version) {
     return Promise.reject(new Error(`No version specified for ${name}`));
   }
@@ -1280,40 +1357,46 @@ function fetchDefinitions(name, version) {
   console.log("[fetchDefinitions] " + name + "@ " + version);
 
   // Query cache for the defintions
-  const key = `${name}@${version}`;
+  const key: string = `${name}@${version}`;
 
-  return getItem(key, store)
-    .catch((e) => {
-      console.error("An error occurred when getting definitions from cache", e);
-    })
-    .then((result) => {
-      if (result) {
-        return result;
-      }
+  return (
+    getItem(key, store)
+      .catch((e) => {
+        console.error(
+          "An error occurred when getting definitions from cache",
+          e
+        );
+      })
+      // TODO: define type of result.
+      .then((result) => {
+        if (result) {
+          return result;
+        }
 
-      // If result is empty, fetch from remote
-      const fetchedPaths = {};
+        // If result is empty, fetch from remote
+        const fetchedPaths: iFetchedPaths = {};
 
-      return fetchFromTypings(name, version, fetchedPaths)
-        .catch(() =>
-          // not available in package.json, try checking meta for inline .d.ts files
-          fetchFromMeta(name, version, fetchedPaths)
-        )
-        .catch(() =>
-          // Not available in package.json or inline from meta, try checking in @types/
-          fetchFromDefinitelyTyped(name, version, fetchedPaths)
-        )
-        .then(() => {
-          if (Object.keys(fetchedPaths).length) {
-            // Also cache the definitions
-            setItem(key, fetchedPaths, store);
+        return fetchFromTypings(name, version, fetchedPaths)
+          .catch(() =>
+            // not available in package.json, try checking meta for inline .d.ts files
+            fetchFromMeta(name, version, fetchedPaths)
+          )
+          .catch(() =>
+            // Not available in package.json or inline from meta, try checking in @types/
+            fetchFromDefinitelyTyped(name, version, fetchedPaths)
+          )
+          .then(() => {
+            if (Object.keys(fetchedPaths).length) {
+              // Also cache the definitions
+              setItem(key, fetchedPaths, store);
 
-            return fetchedPaths;
-          } else {
-            throw new Error(`Type definitions are empty for ${key}`);
-          }
-        });
-    });
+              return fetchedPaths;
+            } else {
+              throw new Error(`Type definitions are empty for ${key}`);
+            }
+          });
+      })
+  );
 }
 
 // self.addEventListener("message", (event) => {
@@ -1337,7 +1420,7 @@ function fetchDefinitions(name, version) {
 //   );
 // });
 
-const _worker = (e) => {
+const _worker = (e: { name: string; version: string }) => {
   const { name, version } = e;
 
   console.log(`[_worker] ${name} ${version}`);
@@ -1355,17 +1438,16 @@ const _worker = (e) => {
 };
 
 function mainthread() {
-
-  const results = [];
+  // const results = [];
 
   // Fetch some definitions
-  const dependencies = {
-    expo: "29.0.0",
+  const dependencies: iObject = {
+    expo: "29.0.0"
     // react: "16.3.1",
     // "react-native": "0.55.4"
   };
 
-  Object.keys(dependencies).forEach((name) =>
+  Object.keys(dependencies).forEach((name: string) =>
     _worker({
       name,
       version: dependencies[name]
@@ -1380,10 +1462,11 @@ function mainthread() {
       })
   );
 
-  console.log(results);
-};
+  // console.log(results);
+}
 
 // mainthread();
+
 ```
 
 
