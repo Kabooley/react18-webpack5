@@ -1386,6 +1386,75 @@ function mainthread() {
 // mainthread();
 ```
 
+
+#### 実装：moduleをaddExtraLibsする処理
+
+- 依存関係を取得する(エディタ上のimportなど)
+- 依存関係をworkerへpostする
+- workerから戻ってきたデータを以下のように`_addTypings`へ渡す
+
+今のところ、取得すべき依存関係はハードコーディングする。
+TODO: 要実装：依存関係を取得するプロセス。
+
+```TypeScript
+// App.ts::defualtValueでimportしている依存関係
+const dependencies = {
+  react: "18.2.0",
+  "react-dom": "18.2.0",
+  bulma: "0.9.4"
+};
+```
+
+
+```TypeScript
+interface iTypings {
+  path: string;
+  definition: string;
+};
+
+  _addTypings = ({ typings }: iTypings ) => {
+    Object.keys(typings).forEach(path => {
+      let extraLib = extraLibs.get(path);
+
+      extraLib && extraLib.dispose();
+      extraLib = monaco.languages.typescript.javascriptDefaults.addExtraLib(
+        typings[path],
+        path
+      );
+
+      extraLibs.set(path, extraLib);
+    });
+  };
+```
+
+TODO: 公式playgroundでテストしてみよう。
+
+```JavaScript
+
+// NOTE: definitionはiTypings.definitionのこと
+monaco.languages.typescript.typescriptDefaults.addExtraLib(
+    definition,
+    "node_modules/react/index.d.ts"
+);
+
+const model = monaco.editor.createModel(
+  "import { createRoot } from 'react-dom/client';\r\nimport React from 'react';\r\nimport 'bulma/css/bulma.css';\r\n\r\nconst App = () => {\r\n    return (\r\n        <div className=\"container\">\r\n          <span>REACT</span>\r\n        </div>\r\n    );\r\n};\r\n\r\nconst root = createRoot(document.getElementById('root'));\r\nroot.render(<App />);",
+  "typescript",
+  monaco.Uri.parse("file:///main.tsx")
+);
+
+monaco.editor.create(document.getElementById("container"), { model });
+```
+
+#### 実装：依存関係を取得する仕組み
+
+[実装：moduleをaddExtraLibsする処理](#実装：moduleをaddExtraLibsする処理)より。
+
+onchangeイベント
+--> value取得
+--> valueをparseする
+--> 依存関係を解決する
+
 #### autocomplete suggestionsを出す
 
 ## JavaScript Tips
