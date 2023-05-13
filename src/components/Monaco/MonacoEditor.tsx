@@ -139,6 +139,7 @@ const MonacoEditor = (props: iProps): JSX.Element => {
         });
     };
 
+
     /**
      * - dispose monaco instances
      * - terminate workers

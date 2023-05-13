@@ -58,9 +58,9 @@ const files = {
     'react-dom': ``,
 }
 
-const addExtraLibraries = () => {
-    monaco.languages.typescript.typescriptDefaults.addExtraLib();
-};
+// const addExtraLibraries = () => {
+//     monaco.languages.typescript.typescriptDefaults.addExtraLib();
+// };
 
 /***
  * willMountMonacoProcess will be invoked before monaco is mounted.

@@ -2,7 +2,10 @@ import React, { useState, useRef, useMemo, useEffect } from "react";
 import * as monaco from 'monaco-editor';
 import MonacoEditor from './components/Monaco/MonacoEditor';
 import { files } from "./components/Monaco/files";
-import type { iFiles, iFile } from "./components/Monaco/files";
+import type { iFetchedPaths } from './workers/FetchLibs.worker';
+import { iOrderFetchLibs } from "./workers/types";
+
+// import type { iFiles, iFile } from "./components/Monaco/files";
 
 
 // @ts-ignore
@@ -52,6 +55,9 @@ const editorConstructOptions: monaco.editor.IStandaloneEditorConstructionOptions
 };
 
 
+// Store details about typings we have loaded
+const extraLibs = new Map<string, monaco.IDisposable>();
+
 
 const App = () => {
     const [value, setValue] = useState<string>("");
@@ -89,6 +95,29 @@ const App = () => {
         setValue(v);
     };
 
+    
+    /**
+     * 
+     * extraLibs
+     * */ 
+    const _addTypings = (typings: iFetchedPaths) => {
+        // DEBUG: 
+        console.log("[App] _addTypings:");
+        console.log(typings);
+
+        Object.keys(typings).forEach(path => {
+          let extraLib = extraLibs.get(path);
+    
+          extraLib && extraLib.dispose();
+          extraLib = monaco.languages.typescript.javascriptDefaults.addExtraLib(
+            typings[path],
+            path
+          );
+    
+          extraLibs.set(path, extraLib);
+        });
+    };
+
 
     const _onUnmount = () => {
         esLinteWorker.removeEventListener('message', _cbLinter, false);
@@ -101,7 +130,11 @@ const App = () => {
 
     const _cbLinter = () => {};
     const _cbSyntaxHilighter = () => {};
-    const _cbAddLibs = () => {};
+    const _cbAddLibs = (e: MessageEvent<iOrderFetchLibs>) => {
+        const { typings, err } = e.data;
+        if(err) console.error(err);
+        typings && _addTypings(typings);
+    };
 
     return (
         <div className="app">

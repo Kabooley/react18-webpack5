@@ -1,14 +1,11 @@
-// TODO: Enable Node.js api in browser app
+import "./styles.css";
 import path from "path";
-import type * as TypeScriptType from "typescript";
 import { createStore, set as setItem, get as getItem } from "idb-keyval";
-import type { iOrderFetchLibs } from "./types";
+import ts from "typescript";
 
-self.importScripts(
-  "https://cdnjs.cloudflare.com/ajax/libs/typescript/5.0.4/typescript.min.js"
-);
-
-declare const ts: typeof TypeScriptType;
+// self.importScripts(
+//   "https://cdnjs.cloudflare.com/ajax/libs/typescript/2.4.2/typescript.min.js"
+// );
 
 /***
  * interface for `fetchedPaths`.
@@ -33,19 +30,19 @@ declare const ts: typeof TypeScriptType;
  *
  * */
 
-export interface iFetchedPaths {
+interface iFetchedPaths {
   [modulePath: string]: string;
-};
+}
 
-// interface iObject {
-//   [name: string]: string;
-// }
+interface iObject {
+  [name: string]: string;
+}
 
 const ROOT_URL = `https://cdn.jsdelivr.net/`;
 
 const store = createStore(
-  "typescript-definitions-cache-v1-db",
-  "typescript-definitions-cache-v1-store"
+  "typescript-definitions-cache-v1",
+  "typescript-definitions-cache-v1"
 );
 
 const fetchCache = new Map<string, Promise<string>>();
@@ -108,7 +105,7 @@ const fetchFromDefinitelyTyped = (
 const getRequireStatements = (title: string, code: string): string[] => {
   const requires: string[] = [];
 
-  const sourceFile: TypeScriptType.SourceFile = ts.createSourceFile(
+  const sourceFile: ts.SourceFile = ts.createSourceFile(
     title,
     code,
     ts.ScriptTarget.Latest,
@@ -122,19 +119,19 @@ const getRequireStatements = (title: string, code: string): string[] => {
   // ts.Node <-- ts.Statement < -- ts.ExportDeclaration  
   // 
   ts.forEachChild(sourceFile, (
-    node: TypeScriptType.ImportDeclaration | TypeScriptType.ExportDeclaration | TypeScriptType.Node
+    node: ts.ImportDeclaration | ts.ExportDeclaration | ts.Node
   ) => {
 
 
     switch (node.kind) {
       case ts.SyntaxKind.ImportDeclaration: {
         // ts.Node.getText()
-        requires.push((<TypeScriptType.ImportDeclaration>node).moduleSpecifier.getText());
+        requires.push((<ts.ImportDeclaration>node).moduleSpecifier.getText());
         break;
       }
 
       case ts.SyntaxKind.ExportDeclaration: {
-        const n: TypeScriptType.ExportDeclaration = node as TypeScriptType.ExportDeclaration;
+        const n: ts.ExportDeclaration = node as ts.ExportDeclaration;
         // For syntax 'export ... from '...'''
         if (n.moduleSpecifier) {
           requires.push(n.moduleSpecifier.getText());
@@ -178,6 +175,20 @@ const tempTransformFiles = (files: iMetaFile[]): { [path: string]: iMetaFile } =
 
   return finalObj;
 };
+
+/****
+ * Comment out because this function is not be invoked from anywhere.
+ *  */
+// const transformFiles = (dir) =>
+//   dir.files
+//     ? dir.files.reduce((prev, next) => {
+//         if (next.type === "file") {
+//           return { ...prev, [next.path]: next };
+//         }
+
+//         return { ...prev, ...transformFiles(next) };
+//       }, {})
+//     : {};
 
 /****
  *
@@ -426,7 +437,8 @@ function fetchDefinitions(name: string, version: string) {
           e
         );
       })
-      .then((result: iFetchedPaths) => {
+      // TODO: define type of result.
+      .then((result) => {
         if (result) {
           return result;
         }
@@ -457,94 +469,70 @@ function fetchDefinitions(name: string, version: string) {
   );
 }
 
-self.addEventListener("message", (event: MessageEvent<iOrderFetchLibs>) => {
-  const { name, version } = event.data;
+// self.addEventListener("message", (event) => {
+//   const { name, version } = event.data;
 
-  fetchDefinitions(name, version).then(
-    (result: iFetchedPaths) =>
+//   cl("onmessage" + name + version);
 
-      self.postMessage({
-        name,
-        version,
-        typings: result
-      }),
-    (err) => {
-      if (process.env.NODE_ENV !== "production") {
-        console.error(err);
-      }
-      else {
-        self.postMessage({
-          name, version, err
-        });
-      }
-    }
-  );
-});
-
-// -----------------------
-// TEST
-// -----------------------
-// Add this file with code below on Codesandbox.
-// 
-// const _worker = (e: { name: string; version: string }) => {
-//   const { name, version } = e;
-
-//   console.log(`[_worker] ${name} ${version}`);
-
-//   return fetchDefinitions(name, version).then(
-//     (result) => {
-//       return { name, version, typings: result };
-//     },
+//   fetchDefinitions(name, version).then(
+//     (result) =>
+//
+//       self.postMessage({
+//         name,
+//         version,
+//         typings: result
+//       }),
 //     (error) => {
 //       if (process.env.NODE_ENV !== "production") {
 //         console.error(error);
 //       }
 //     }
 //   );
-// };
+// });
 
-// function mainthread() {
-//   // const results = [];
+const _worker = (e: { name: string; version: string }) => {
+  const { name, version } = e;
 
-//   // Fetch some definitions
-//   const dependencies: iObject = {
-//     expo: "29.0.0"
-//     // react: "16.3.1",
-//     // "react-native": "0.55.4"
-//   };
+  console.log(`[_worker] ${name} ${version}`);
 
-//   Object.keys(dependencies).forEach((name: string) =>
-//     _worker({
-//       name,
-//       version: dependencies[name]
-//     })
-//       .then((r) => {
-//         console.log("solved:");
-//         return console.log(r);
-//       })
-//       .catch((e) => {
-//         console.log("Unsolved:");
-//         return console.error(e);
-//       })
-//   );
+  return fetchDefinitions(name, version).then(
+    (result) => {
+      return { name, version, typings: result };
+    },
+    (error) => {
+      if (process.env.NODE_ENV !== "production") {
+        console.error(error);
+      }
+    }
+  );
+};
 
-//   // console.log(results);
-// }
+function mainthread() {
+  // const results = [];
 
-// // mainthread();
+  // Fetch some definitions
+  const dependencies: iObject = {
+    expo: "29.0.0"
+    // react: "16.3.1",
+    // "react-native": "0.55.4"
+  };
 
+  Object.keys(dependencies).forEach((name: string) =>
+    _worker({
+      name,
+      version: dependencies[name]
+    })
+      .then((r) => {
+        console.log("solved:");
+        return console.log(r);
+      })
+      .catch((e) => {
+        console.log("Unsolved:");
+        return console.error(e);
+      })
+  );
 
+  // console.log(results);
+}
 
-/****
- * Comment out because this function is not be invoked from anywhere.
- *  */
-// const transformFiles = (dir) =>
-//   dir.files
-//     ? dir.files.reduce((prev, next) => {
-//         if (next.type === "file") {
-//           return { ...prev, [next.path]: next };
-//         }
-
-//         return { ...prev, ...transformFiles(next) };
-//       }, {})
-//     : {};
+// mainthread();
