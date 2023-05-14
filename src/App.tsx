@@ -67,10 +67,28 @@ const App = () => {
     const fetchLibsWorker = useMemo(() => new Worker(new URL('/src/workers/FetchLibs.worker.ts', import.meta.url)), []);
 
     useEffect(() => {
+        // DEBUG:
+        console.log("[App] on did mount");
+
         if(window.Worker) {
+            console.log("[App] worker set up.");
+            
             esLinteWorker.addEventListener('message', _cbLinter, false);
             jsxHighlightWorker.addEventListener('message', _cbSyntaxHilighter, false);
             fetchLibsWorker.addEventListener('message', _cbAddLibs, false);
+
+            const dependencies: { [key: string]: string } = {
+                react: "18.0.4",
+                "react-dom": "18.0.4"
+            };
+
+            Object.keys(dependencies).forEach(key => {
+                fetchLibsWorker.postMessage({
+                    order: "fetch-libs",
+                    name: key,
+                    version: dependencies[key]
+                });
+            });
         }
 
         return () => {
@@ -120,6 +138,9 @@ const App = () => {
 
 
     const _onUnmount = () => {
+        // DEBUG:
+        console.log("[App] onUnmount():");
+
         esLinteWorker.removeEventListener('message', _cbLinter, false);
         jsxHighlightWorker.removeEventListener('message', _cbSyntaxHilighter, false);
         fetchLibsWorker.removeEventListener('message', _cbAddLibs, false);
