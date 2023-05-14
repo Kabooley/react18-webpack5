@@ -4,6 +4,7 @@ import MonacoEditor from './components/Monaco/MonacoEditor';
 import { files } from "./components/Monaco/files";
 import type { iFetchedPaths } from './workers/FetchLibs.worker';
 import { iOrderFetchLibs } from "./workers/types";
+import { isIndexSignatureDeclaration } from "typescript";
 
 // import type { iFiles, iFile } from "./components/Monaco/files";
 
@@ -82,13 +83,18 @@ const App = () => {
                 "react-dom": "18.0.4"
             };
 
-            Object.keys(dependencies).forEach(key => {
-                fetchLibsWorker.postMessage({
-                    order: "fetch-libs",
-                    name: key,
-                    version: dependencies[key]
+            setTimeout(() => {
+                Object.keys(dependencies).forEach(key => {
+                    fetchLibsWorker.postMessage({
+                        order: "fetch-libs",
+                        name: key,
+                        version: dependencies[key]
+                    });
+                    // DEBUG:
+                    console.log(`[App] sent dependency: ${key}@${dependencies[key]}`);
                 });
-            });
+            }, 10000);
+
         }
 
         return () => {
@@ -152,7 +158,9 @@ const App = () => {
     const _cbLinter = () => {};
     const _cbSyntaxHilighter = () => {};
     const _cbAddLibs = (e: MessageEvent<iOrderFetchLibs>) => {
+
         const { typings, err } = e.data;
+
         if(err) console.error(err);
         typings && _addTypings(typings);
     };

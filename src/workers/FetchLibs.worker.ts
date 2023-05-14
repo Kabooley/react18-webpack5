@@ -35,30 +35,33 @@ export interface iFetchedPaths {
   [modulePath: string]: string;
 };
 
+const ROOT_URL = `https://cdn.jsdelivr.net/`;
+const fetchCache = new Map<string, Promise<string>>();
+
+// DEBUG:
+console.log("[FetchLibs] running?");
+
+
 /***
+ * Worker runs twice!
+ * 
  * Check `importScripts` 
  * https://stackoverflow.com/a/28620642
  * */ 
 if(typeof self.importScripts === 'function') {
-
-  self.importScripts(
-    "https://cdnjs.cloudflare.com/ajax/libs/typescript/5.0.4/typescript.min.js"
-  );
-  
-  
-  
-  // interface iObject {
-  //   [name: string]: string;
-  // }
-  
-  const ROOT_URL = `https://cdn.jsdelivr.net/`;
+    self.importScripts(
+      "https://cdnjs.cloudflare.com/ajax/libs/typescript/5.0.4/typescript.min.js"
+    );
+}
+    
+  // DEBUG:
+  console.log("[FetchLibs] running...");
   
   const store = createStore(
     "typescript-definitions-cache-v1-db",
     "typescript-definitions-cache-v1-store"
   );
   
-  const fetchCache = new Map<string, Promise<string>>();
   
   /****
    *
@@ -466,8 +469,8 @@ if(typeof self.importScripts === 'function') {
         })
     );
   }
-  
-  self.addEventListener("message", (event: MessageEvent<iOrderFetchLibs>) => {
+
+  const listener = (event: MessageEvent<iOrderFetchLibs>) => {
     const { name, version } = event.data;
 
     console.log(`[onmessage]: ${name}@${version}`);
@@ -491,7 +494,11 @@ if(typeof self.importScripts === 'function') {
         }
       }
     );
-  });
+  }
+  
+  // To avoid leave listener while run worker twice 
+  self.removeEventListener("message", listener);
+  self.addEventListener("message", listener);
   
   // -----------------------
   // TEST
@@ -544,7 +551,7 @@ if(typeof self.importScripts === 'function') {
   // }
   
   // // mainthread();
-};
+
 
 
   /****
