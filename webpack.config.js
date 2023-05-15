@@ -67,7 +67,11 @@ module.exports = {
 	devtool: 'inline-source-map',
 	devServer: {
 		static: './dist',
-		hot: true
+		hot: true,
+		port: 8080,
+		// I don' know specification is working or not...
+		allowedHosts: ["localhost:8080", "172.22.72.243:8080"]
+
 	},
 	/**
 	 * https://webpack.js.org/guides/code-splitting/#splitchunksplugin

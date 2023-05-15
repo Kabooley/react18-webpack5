@@ -575,6 +575,37 @@ const model = monaco.editor.createModel(
 monaco.editor.create(document.getElementById("container"), { model });
 ```
 
+#### 修正：webworkerがmount完了したことを知らせる仕組みにする
+
+NOTE: これは仕方なくである。
+
+現状次の問題がある。
+
+Reactはマウント時に二回実行される仕様。
+
+そのため、FetchLibs.workerは2度実行される。
+
+（そして2度目にself.importScriptが存在する。これ関係ないな。）
+
+webpack-dev-serverを使うと2度目の実行時に通信が途切れやがる。バカか。
+
+そのため、
+
+mainthreadで送信したメッセージを、workerがaddeventlistenerをまだ用意できていないために、取り逃すのである。
+
+クソか。
+
+----
+
+workerthread {order: "ready"}
+mainthread receives message
+mainthread { order: "fetch-libs"}
+
+という内容を実装してみたけどやっぱり駄目だ。
+
+やはり原因はWDS disconnected!にあると思う。
+
+
 #### 実装：依存関係を取得する仕組み
 
 [実装：moduleをaddExtraLibsする処理](#実装：moduleをaddExtraLibsする処理)より。
@@ -583,6 +614,7 @@ onchangeイベント
 --> value取得
 --> valueをparseする
 --> 依存関係を解決する
+
 
 #### autocomplete suggestionsを出す
 

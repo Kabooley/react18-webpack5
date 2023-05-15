@@ -77,24 +77,6 @@ const App = () => {
             esLinteWorker.addEventListener('message', _cbLinter, false);
             jsxHighlightWorker.addEventListener('message', _cbSyntaxHilighter, false);
             fetchLibsWorker.addEventListener('message', _cbAddLibs, false);
-
-            const dependencies: { [key: string]: string } = {
-                react: "18.0.4",
-                "react-dom": "18.0.4"
-            };
-
-            setTimeout(() => {
-                Object.keys(dependencies).forEach(key => {
-                    fetchLibsWorker.postMessage({
-                        order: "fetch-libs",
-                        name: key,
-                        version: dependencies[key]
-                    });
-                    // DEBUG:
-                    console.log(`[App] sent dependency: ${key}@${dependencies[key]}`);
-                });
-            }, 10000);
-
         }
 
         return () => {
@@ -142,14 +124,31 @@ const App = () => {
         });
     };
 
+    const _orderFetchLibs = () => {
+        const dependencies: { [key: string]: string } = {
+            react: "18.0.4",
+            "react-dom": "18.0.4"
+        };
+
+        Object.keys(dependencies).forEach(key => {
+            fetchLibsWorker.postMessage({
+                order: "fetch-libs",
+                name: key,
+                version: dependencies[key]
+            });
+            // DEBUG:
+            console.log(`[App] sent dependency: ${key}@${dependencies[key]}`);
+        });
+    };
+
 
     const _onUnmount = () => {
         // DEBUG:
         console.log("[App] onUnmount():");
 
-        esLinteWorker.removeEventListener('message', _cbLinter, false);
-        jsxHighlightWorker.removeEventListener('message', _cbSyntaxHilighter, false);
-        fetchLibsWorker.removeEventListener('message', _cbAddLibs, false);
+        esLinteWorker.removeEventListener('message', _cbLinter);
+        jsxHighlightWorker.removeEventListener('message', _cbSyntaxHilighter);
+        fetchLibsWorker.removeEventListener('message', _cbAddLibs);
         esLinteWorker.terminate();
         jsxHighlightWorker.terminate();
         fetchLibsWorker.terminate();
@@ -159,10 +158,26 @@ const App = () => {
     const _cbSyntaxHilighter = () => {};
     const _cbAddLibs = (e: MessageEvent<iOrderFetchLibs>) => {
 
-        const { typings, err } = e.data;
+        // DEBUG:
+        console.log(`[App] _cbAddLibs got order: ${order}`);
+
+        const { typings, err, order } = e.data;
 
         if(err) console.error(err);
-        typings && _addTypings(typings);
+
+        // DEBUG:
+        console.log(`[App] onmessage: ${order}`);
+
+        switch(order) {
+            case "fetch-libs":
+                typings && _addTypings(typings);
+            break;
+            // TODO: `ready`は一度のみ発火するように!
+            case "ready":
+                _orderFetchLibs();
+            break;
+            default: break;
+        };
     };
 
     return (

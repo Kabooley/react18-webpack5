@@ -3,7 +3,7 @@
  * ***********************************/
 import type { iFetchedPaths } from "./FetchLibs.worker";
 
-export type iOrder = "bundle" | "tokenize" | "fetch-libs";
+export type iOrder = "bundle" | "tokenize" | "fetch-libs" | "ready";
 
 export interface iMessage {
     order: iOrder;

@@ -52,7 +52,7 @@ if(typeof self.importScripts === 'function') {
     self.importScripts(
       "https://cdnjs.cloudflare.com/ajax/libs/typescript/5.0.4/typescript.min.js"
     );
-}
+
     
   // DEBUG:
   console.log("[FetchLibs] running...");
@@ -471,7 +471,9 @@ if(typeof self.importScripts === 'function') {
   }
 
   const listener = (event: MessageEvent<iOrderFetchLibs>) => {
-    const { name, version } = event.data;
+    const { name, version, order } = event.data;
+
+    if(order !== "fetch-libs") return;
 
     console.log(`[onmessage]: ${name}@${version}`);
   
@@ -499,7 +501,14 @@ if(typeof self.importScripts === 'function') {
   // To avoid leave listener while run worker twice 
   self.removeEventListener("message", listener);
   self.addEventListener("message", listener);
-  
+// self.onmessage = listener;  
+
+// Notify mainthread that worker is ready.
+self.postMessage({
+  order: "ready",
+});
+
+
   // -----------------------
   // TEST
   // -----------------------
@@ -551,7 +560,7 @@ if(typeof self.importScripts === 'function') {
   // }
   
   // // mainthread();
-
+};
 
 
   /****
