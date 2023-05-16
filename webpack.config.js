@@ -26,7 +26,7 @@ module.exports = {
 		globalObject: 'self',
 		filename: '[name].bundle.js',
 		path: path.resolve(__dirname, 'dist'),
-		clean: true
+		clean: true,
 	},
 	module: {
 		rules: [
@@ -69,8 +69,7 @@ module.exports = {
 		static: './dist',
 		hot: true,
 		port: 8080,
-		// I don' know specification is working or not...
-		allowedHosts: ["localhost:8080", "172.22.72.243:8080"]
+		// allowedHosts: ["localhost:8080", "172.22.72.243:8080"]
 
 	},
 	/**

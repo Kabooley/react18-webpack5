@@ -4,7 +4,6 @@ import MonacoEditor from './components/Monaco/MonacoEditor';
 import { files } from "./components/Monaco/files";
 import type { iFetchedPaths } from './workers/FetchLibs.worker';
 import { iOrderFetchLibs } from "./workers/types";
-import { isIndexSignatureDeclaration } from "typescript";
 
 // import type { iFiles, iFile } from "./components/Monaco/files";
 
@@ -77,12 +76,22 @@ const App = () => {
             esLinteWorker.addEventListener('message', _cbLinter, false);
             jsxHighlightWorker.addEventListener('message', _cbSyntaxHilighter, false);
             fetchLibsWorker.addEventListener('message', _cbAddLibs, false);
+            fetchLibsWorker.onerror = (e) => {
+                console.error(e);
+            };
+
+            // send dependency
+            _orderFetchLibs();
         }
+
+        console.log("[App] is fetchLibsWorker exists?:");
+        console.log(fetchLibsWorker);
 
         return () => {
             _onUnmount();
         }
     }, []);
+
     
     const onWillMount = () => {
         // DEBUG:
@@ -99,6 +108,7 @@ const App = () => {
         console.log("[App] On value change.");
 
         setValue(v);
+        _orderFetchLibs();
     };
 
     
@@ -146,9 +156,9 @@ const App = () => {
         // DEBUG:
         console.log("[App] onUnmount():");
 
-        esLinteWorker.removeEventListener('message', _cbLinter);
-        jsxHighlightWorker.removeEventListener('message', _cbSyntaxHilighter);
-        fetchLibsWorker.removeEventListener('message', _cbAddLibs);
+        esLinteWorker.removeEventListener('message', _cbLinter, false);
+        jsxHighlightWorker.removeEventListener('message', _cbSyntaxHilighter, false);
+        fetchLibsWorker.removeEventListener('message', _cbAddLibs, false);
         esLinteWorker.terminate();
         jsxHighlightWorker.terminate();
         fetchLibsWorker.terminate();
@@ -158,10 +168,11 @@ const App = () => {
     const _cbSyntaxHilighter = () => {};
     const _cbAddLibs = (e: MessageEvent<iOrderFetchLibs>) => {
 
-        // DEBUG:
-        console.log(`[App] _cbAddLibs got order: ${order}`);
 
         const { typings, err, order } = e.data;
+        
+        // DEBUG:
+        console.log(`[App] _cbAddLibs got order: ${order}`);
 
         if(err) console.error(err);
 
