@@ -48,8 +48,9 @@ if(typeof self.importScripts === 'function') {
       "https://cdnjs.cloudflare.com/ajax/libs/typescript/5.0.4/typescript.min.js"
     );
     
-  // DEBUG:
-  console.log("[FetchLibs] imported typescript.min.js");
+    
+  console.log("[FetchLibs] self @ top:");
+  console.log(self);
 
   // Notify mainthread that worker is ready.
   self.postMessage({
@@ -475,11 +476,11 @@ const listener = (event: MessageEvent<iOrderFetchLibs>) => {
 
   // DEBUG:
   console.log(`[fetchLibs] order: ${order}`);
-  console.log(event.data);
+  // console.log(event.data);
 
   if(order !== "fetch-libs") return;
 
-  console.log(`[onmessage]: ${name}@${version}`);
+  console.log(`[FetchLibs] Will fetch: ${name}@${version}`);
 
   fetchDefinitions(name, version).then(
     (result: iFetchedPaths) =>
@@ -502,19 +503,20 @@ const listener = (event: MessageEvent<iOrderFetchLibs>) => {
   );
 };
 
-/**
- * I don't know why but addEventListener receives message but onmessage doesn't.
- * 
- * */ 
-// To avoid leave listener while run worker twice 
-// self.removeEventListener("message", listener);
-self.addEventListener("message", listener, false);
 
-// onmessage doesn't work!
-// self.onmessage = listener;  
+self.removeEventListener("message", listener);
+self.addEventListener("message", listener, false);
+self.onmessage = listener;
 self.onmessageerror = (e) => {
   console.error(e);
 };
+
+console.log("[FetchLibs] self @ bottom:");
+console.log(self);
+// Notify mainthread that worker is ready.
+self.postMessage({
+  order: "ready",
+});
 
 
 // -----------------------

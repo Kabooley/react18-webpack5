@@ -62,9 +62,9 @@ const extraLibs = new Map<string, monaco.IDisposable>();
 const App = () => {
     const [value, setValue] = useState<string>("");
     // Workers
-    const esLinteWorker = useMemo(() => new Worker(new URL('/src/workers/ESLint.worker.ts', import.meta.url)), []);
-    const jsxHighlightWorker = useMemo(() => new Worker(new URL('/src/workers/JSXHighlight.worker.ts', import.meta.url)), []);
-    const fetchLibsWorker = useMemo(() => new Worker(new URL('/src/workers/FetchLibs.worker.ts', import.meta.url)), []);
+    const esLinteWorker = useMemo<Worker>(() => new Worker(new URL('/src/workers/ESLint.worker.ts', import.meta.url)), []);
+    const jsxHighlightWorker = useMemo<Worker>(() => new Worker(new URL('/src/workers/JSXHighlight.worker.ts', import.meta.url)), []);
+    const fetchLibsWorker = useMemo<Worker>(() => new Worker(new URL('/src/workers/FetchLibs.worker.ts', import.meta.url)), []);
 
     useEffect(() => {
         // DEBUG:
@@ -76,21 +76,31 @@ const App = () => {
             esLinteWorker.addEventListener('message', _cbLinter, false);
             jsxHighlightWorker.addEventListener('message', _cbSyntaxHilighter, false);
             fetchLibsWorker.addEventListener('message', _cbAddLibs, false);
+            // fetchLibsWorker.onmessage = _cbAddLibs;
+            fetchLibsWorker.onmessage = (e: MessageEvent<iOrderFetchLibs>) => {
+                console.log("[App] onmessage");
+                console.log(e);
+            };
             fetchLibsWorker.onerror = (e) => {
                 console.error(e);
             };
-
-            // send dependency
-            _orderFetchLibs();
         }
 
-        console.log("[App] is fetchLibsWorker exists?:");
+        console.log("[App] Check onmessage is defined or null:");
         console.log(fetchLibsWorker);
 
         return () => {
             _onUnmount();
         }
     }, []);
+
+    useEffect(() => {
+        console.log(fetchLibsWorker);
+        fetchLibsWorker.onmessage = (e: MessageEvent<iOrderFetchLibs>) => {
+            console.log("[App] onmessage");
+            console.log(e);
+        };
+    }, [fetchLibsWorker]);
 
     
     const onWillMount = () => {
