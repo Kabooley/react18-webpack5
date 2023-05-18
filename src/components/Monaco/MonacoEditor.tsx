@@ -1,12 +1,12 @@
 /***********************************************************
  * Wrapper of monaco-editor 
  * *********************************************************/ 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
 import type * as Monaco from 'monaco-editor';
 
 import willMountMonacoProcess from './monacoWillMountProcess';
-import type { iFile, iFiles } from './files';
+import type { iFile } from '../../data/files';
 
 /**
  * iProps contains...

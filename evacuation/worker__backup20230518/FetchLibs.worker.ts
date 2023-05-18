@@ -1,3 +1,6 @@
+/**************************************************************
+ * NOTE: Disable all on `feat_multi-file` branch.
+ * ************************************************************/ 
 import path from 'path-browserify';
 import type * as TypeScriptType from "typescript";
 import { createStore, set as setItem, get as getItem } from "idb-keyval";
