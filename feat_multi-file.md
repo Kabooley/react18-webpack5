@@ -39,7 +39,7 @@ editorで現在開いている最中のファイルのタブ
 
 https://github.com/Microsoft/monaco-editor/issues/604#issuecomment-344214706
 
-https://stackoverflow.com/questions/53900950/tabs-in-monaco-editor
+https://github.com/Microsoft/monaco-editor/blob/bad3c34056624dca34ac8be5028ae3454172125c/website/playground/playground.js#L108
 
 https://microsoft.github.io/monaco-editor/docs.html#interfaces/editor.IStandaloneCodeEditor.html#restoreViewState
 
@@ -54,6 +54,163 @@ https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneC
 > Saves current view state of the editor in a serializable object.
 
 `ICodeEditorViewState`のオブジェクトを
+
+```JavaScript
+var data = {
+	js: {
+		model: null,
+		state: null
+	},
+	css: {
+		model: null,
+		state: null
+	},
+	html: {
+		model: null,
+		state: null
+	}
+};
+
+function changeTab(selectedTabNode, desiredModelId) {
+    // 一旦すべてのtabのclassNameを'tab'にする
+    for (var i = 0; i < tabArea.childNodes.length; i++) {
+        var child = tabArea.childNodes[i];
+        if (/tab/.test(child.className)) {
+            child.className = 'tab';
+        }
+    }
+    // 選択されたtabのみclassName='tab active'にする
+    selectedTabNode.className = 'tab active';
+
+    // 切り替える前のeditorのviewstateヲ取り出して
+    var currentState = editor.saveViewState();
+
+    // 切り替える前のmodelのstateを保存しておく
+    var currentModel = editor.getModel();
+    if (currentModel === data.js.model) {
+        data.js.state = currentState;
+    } else if (currentModel === data.css.model) {
+        data.css.state = currentState;
+    } else if (currentModel === data.html.model) {
+        data.html.state = currentState;
+    }
+
+    // modelを切り替えて...
+    editor.setModel(data[desiredModelId].model);
+    // 切り替わったmodelのstateを適用する
+    editor.restoreViewState(data[desiredModelId].state);
+    editor.focus();
+};
+```
+
+```TypeScript
+import React, { useRef } from 'react';
+
+var data = {
+	js: {
+		model: null,
+		state: null
+	},
+	css: {
+		model: null,
+		state: null
+	},
+	html: {
+		model: null,
+		state: null
+	}
+};
+
+
+const Tabs = (props) => {
+    const _refJSTab = useRef<HTMLSpanElement>();
+    const _refJSTab2 = useRef<HTMLSpanElement>();
+    const _refCSSTab = useRef<HTMLSpanElement>();
+    const _refHTMLTab = useRef<HTMLSpanElement>();
+
+    const changeTab = (selectedTabNode: HTMLSpanElement, desiredModelId: string) => {
+        // 一旦すべてのtabのclassNameを'tab'にする
+        for (var i = 0; i < tabArea.childNodes.length; i++) {
+            var child = tabArea.childNodes[i];
+            if (/tab/.test(child.className)) {
+                child.className = 'tab';
+            }
+        }
+        // 選択されたtabのみclassName='tab active'にする
+        selectedTabNode.className = 'tab active';
+
+        // 切り替える前のeditorのviewstateヲ取り出して
+        var currentState = editor.saveViewState();
+
+        // 切り替える前のmodelのstateを保存しておく
+        var currentModel = editor.getModel();
+        if (currentModel === data.js.model) {
+            data.js.state = currentState;
+        } else if (currentModel === data.css.model) {
+            data.css.state = currentState;
+        } else if (currentModel === data.html.model) {
+            data.html.state = currentState;
+        }
+
+        // modelを切り替えて...
+        editor.setModel(data[desiredModelId].model);
+        // 切り替わったmodelのstateを適用する
+        editor.restoreViewState(data[desiredModelId].state);
+        editor.focus();
+    };
+
+    return (
+        <div className="tabArea">
+            <span 
+                className="tab active" 
+                ref={_refJSTabElement} 
+                onClick={() => onClickHandler(_refJSTabElement.current, "js")}
+            >jstab</span>
+        </div>
+        <div className="tabArea">
+            <span 
+                className="tab" 
+                ref={_refJSTabElement2} 
+                onClick={() => onClickHandler(_refJSTabElement2.current, "js")}
+            >jstab2</span>
+        </div>
+        <div className="tabArea">
+            <span 
+                className="tab" 
+                ref={_refCSSTabElement} 
+                onClick={() => onClickHandler(_refCSSTabElement.current, "css")}
+            >csstab</span>
+        </div>
+        <div className="tabArea">
+            <span 
+                className="tab" 
+                ref={_refHTMLTabElement} 
+                onClick={() => onClickHandler(_refHTMLTabElement.current, "js")}
+            >htmltab</span>
+        </div>
+    );
+};
+
+export default Tabs;
+```
+```css
+.tabArea {
+    position: absolute;
+    box-sizing: border-box;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+}
+
+.tab {
+    
+}
+
+.tab .active{
+
+}
+```
 
 
 ## 他
