@@ -8,6 +8,15 @@ import type * as Monaco from 'monaco-editor';
 import willMountMonacoProcess from './monacoWillMountProcess';
 import type { iFile } from '../../data/files';
 
+interface iModel {
+    model: monaco.editor.ITextModel;
+    state: monaco.editor.ICodeEditorViewState;
+};
+
+interface iModels {
+    [language: string]: iModel
+};
+
 /**
  * iProps contains...
  * - file information
@@ -19,6 +28,7 @@ interface iProps
     extends Monaco.editor.IStandaloneEditorConstructionOptions {
     file: iFile;
     path: string;
+    desiredModel: iModel;       // 選択されたmodel
     onValueChange: (v: string) => void;
     onWillMount: () => void;
     onDidMount: () => void;
@@ -69,7 +79,7 @@ const MonacoEditor = (props: iProps): JSX.Element => {
         // Object.keys(files).forEach(path => {
         //     _initializeFiles(path, files[path], files.language);
         // });
-        _initializeFiles(path, file.value, file.language);
+        _initializeFiles(path, file);
 
         // Apply file to editor according to path and value
         _applyFile(path);
@@ -82,6 +92,13 @@ const MonacoEditor = (props: iProps): JSX.Element => {
         }
     }, []);
 
+    // 
+    useEffect(() => {
+        const { desiredModel } = props;
+        _initializeFiles();
+        _modelChange(desiredModel);
+    }, [props.desiredModel]);
+
     // componentDidUpdate
     useEffect(() => {
         // DEBUG:
@@ -89,9 +106,15 @@ const MonacoEditor = (props: iProps): JSX.Element => {
     });
 
     /**
-     * 
+     * fileが追加されたりするたびに呼び出されたりする
+     * 生成されたmodelはmonaco-editor固有のstateに保存される
+     * （取り出しはmonaco.editor.getModels()で生成済を取り出すことができる）
+     * TODO: `data`の更新
+     * TODO: applyFileと役割かぶっている
      * */
-    const _initializeFiles = (path: string, value: string, language: string) => {
+    // const _initializeFiles = (path: string, value: string, language: string) => {
+    const _initializeFiles = (path: string, file: iFile) => {
+        const { language, value } = file;
         let model = monaco.editor.getModels()?.find(m => m.uri.path === path);
         if(model) {
             // TODO: apply latest state to the model
@@ -138,6 +161,49 @@ const MonacoEditor = (props: iProps): JSX.Element => {
             props.onValueChange(value ? value : "");
         });
     };
+    
+
+    /***
+     * 参考：
+     * https://github.com/Microsoft/monaco-editor/blob/bad3c34056624dca34ac8be5028ae3454172125c/website/playground/playground.js#L108
+     * 
+     * https://github.com/satya164/monaco-editor-boilerplate/blob/master/src/Editor.js
+     * 
+     * satyajitの方はfile: {path: string, value: content}
+     * playgroundの方はdata: {
+     *  'language': {
+     *      model: monaco.editor.ITextModel;
+     *      state: monaco.editor.ICodeEditorViewState;
+     *   }
+     * }
+     * 
+     * つまり、fileはcreatemodelに必要な材料で
+     * dataは出来上がったものである
+     * 
+     * TODO: `data`をどこに保存しておくか
+     * 
+     * modelとviewstateの保存
+     * */
+    const _modelChange = (newModelId: string) => {
+        // 切り替える前のeditorのviewstateヲ取り出して
+        const currentState = _refEditor.current!.saveViewState();
+
+        // 切り替える前のmodelのstateを保存しておく
+        var currentModel = _refEditor.current!.getModel();
+        if (currentModel === data.js.model) {
+            data.js.state = currentState;
+        } else if (currentModel === data.css.model) {
+            data.css.state = currentState;
+        } else if (currentModel === data.html.model) {
+            data.html.state = currentState;
+        }
+
+        // modelを切り替えて...
+        _refEditor.current!.setModel(data[newModelId].model);
+        // 切り替わったmodelのstateを適用する
+        _refEditor.current!.restoreViewState(data[newModelId].state);
+        _refEditor.current!.focus();
+    }; 
 
 
     /**
