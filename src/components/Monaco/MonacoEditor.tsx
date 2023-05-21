@@ -244,13 +244,25 @@ const MonacoEditor = (props: iProps): JSX.Element => {
 
 export default MonacoEditor;
 
-/***
- * Temporary Memo
+/****
+ * multiple fileの実現のために
  * 
- * Error ModelService: Cannot add model because it already exists!
+ * MonacoEditor:
+ * - 親コンポーネントからprops.file: iFileを取得
+ * - props.fileをもとにcreateModel()を実行し、modelを生成しておく
+ * （modelは保存する必要がない。monaco.editor.getModels().find()で生成済を取得できる
+ * - props.pathをもとに、editorインスタンスへ適用するmodelを選択する
+ * - useEffect(, [path])でファイル変更を監視する
+ * - useEffect(, [file])は必要ないかなぁ
+ * - ファイル変更の手順：saveViewState()して戻り値を保存して(TODO:fileオブジェクト関連へ保存して)、valueも保存して(TODO: 必要性があるか確認)、
+ *   setModelして、restoerViewState()で適用モデルの保存しておいたviewstateを適用させる
  * 
- *  https://stackoverflow.com/a/62466612
- *  
- *  
+ * data: {
+ *   // Related to each model
+ *  ['uri': string]: viewState: ICodeEditorViewState;    // viewstate of the model related to the uri.
+ * }
  * 
+ * dataを保存しておく方法：
+ * 案１：reactコンポーネントでない関数を定義してimportでとりこみuseEffectで使う
+ * 案２：useMemo()を使う
  * */ 
