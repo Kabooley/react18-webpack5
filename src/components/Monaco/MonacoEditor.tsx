@@ -7,6 +7,7 @@ import type * as Monaco from 'monaco-editor';
 
 import willMountMonacoProcess from './monacoWillMountProcess';
 import type { iFile } from '../../data/files';
+import viewStateFiles from '../../data/viewStates';
 
 interface iModel {
     model: monaco.editor.ITextModel;
@@ -111,7 +112,6 @@ const MonacoEditor = (props: iProps): JSX.Element => {
      * （取り出しはmonaco.editor.getModels()で生成済を取り出すことができる）
      * TODO: `data`の更新
      * TODO: applyFileと役割かぶっている
-     * */
     // const _initializeFiles = (path: string, value: string, language: string) => {
     const _initializeFiles = (path: string, file: iFile) => {
         const { language, value } = file;
@@ -184,24 +184,34 @@ const MonacoEditor = (props: iProps): JSX.Element => {
      * 
      * modelとviewstateの保存
      * */
-    const _modelChange = (newModelId: string) => {
+    /***
+     * Save previous model viewState.
+     * Set selected model to editor.
+     * Set selected model's viewState to editor.
+     * 
+     * @param {string} newModelUriPath - Selected model's uri path.
+     * 
+     * TODO: modelをuri.pathから引っ張ってくる
+     * */ 
+    const _modelChange = (newModelUriPath: string) => {
         // 切り替える前のeditorのviewstateヲ取り出して
         const currentState = _refEditor.current!.saveViewState();
 
         // 切り替える前のmodelのstateを保存しておく
         var currentModel = _refEditor.current!.getModel();
-        if (currentModel === data.js.model) {
-            data.js.state = currentState;
-        } else if (currentModel === data.css.model) {
-            data.css.state = currentState;
-        } else if (currentModel === data.html.model) {
-            data.html.state = currentState;
-        }
+        
+        if(!currentModel) throw new Error("No model was set on Editor");
 
-        // modelを切り替えて...
+        // Generating {[uripath: string]: monaco.editor.ICodeEditorViewState}
+        const s = Object.defineProperty({}, currentModel.uri.path, currentState!) as {
+            [uri: string]: monaco.editor.ICodeEditorViewState;
+        };
+        viewStateFiles.set(s);
+
+
+        // 適用modelの切り替え
         _refEditor.current!.setModel(data[newModelId].model);
-        // 切り替わったmodelのstateを適用する
-        _refEditor.current!.restoreViewState(data[newModelId].state);
+        _refEditor.current!.restoreViewState(viewStateFiles.get(newModelUriPath));
         _refEditor.current!.focus();
     }; 
 
