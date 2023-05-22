@@ -73,8 +73,36 @@ changeModel()は、
 
 
 
-file: modelの特定か、createModelの時に必要で、MonacoEditorで保存しておく必要がない
-data: 
+```css
+.tab-area {
+    position: absolute;
+    box-sizing: border-box;
+    top: 0;
+    left: 0;
+	height: 20px;
+	box-sizing: border-box;
+	border-bottom: 1px solid #999;
+}
+
+.tab {
+	height: 20px;
+	line-height: 20px;
+	box-sizing: border-box;
+	color: #999;
+	padding: 0 8px;
+	border: 1px solid #999;
+	border-bottom: 0;
+	cursor: pointer;
+	float: left;
+}
+
+.tab.active {
+	color: black;
+	border-bottom: 1px solid white;
+    background-color: violet;
+}
+```
+
 ## 他
 
 #### webpack: 無視するディレクトリの指定の仕方

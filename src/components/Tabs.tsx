@@ -1,21 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { files } from '../data/files';
 import type { iFile } from '../data/files';
-
-var data = {
-	js: {
-		model: null,
-		state: null
-	},
-	css: {
-		model: null,
-		state: null
-	},
-	html: {
-		model: null,
-		state: null
-	}
-};
+import './Tabs.css';
 
 interface iJSXNode extends Node {
     className?: string;
@@ -23,22 +9,22 @@ interface iJSXNode extends Node {
 
 
 /***
+ * - filesのすべてのタブをひとまず表示させている
+ * 
  * TODO: propsからfiles情報を取得すること
  * TODO: filesの情報を基にタブを生成すること
  * TODO: filesの情報を基にrefを生成すること
  * 
+ * mount時のアクティブタブは、files配列の一番初めのタブにする
  * */ 
 const Tabs = () => {
     const _refTabArea = useRef<HTMLDivElement>(null);
-    // ハードコーディング
-    const _refJSTab = useRef<HTMLSpanElement>(null);
-    const _refJSTab2 = useRef<HTMLSpanElement>(null);
-    const _refCSSTab = useRef<HTMLSpanElement>(null);
-    const _refHTMLTab = useRef<HTMLSpanElement>(null);
+    const [activeTab, setActiveTab] = useState<string>(files['react-typescript'].path);
+    const _refTabs = useRef(
+        Object.keys(files).map(() => React.createRef<HTMLSpanElement>())
+    );
 
-    const _refCurrentTab = useRef<HTMLSpanElement>(null);
-
-    const changeTab = (selectedTabNode: HTMLSpanElement, desiredModelId: string) => {
+    const changeTab = (selectedTabNode: HTMLSpanElement, desiredFilePath: string) => {
         // 一旦すべてのtabのclassNameを'tab'にする
         for (var i = 0; i < _refTabArea.current!.childNodes.length; i++) {
             // NOTE: 無理やり型を合わせている。
@@ -55,35 +41,26 @@ const Tabs = () => {
 
 
     return (
-        <div className="tabArea" ref={_refTabArea}>
+        <div className="tab-area" ref={_refTabArea}>
             {
                 Object.keys(files).map((key, index) => {
                     const file: iFile = files[key];
-                    return (
-                        <span 
-                            className={ index ? "tab" : "tab active"} 
-                            ref={} 
-                            onClick={() => changeTab(_refJSTab.current!, "js")}
-                        >{}</span>
-                    )
+                        return (
+                            <span 
+                                className={file.path === activeTab ? "tab active": "tab"}
+                                ref={_refTabs.current[index]}
+                                onClick={() => changeTab(_refTabs.current[index].current!, file.path)}
+                            >
+                                {/*
+                                 TODO: "/main.js"なので一番初めの'/'を取り除きたい 
+                                 参考：
+                                 https://stackoverflow.com/questions/10396074/remove-specific-characters-from-a-string-in-javascript
+                                 */}
+                                {file.path}
+                            </span>
+                        );
                 })
             }
-
-            <span 
-                className="tab" 
-                ref={_refJSTab2} 
-                onClick={() => changeTab(_refJSTab2.current!, "js")}
-            >jstab2</span>
-            <span 
-                className="tab" 
-                ref={_refCSSTab} 
-                onClick={() => changeTab(_refCSSTab.current!, "css")}
-            >csstab</span>
-            <span 
-                className="tab" 
-                ref={_refHTMLTab} 
-                onClick={() => changeTab(_refHTMLTab.current!, "js")}
-            >htmltab</span>
         </div>
     );
 };
