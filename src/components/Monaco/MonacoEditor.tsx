@@ -6,8 +6,9 @@ import * as monaco from 'monaco-editor';
 import type * as Monaco from 'monaco-editor';
 
 import willMountMonacoProcess from './monacoWillMountProcess';
-import type { iFile } from '../../data/files';
 import viewStateFiles from '../../data/viewStates';
+import { getModelByPath } from '../../utils/getModelByPath';
+import type { iFile, iFiles } from '../../data/files';
 
 interface iModel {
     model: monaco.editor.ITextModel;
@@ -27,9 +28,8 @@ interface iModels {
  * */ 
 interface iProps 
     extends Monaco.editor.IStandaloneEditorConstructionOptions {
-    file: iFile;
+    files: iFiles;
     path: string;
-    desiredModel: iModel;       // 選択されたmodel
     onValueChange: (v: string) => void;
     onWillMount: () => void;
     onDidMount: () => void;
@@ -50,8 +50,8 @@ const MonacoEditor = (props: iProps): JSX.Element => {
     const _subOnDidChangeContent = useRef<Monaco.IDisposable>();
     const _subOnDidChangeModel = useRef<Monaco.IDisposable>();
 
-    // componentDidMount
     /***
+     * componentDidMount
      * 
      * - monaco.editor.create()
      * - createModel() according to files
@@ -63,7 +63,7 @@ const MonacoEditor = (props: iProps): JSX.Element => {
         if(!_refEditorNode.current) throw new Error("Error: monaco-container dom is not exist.");
 
         const { 
-            file, path, onDidMount, onWillMount, onValueChange, 
+            files, path, onDidMount, onWillMount, onValueChange, 
             ...options 
         } = props;
 
@@ -77,15 +77,14 @@ const MonacoEditor = (props: iProps): JSX.Element => {
         );
 
         // Generate models according to files prop
-        // Object.keys(files).forEach(path => {
-        //     _initializeFiles(path, files[path], files.language);
-        // });
-        _initializeFiles(path, file);
+        Object.keys(files).forEach(path => {
+            _initializeFiles(files[path]);
+        });
 
         // Apply file to editor according to path and value
         _applyFile(path);
 
-        // set window resize handlerなど...
+        // TODO: set window resize handlerなど...
 
         // componentWillUnmount
         return () => {
@@ -95,10 +94,17 @@ const MonacoEditor = (props: iProps): JSX.Element => {
 
     // 
     useEffect(() => {
-        const { desiredModel } = props;
-        _initializeFiles();
-        _modelChange(desiredModel);
-    }, [props.desiredModel]);
+        // DEBUG:
+        console.log("[MonacoEditor] useEffect(, [props.path])");
+
+        const { path, files } = props;
+
+        // Get key which matches its path property
+        const key = Object.keys(files).find(k => files[k].path === path);
+
+        key && _initializeFiles(files[key]);
+        _modelChange(path);
+    }, [props.path]);
 
     // componentDidUpdate
     useEffect(() => {
@@ -112,10 +118,11 @@ const MonacoEditor = (props: iProps): JSX.Element => {
      * （取り出しはmonaco.editor.getModels()で生成済を取り出すことができる）
      * TODO: `data`の更新
      * TODO: applyFileと役割かぶっている
-    // const _initializeFiles = (path: string, value: string, language: string) => {
-    const _initializeFiles = (path: string, file: iFile) => {
-        const { language, value } = file;
-        let model = monaco.editor.getModels()?.find(m => m.uri.path === path);
+     * */
+    // const _initializeFiles = (path: string, file: iFile) => {
+    const _initializeFiles = (file: iFile) => {
+        const { path, language, value } = file;
+        let model = getModelByPath(monaco, path);
         if(model) {
             // TODO: apply latest state to the model
         }
@@ -169,20 +176,6 @@ const MonacoEditor = (props: iProps): JSX.Element => {
      * 
      * https://github.com/satya164/monaco-editor-boilerplate/blob/master/src/Editor.js
      * 
-     * satyajitの方はfile: {path: string, value: content}
-     * playgroundの方はdata: {
-     *  'language': {
-     *      model: monaco.editor.ITextModel;
-     *      state: monaco.editor.ICodeEditorViewState;
-     *   }
-     * }
-     * 
-     * つまり、fileはcreatemodelに必要な材料で
-     * dataは出来上がったものである
-     * 
-     * TODO: `data`をどこに保存しておくか
-     * 
-     * modelとviewstateの保存
      * */
     /***
      * Save previous model viewState.
@@ -210,7 +203,8 @@ const MonacoEditor = (props: iProps): JSX.Element => {
 
 
         // 適用modelの切り替え
-        _refEditor.current!.setModel(data[newModelId].model);
+        const model = getModelByPath(monaco, newModelUriPath);
+        model && _refEditor.current!.setModel(model);
         _refEditor.current!.restoreViewState(viewStateFiles.get(newModelUriPath));
         _refEditor.current!.focus();
     }; 
@@ -243,26 +237,3 @@ const MonacoEditor = (props: iProps): JSX.Element => {
 };
 
 export default MonacoEditor;
-
-/****
- * multiple fileの実現のために
- * 
- * MonacoEditor:
- * - 親コンポーネントからprops.file: iFileを取得
- * - props.fileをもとにcreateModel()を実行し、modelを生成しておく
- * （modelは保存する必要がない。monaco.editor.getModels().find()で生成済を取得できる
- * - props.pathをもとに、editorインスタンスへ適用するmodelを選択する
- * - useEffect(, [path])でファイル変更を監視する
- * - useEffect(, [file])は必要ないかなぁ
- * - ファイル変更の手順：saveViewState()して戻り値を保存して(TODO:fileオブジェクト関連へ保存して)、valueも保存して(TODO: 必要性があるか確認)、
- *   setModelして、restoerViewState()で適用モデルの保存しておいたviewstateを適用させる
- * 
- * data: {
- *   // Related to each model
- *  ['uri': string]: viewState: ICodeEditorViewState;    // viewstate of the model related to the uri.
- * }
- * 
- * dataを保存しておく方法：
- * 案１：reactコンポーネントでない関数を定義してimportでとりこみuseEffectで使う
- * 案２：useMemo()を使う
- * */ 

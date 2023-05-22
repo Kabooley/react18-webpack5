@@ -8,6 +8,7 @@
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import * as monaco from 'monaco-editor';
 import MonacoEditor from './Monaco/MonacoEditor';
+import Tabs from './Tabs';
 import { files } from "../data/files";
 
 
@@ -30,8 +31,6 @@ self.MonacoEnvironment = {
 	}
 };
 
-// const defaultValue = "import { createRoot } from 'react-dom/client';\r\nimport React from 'react';\r\nimport 'bulma/css/bulma.css';\r\n\r\nconst App = () => {\r\n    return (\r\n        <div className=\"container\">\r\n          <span>REACT</span>\r\n        </div>\r\n    );\r\n};\r\n\r\nconst root = createRoot(document.getElementById('root'));\r\nroot.render(<App />);";
-
 
 /***
  * IStandaloneEditorConstructionOptions: {
@@ -48,7 +47,6 @@ self.MonacoEnvironment = {
  * 
  * */ 
 const editorConstructOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
-    // value: defaultValue,
 	language: "typescript",
 	lineNumbers: "off",
 	roundedSelection: false,
@@ -60,6 +58,7 @@ const editorConstructOptions: monaco.editor.IStandaloneEditorConstructionOptions
 
 const MonacoContainer = () => {
     const [value, setValue] = useState<string>("");
+    const [currentFilePath, setCurrentFilePath] = useState<string>(files['react-typescript'].path);
 
     useEffect(() => {
         // DEBUG:
@@ -96,9 +95,11 @@ const MonacoContainer = () => {
 
     return (
         <div className="monaco-container">
+            <Tabs />
             <MonacoEditor 
-                file={files['react-typescript']}
-                path={files['react-typescript'].path}
+                files={files}
+                // 'react-typescript' as default path
+                path={currentFilePath}   
                 onWillMount={onWillMount}
                 onValueChange={onValueChange}
                 onDidMount={onDidMount}

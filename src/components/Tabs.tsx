@@ -1,4 +1,6 @@
 import React, { useRef } from 'react';
+import { files } from '../data/files';
+import type { iFile } from '../data/files';
 
 var data = {
 	js: {
@@ -19,6 +21,13 @@ interface iJSXNode extends Node {
     className?: string;
 };
 
+
+/***
+ * TODO: propsからfiles情報を取得すること
+ * TODO: filesの情報を基にタブを生成すること
+ * TODO: filesの情報を基にrefを生成すること
+ * 
+ * */ 
 const Tabs = () => {
     const _refTabArea = useRef<HTMLDivElement>(null);
     // ハードコーディング
@@ -26,6 +35,8 @@ const Tabs = () => {
     const _refJSTab2 = useRef<HTMLSpanElement>(null);
     const _refCSSTab = useRef<HTMLSpanElement>(null);
     const _refHTMLTab = useRef<HTMLSpanElement>(null);
+
+    const _refCurrentTab = useRef<HTMLSpanElement>(null);
 
     const changeTab = (selectedTabNode: HTMLSpanElement, desiredModelId: string) => {
         // 一旦すべてのtabのclassNameを'tab'にする
@@ -40,37 +51,24 @@ const Tabs = () => {
         }
         // 選択されたtabのみclassName='tab active'にする
         selectedTabNode.className = 'tab active';
-
-        // 以下の処理は親コンポーネントから引っ張ってくる関数に任せてもいいかも
-        // -------
-            // 切り替える前のeditorのviewstateヲ取り出して
-            var currentState = editor.saveViewState();
-
-            // 切り替える前のmodelのstateを保存しておく
-            var currentModel = editor.getModel();
-            if (currentModel === data.js.model) {
-                data.js.state = currentState;
-            } else if (currentModel === data.css.model) {
-                data.css.state = currentState;
-            } else if (currentModel === data.html.model) {
-                data.html.state = currentState;
-            }
-
-            // modelを切り替えて...
-            editor.setModel(data[desiredModelId].model);
-            // 切り替わったmodelのstateを適用する
-            editor.restoreViewState(data[desiredModelId].state);
-            editor.focus();
-        // -----------
     };
+
 
     return (
         <div className="tabArea" ref={_refTabArea}>
-            <span 
-                className="tab active" 
-                ref={_refJSTab} 
-                onClick={() => changeTab(_refJSTab.current!, "js")}
-            >jstab</span>
+            {
+                Object.keys(files).map((key, index) => {
+                    const file: iFile = files[key];
+                    return (
+                        <span 
+                            className={ index ? "tab" : "tab active"} 
+                            ref={} 
+                            onClick={() => changeTab(_refJSTab.current!, "js")}
+                        >{}</span>
+                    )
+                })
+            }
+
             <span 
                 className="tab" 
                 ref={_refJSTab2} 
