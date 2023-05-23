@@ -60,7 +60,7 @@ const MonacoEditor = (props: iProps): JSX.Element => {
      * - set unmount process
      * */ 
     useEffect(() => {
-        if(!_refEditorNode.current) throw new Error("Error: monaco-container dom is not exist.");
+        if(!_refEditorNode.current) throw new Error("Error: monaco-editor dom is not exist.");
 
         const { 
             files, path, onDidMount, onWillMount, onValueChange, 
@@ -228,7 +228,7 @@ const MonacoEditor = (props: iProps): JSX.Element => {
     return (
         <section style={{width: "100%", height: "90vh"}}>
             <div 
-                className="monaco-container" 
+                className="monaco-editor" 
                 ref={_refEditorNode}
                 style={{width: "100%", height: "100%"}}
             ></div>

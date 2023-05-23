@@ -12,12 +12,12 @@ export const files: iFiles = {
     'javascript': {
         path: '/main.js',
         language: 'javascript',
-        value: ``
+        value: `var salute = "salute!!";`
     },
     'typescript': {
         path: '/main.ts',
         language: 'typescript',
-        value: ``
+        value: `const jungleBeats: string = "Holla at me, boo";`
     },
     'react': {
         path: '/main.jsx',

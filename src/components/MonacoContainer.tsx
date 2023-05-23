@@ -10,6 +10,7 @@ import * as monaco from 'monaco-editor';
 import MonacoEditor from './Monaco/MonacoEditor';
 import Tabs from './Tabs';
 import { files } from "../data/files";
+import './index.css';
 
 
 // @ts-ignore
@@ -93,9 +94,17 @@ const MonacoContainer = () => {
         console.log("[App] onUnmount():");
     };
 
+    
+    const onChangeFile = (path: string) => {
+        // DEBUG:
+        console.log(`[MonacoContainer] onChangeFile: change to ${path}`);
+
+        setCurrentFilePath(path);
+    }
+
     return (
         <div className="monaco-container">
-            <Tabs />
+            <Tabs path={currentFilePath} onChangeFile={onChangeFile}/>
             <MonacoEditor 
                 files={files}
                 // 'react-typescript' as default path
