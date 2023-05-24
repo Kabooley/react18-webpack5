@@ -11,6 +11,7 @@ module.exports = {
 		// ESLintWorker: './src/workers/ESLint.worker.ts',
 		// JSXHighlightWorker: './src/workers/JSXHighlight.worker.ts',
 		// FetcLibsWorker: './src/workers/FetchLibs.worker.ts',
+		'bundle.worker': './src/workers/bundle.worker.ts',
 
 		// monaco-editor requirement:
 		'editor.worker': 'monaco-editor/esm/vs/editor/editor.worker.js',
