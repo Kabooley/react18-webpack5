@@ -17,13 +17,7 @@ interface iProps {
 
 
 /***
- * - filesのすべてのタブをひとまず表示させている
  * 
- * TODO: propsからfiles情報を取得すること
- * TODO: filesの情報を基にタブを生成すること
- * TODO: filesの情報を基にrefを生成すること
- * 
- * mount時のアクティブタブは、files配列の一番初めのタブにする
  * */ 
 const Tabs = ({ path, onChangeFile }: iProps) => {
     const _refTabArea = useRef<HTMLDivElement>(null);

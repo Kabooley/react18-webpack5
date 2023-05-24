@@ -23,17 +23,235 @@ https://stackoverflow.com/questions/53900950/tabs-in-monaco-editor
 - saveViewState, restoreViewState
 
 
-#### 実装：file 
+## 実装：file 
 
-ひとまず、buttonを設置して、
+MonacoEditorコンポーネントは、props.pathに該当するファイルを表示するようにする。
 
-各ボタンをクリック　--> fileが切り替わる
+- (ひとまず)親コンポーネント(MonacoContainer.tsx)はimportで`files`を取得して、filesのうち一つのfileのpathを子コンポーネントに渡す
+- MonacoEditor.tsxはpathとfilesをpropsで取得する
+- MonacoEditorはprops.filesを基にmodelを作成する
+- MonacoEditorはprops.pathを基にmodelのなかから該当するmodelをsetModel()する
+- props.path変更時に、editorに適用しているmodelの変更を行う
+- model変更時は、saveViewState()で現在のviewStateを出力して`viewStateFiles`に保存
+- model変更時は、restoreViewState()で適用するmodelのviewstateを`viewStateFiles`から取り出して保存する
 
-という仕様にする。
+#### とにかくつくってみる
+
+NOTE: いまのところ、`MonacoEditor`は`files`を直接importしている。
+
+MonacoEditor component:
+
+- props.path: どのタブがまたはファイルが選択されたのかの情報を受け取る
+- useEffect(, [props.currentModel])が、initializeFileとchangeModelを呼び出す
+- initializeFileはmodelの生成、modelのキャッシュ
+
+changeModel()は、
+    saveViewStateで現在のmodelのviewstateを保存する
+    setModelで新しいmodelをエディタに反映させる
+    restoreViewStateで切り替わったmodelのstateを反映させる
 
 
+```TypeScript
+import React, { useEffect, useRef } from 'react';
+import * as monaco from 'monaco-editor';
+import type * as Monaco from 'monaco-editor';
+import viewStateFiles from '../../data/viewStates';
+import { getModelByPath } from '../../utils/getModelByPath';
+import type { iFile, iFiles } from '../../data/files';
 
-#### 実装：Tabs
+interface iModel {
+    model: monaco.editor.ITextModel;
+    state: monaco.editor.ICodeEditorViewState;
+};
+
+interface iModels {
+    [language: string]: iModel
+};
+
+interface iProps 
+    extends Monaco.editor.IStandaloneEditorConstructionOptions {
+    files: iFiles;
+    path: string;
+    onValueChange: (v: string) => void;
+    onWillMount: () => void;
+    onDidMount: () => void;
+};
+
+/**
+ * 
+ * */ 
+const MonacoEditor = (props: iProps): JSX.Element => {
+    const _refEditorNode = useRef<HTMLDivElement>(null);
+    const _refEditor = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+    // Ref to ITextModel.onDidChangeContent
+    const _subOnDidChangeContent = useRef<Monaco.IDisposable>();
+    const _subOnDidChangeModel = useRef<Monaco.IDisposable>();
+
+    /***
+     * componentDidMount
+     * 
+     * - monaco.editor.create()
+     * - createModel() according to files
+     * - editor.setModel()
+     * - reset subscription
+     * - set unmount process
+     * */ 
+    useEffect(() => {
+        if(!_refEditorNode.current) throw new Error("Error: monaco-editor dom is not exist.");
+
+        const { 
+            files, path, onDidMount, onWillMount, onValueChange, 
+            ...options 
+        } = props;
+
+        _refEditor.current = monaco.editor.create(
+            _refEditorNode.current, 
+            options
+        );
+
+        _subOnDidChangeModel.current = _refEditor.current.onDidChangeModel(
+            _onDidChangeModel
+        );
+
+        // Generate models according to files prop
+        Object.keys(files).forEach(path => {
+            _initializeFiles(files[path]);
+        });
+
+        // Apply file to editor according to path and value
+        _applyFile(path);
+
+        // componentWillUnmount
+        return () => {
+            _onUnmount();
+        }
+    }, []);
+
+    /**
+	 * props.pathに基づきmodelの変更を適用させる
+	 * 
+	 * 
+	 * */ 
+    useEffect(() => {
+
+        const { path, files } = props;
+
+        // Get key which matches its path property
+        const key = Object.keys(files).find(k => files[k].path === path);
+
+		// props.pathのモデルを生成させる
+        key && _initializeFiles(files[key]);
+		// props.pathのモデルを適用させる
+        _modelChange(path);
+    }, [props.path]);
+
+	/**
+	 * 
+	 * */ 
+    const _initializeFiles = (file: iFile) => {
+        const { path, language, value } = file;
+        let model = getModelByPath(monaco, path);
+        if(model) {
+            // TODO: apply latest state to the model
+        }
+        else {
+            model = monaco.editor.createModel(
+                value, language, 
+                new monaco.Uri().with({ path })
+            );
+            model.updateOptions({
+                tabSize: 2,
+                insertSpaces: true,        
+            });
+        }
+    };
+
+    /**
+     * Apply file to editor according to props.path and props.value
+     * */
+    const _applyFile = (path: string) => {
+        if(!_refEditor.current) return;
+        const model = monaco.editor.getModels()?.find(
+            m => m.uri.path === path
+        );
+        model && _refEditor.current.setModel(model);
+    };
+
+    /**
+     * Handler of event fires when model changed.
+     * */
+    const _onDidChangeModel = ({ newModelUrl, oldModelUrl }: Monaco.editor.IModelChangedEvent) => {
+        _resetSubscriptions();
+    };
+
+    /**
+     * Reset subscriptions
+     * */ 
+    const _resetSubscriptions = () => {
+        _subOnDidChangeContent.current && _subOnDidChangeContent.current.dispose();
+        _refEditor.current?.getModel()?.onDidChangeContent(() => {
+            const value = _refEditor.current?.getModel()?.getValue();
+            props.onValueChange(value ? value : "");
+        });
+    };
+    
+
+    /***
+     * 参考：
+     * https://github.com/Microsoft/monaco-editor/blob/bad3c34056624dca34ac8be5028ae3454172125c/website/playground/playground.js#L108
+     * 
+     * https://github.com/satya164/monaco-editor-boilerplate/blob/master/src/Editor.js
+     * 
+     * */
+    /***
+     * Save previous model viewState.
+     * Set selected model to editor.
+     * Set selected model's viewState to editor.
+     * 
+     * @param {string} newModelUriPath - Selected model's uri path.
+     * 
+     * */ 
+    const _modelChange = (newModelUriPath: string) => {
+        // 切り替える前のeditorのviewstateヲ取り出して
+        const currentState = _refEditor.current!.saveViewState();
+
+        // 切り替える前のmodelのstateを保存しておく
+        var currentModel = _refEditor.current!.getModel();
+        
+        if(!currentModel) throw new Error("No model was set on Editor");
+
+        // Generating {[uripath: string]: monaco.editor.ICodeEditorViewState}
+        const s = Object.defineProperty({}, currentModel.uri.path, currentState!) as {
+            [uri: string]: monaco.editor.ICodeEditorViewState;
+        };
+        viewStateFiles.set(s);
+
+
+        // 適用modelの切り替え
+        const model = getModelByPath(monaco, newModelUriPath);
+        model && _refEditor.current!.setModel(model);
+        _refEditor.current!.restoreViewState(viewStateFiles.get(newModelUriPath));
+        _refEditor.current!.focus();
+    }; 
+
+    return (
+		// ...
+    );
+};
+
+export default MonacoEditor;
+```
+
+これでpathにもとづいてmodelの変更が可能になった。
+
+
+## 実装：Tabs
+
+- props.pathで現在選択中のファイルのpathを取得する
+- props.onChangeFileでタブが切り替わったことを親コンポーネントへ伝達する
+- 動的に増減するタブへのDOMポインタを動的ref生成でまかなう
+
+#### 参考
 
 editorで現在開いている最中のファイルのタブ
 
@@ -43,37 +261,77 @@ https://github.com/Microsoft/monaco-editor/blob/bad3c34056624dca34ac8be5028ae345
 
 https://microsoft.github.io/monaco-editor/docs.html#interfaces/editor.IStandaloneCodeEditor.html#restoreViewState
 
-ファイルを切り替えたときに、切り替得る前のmodelのviewを保存するのに使う
-
-> Restores the view state of the editor from a serializable object generated by `saveViewState`.
-
 https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneCodeEditor.html#saveViewState
 
-現在のmodelのviewを保存しておく。
 
-> Saves current view state of the editor in a serializable object.
+#### つくってみた
+
+```TypeScript
+// Tabs.tsx
+import React, { useRef, useState } from 'react';
+import { files } from '../data/files';
+import type { iFile } from '../data/files';
+import './Tabs.css';
+
+// NOTE: 無理やり型を合わせている。
+// 本来`child: Node`でclassNameというpropertyを持たないが、iJSXNode.classNameをoptionalにすることによって
+// 回避している
+interface iJSXNode extends Node {
+    className?: string;
+};
+
+interface iProps {
+    path: string;
+    onChangeFile: (path: string) => void;
+}
+
+const Tabs = ({ path, onChangeFile }: iProps) => {
+    const _refTabArea = useRef<HTMLDivElement>(null);
+	// 動的ref生成装置
+    const _refTabs = useRef(
+        Object.keys(files).map(() => React.createRef<HTMLSpanElement>())
+    );
+
+    const changeTab = (selectedTabNode: HTMLSpanElement, desiredFilePath: string) => {
+        // 一旦すべてのtabのclassNameを'tab'にする
+        for (var i = 0; i < _refTabArea.current!.childNodes.length; i++) {
+
+            var child: iJSXNode = _refTabArea.current!.childNodes[i];
+            if (/tab/.test(child.className!)) {
+                child.className = 'tab';
+            }
+        }
+        // 選択されたtabのみclassName='tab active'にする
+        selectedTabNode.className = 'tab active';
+        onChangeFile(desiredFilePath);
+    };
 
 
-#### とにかくつくってみる
+    return (
+        <div className="tab-area" ref={_refTabArea}>
+            {
+                Object.keys(files).map((key, index) => {
+                    const file: iFile = files[key];
+                        return (
+                            <span 
+                                className={file.path === path ? "tab active": "tab"}
+                                ref={_refTabs.current[index]}
+                                onClick={() => changeTab(_refTabs.current[index].current!, file.path)}
+                            >
+                                {file.path}
+                            </span>
+                        );
+                })
+            }
+        </div>
+    );
+};
 
-MonacoEditor component:
-
-- props.currentModel: 
-
-親コンポーネントから、どのタブがまたはファイルが選択されたのかの情報を受け取る
-
-useEffect(, [props.currentModel])が、initializeFileとchangeModelを呼び出す
-
-initializeFileはmodelの生成、modelのキャッシュ
-
-changeModel()は、
-    saveViewStateで現在のmodelのviewstateを保存する
-    setModelで新しいmodelをエディタに反映させる
-    restoreViewStateで切り替わったmodelのstateを反映させる
-
-
+export default Tabs;
+```
 
 ```css
+/* Tabs.css */
 .tab-area {
     position: absolute;
     box-sizing: border-box;
@@ -102,6 +360,16 @@ changeModel()は、
     background-color: violet;
 }
 ```
+
+#### 動的ref生成
+
+TODO: stackoverflowの記事を貼る。
+
+どのタブに切り替わったのか、classNameを変更するためにどうしてもDOM情報が必要なので、
+
+動的に生成されるタブに対応するため動的なref生成が必要になった。
+
+
 
 ## 他
 
