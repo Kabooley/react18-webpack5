@@ -1,8 +1,5 @@
 .tab-area {
-    position: absolute;
     box-sizing: border-box;
-    top: 0;
-    left: 0;
     height: 20px;
     box-sizing: border-box;
     border-bottom: 1px solid #999;
