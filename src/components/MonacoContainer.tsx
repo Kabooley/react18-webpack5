@@ -12,8 +12,10 @@ import MonacoEditor from './Monaco/MonacoEditor';
 import Tabs from './Tabs';
 import { files } from "../data/files";
 import './index.css';
-// NOTE: added:
-import type { iMessageBundleWorker } from "../worker/types";
+// // NOTE: added:
+// import type { iMessageBundleWorker } from "../worker/types";
+
+import bundler from '../Bundle';
 
 interface iProps {
     onBundled: (bundledCode: string) => void;
@@ -55,18 +57,18 @@ const MonacoContainer = ({
 }: iProps) => {
     const [value, setValue] = useState<string>("");
     const [currentFilePath, setCurrentFilePath] = useState<string>(files['react-typescript'].path);
-    // NOTE: added bundle worker
-    const bundleWorker = useMemo(
-        () => new Worker(new URL('/src/Worker/bundle.worker.ts', import.meta.url), { type: "module" }
-        ), []);
+    // // NOTE: added bundle worker
+    // const bundleWorker = useMemo(
+    //     () => new Worker(new URL('/src/worker/bundle.worker.ts', import.meta.url), { type: "module" }
+    //     ), []);
 
     useEffect(() => {
         // DEBUG:
         console.log("[App] on did mount");
 
-        if(window.Worker) {
-            bundleWorker.addEventListener('message', _cbBundledMessage, false);
-        }
+        // if(window.Worker) {
+        //     bundleWorker.addEventListener('message', _cbBundledMessage, false);
+        // }
 
         return () => {
             _onUnmount();
@@ -95,8 +97,8 @@ const MonacoContainer = ({
     const _onUnmount = () => {
         // DEBUG:
         console.log("[App] onUnmount():");
-        bundleWorker && bundleWorker.removeEventListener('message', _cbBundledMessage, false);
-        bundleWorker && bundleWorker.terminate();
+        // bundleWorker && bundleWorker.removeEventListener('message', _cbBundledMessage, false);
+        // bundleWorker && bundleWorker.terminate();
     };
 
     
@@ -115,21 +117,31 @@ const MonacoContainer = ({
         // DEBUG:
         console.log("[MonacoContainer] submit");
 
-        bundleWorker.postMessage({
-            order: "bundle",
-            code: value
-        });
+        // bundleWorker.postMessage({
+        //     order: "bundle",
+        //     code: value
+        // });
+
+        bundler(value)
+        .then(({ code, err }) => {
+            if(err) throw err;
+            console.log(code);
+        })
+        .catch(e => console.error(e.message));
     };
 
-    const _cbBundledMessage = (e: MessageEvent<iMessageBundleWorker>) => {
+    // const _cbBundledMessage = (e: MessageEvent<iMessageBundleWorker>) => {
 
-        // DEBUG:
-        console.log("[MonacoContainer] got bundled code");
+    //     // DEBUG:
+    //     console.log("[MonacoContainer] got bundled code");
 
-        const { bundledCode, err } = e.data;
-        if(err) throw err;
-        bundledCode && onBundled(bundledCode);
-    };
+    //     const { bundledCode, err } = e.data;
+    //     if(err) throw err;
+    //     // DEBUG:
+    //     console.log(bundledCode);
+
+    //     bundledCode && onBundled(bundledCode);
+    // };
 
     return (
         <div className="monaco-container">

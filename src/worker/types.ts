@@ -1,4 +1,4 @@
-type iOrder = "bundle" | "jsxhighlight" | "eslint" | "featch-libs";
+type iOrder = "order" | "bundle" | "jsxhighlight" | "eslint" | "featch-libs";
 
 /***
  * Common property which must be included in any messages.
