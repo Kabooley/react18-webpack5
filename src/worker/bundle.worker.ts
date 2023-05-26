@@ -11,7 +11,7 @@ interface iBuildResult {
 const initializeOptions: esbuild.InitializeOptions = {
     // wasmURL:  '/esbuild.wasm',
     worker: true,
-    wasmURL: 'http://unpkg.com/esbuild-wasm@0.17.16/esbuild.wasm'
+    wasmURL: 'http://unpkg.com/esbuild-wasm@0.17.19/esbuild.wasm'
 };
 
 let isInitialized: boolean = false;
@@ -86,7 +86,7 @@ self.onmessage = (e:MessageEvent<iMessageBundleWorker>): void => {
 
         
     // DEBUG: 
-    console.log("[bundle.worker.ts] got message");
+    console.log("[bundle.worker.ts] got message on onmessage()");
     console.log(e);
 
     // // Validate origin
@@ -129,51 +129,10 @@ self.onmessage = (e:MessageEvent<iMessageBundleWorker>): void => {
 };
 
 
-self.addEventListener('message', (e:MessageEvent<iMessageBundleWorker>): void => {
-
-        
-    // DEBUG: 
-    console.log("[bundle.worker.ts] got message");
+self.addEventListener('message', (e) => {
+    console.log("message:");
     console.log(e);
-
-    // // Validate origin
-    // if(!validateOrigin(e.origin)) return;
-    
-    // Filter necessary message
-    if(e.data.order !== "bundle") return;
-
-
-    
-    // DEBUG: 
-    console.log("[bundle.worker.ts] start bundle process...");
-
-    const { code } = e.data;
-
-    if(code) {
-        bundler(code)
-        .then((result: iBuildResult) => {
-            if(result.err.length) throw new Error(result.err);
-
-            // DEBUG:
-            console.log("[budle.worker.ts] sending bundled code");
-
-            self.postMessage({
-                bundledCode: result.code,
-                err: null
-            });
-        })
-        .catch((e) => {
-            
-            // DEBUG:
-            console.log("[budle.worker.ts] sending Error");
-            
-            self.postMessage({
-                bundledCode: "",
-                err: e
-            });
-        });
-    }
-}, false);
+});
 
 
 console.log("[bundle.worker] running...");

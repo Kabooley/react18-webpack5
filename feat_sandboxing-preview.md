@@ -34,6 +34,18 @@ TODO: EditorSection.tsxからPreviewSection.tsxへバンドル済のコードを
 
 #### 渡されたコードを実行させる
 
+#### 参考：公式playgroundの解析
+
+functiion doRun(): load new iframe
+	onload: runIframe.contentWindow.load()
+
+	iframe.src = 'playground/playground-runner.html';
+
+https://github.com/microsoft/monaco-editor/blob/bad3c34056624dca34ac8be5028ae3454172125c/website/playground/playground-runner.html
+
+	結局eval()してましたわ。
+	eval()でいいわ。
+
 
 ## 実装
 
@@ -86,9 +98,54 @@ workerを有効にするので、
 
 #### workerがStrcitModeだとうまくいかない件
 
-があるのでバンドリングプロセスはReactから直接呼出すようにするかも。
+ひとまずworkerの利用はやめてメインスレッドから直接fetchするようにした。
 
-一旦workerでやってみてダメなら直接呼び出す方向に。
+workerがうまくいかない件の検証
+
+- self.onmessage(), worker.onmessage()が全く役に立たない件。各スコープで確かにonmessageが指定した関数であることが確認できるがメッセージを受け取らない。
+- self.addEventListener()は動いている模様。monaco-editorのworkerからのメッセージを受け取ることはできているのが確認できる。メインスレッドと自前のワーカーとの間の通信だけできていない。
+- メインスレッドでのworker.addEventListener('message', )はなぜかついていない。これはDevTools::Elements::EventListenersから確認できた。
+- CORS制限なのでは？：`devServer: {headers: {'Access-Control-Allow-Origin': '*'}}`にしていても通信できない。なので関係ないことが確認できる。
+
+
+StrictModeを外してから動かしてみたらわかったこと：
+
+- 上記以外のエラーはなかった。つまりStrictModeじゃなければメッセージのやり取りはできている。
+
+
+- StrictModeを外したときでもworker.addEventListener()は確認できるか？: 確認できない。そういうものなんだと思って。
+
+- StrictModeを外したときでもself.onmessage()は呼ばれていないか？：addEventListenerもonmessageも両方ちゃんと呼ばれている。なのでonmessageがなぜか使われていないというのは勘違いな模様。
+
+- メインスレッドとワーカの間のメッセージのoriginが空文字列である。
+
+```JavaScript
+MessageEvent {isTrusted: true, data: {…}, origin: '', lastEventId: '', source: null, …}
+isTrusted: true
+bubbles: false
+cancelBubble: false
+cancelable: false
+composed: false
+currentTarget: DedicatedWorkerGlobalScope {name: '', onmessageerror: null, onmessage: ƒ, cancelAnimationFrame: ƒ, close: ƒ, …}
+data: {order: 'bundle', code: "import { createRoot } from 'react-dom/client';\r\nim…getElementById('root'));\r\nroot.render(<App />);\r\n"}
+defaultPrevented: false
+eventPhase: 0
+lastEventId: ""
+origin: ""
+ports: []
+returnValue: true
+source: null
+srcElement: DedicatedWorkerGlobalScope {name: '', onmessageerror: null, onmessage: ƒ, cancelAnimationFrame: ƒ, close: ƒ, …}
+target: DedicatedWorkerGlobalScope {name: '', onmessageerror: null, onmessage: ƒ, cancelAnimationFrame: ƒ, close: ƒ, …}
+timeStamp: 0
+type: "message"
+userActivation: null
+```
+
+crossoriginisolated?
+globalThis?
+
+TODO: とにかく投稿しよう
 
 #### CORS error
 
@@ -100,14 +157,9 @@ Access to fetch at 'https://unpkg.com/esbuild-wasm@0.17.16/esbuild.wasm' (redire
 
 そういえばworkerへのpostmessageはいつもなぜかoriginが空だから、
 
-それではじかれていたのかも？
+それではじかれていたのかも？エラー表示してほしいけどね。
 
-エラー表示してほしいけどね。
-
-
-cross-originする方法の模索
-
-[webpack cross origin](#webpack-cross-origin)
+参考： [webpack cross origin](#webpack-cross-origin)
 
 ```JavaScript
 // webpack.config.js
@@ -119,7 +171,7 @@ cross-originする方法の模索
 		// DEBUG:
 		// Only for development mode
 		headers: {
-			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Origin': 'unpkg.com',
 			'Access-Control-Allow-Headers': '*',
 			'Access-Control-Allow-Methods': '*',
 		}
@@ -127,14 +179,10 @@ cross-originする方法の模索
 
 ```
 
-NOTE: 開発中だけ...としたいところだけどどう考えても危険なので絞り込むよう検証しなくてはならない
 
-unpkg.comとworkerを許可しなくてはならない
-
-TODO: workerが使えるようになったか確認
-TODO: 'Access-Control-Allow-Origin' を絞り込む
-TODO: 'Access-Control-Allow-Headers' を絞り込む
-TODO: 'Access-Control-Allow-Methods' を絞り込む
+- Access-Control-Allow-Origin: 'unpkg.com'：いまのところここにしか用がないので。確認したところ設定は問題ない。
+- TODO: 'Access-Control-Allow-Headers' を絞り込む
+- TODO: 'Access-Control-Allow-Methods' を絞り込む
 
 
 ## cross origin
