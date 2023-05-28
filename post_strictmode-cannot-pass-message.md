@@ -2,6 +2,8 @@
 
 # React `StrictMode` does not allow message exchange between worker and React component.
 
+I am currently developing an application using webpack5 and React18.
+
 I created the following code to exchange messages with webworker and React component which uses monaco-editor.
 
 I expected app runs like following.
@@ -106,19 +108,28 @@ self.addEventListener('message', (e:MessageEvent<iMessageBundleWorker>): void =>
 console.log("[bundle.worker] running...");
 ```
 
+```TypeScript
+// parent component
+import React from 'react';
+
+const App = () => {
+    return (
+        <div>
+            <React.StrictMode>
+                <MonacoContainer />
+            </React.StrictMode>
+        </div>
+    )
+}
+```
+
 When I run it, I can see that no messages are being exchanged.
 
-```bash
-# Insert: console.log() output content, etc.
-```
+However, if I remove `StrictMode`, it immediately exchanges message without problems.
 
-However, if I remove `StrictMode`, I immediately see that messages are exchanged without problems.
+But with `StrictMode`, it won't.
 
-```bash
-# Insert: console.log()
-```
-
-Here is what I have tried to solve.
+#### Here is what I have surveyed to solve.
 
 - `StrictMode` causes `useEffect()` to be ran twice, so maybe not cleaning up properly has something to do with this problem?
 
@@ -129,10 +140,9 @@ Both `worker.terminate()` and `worker.removeEventListener('message')` are execut
 Development is done locally, and I have confirmed that both are `http://localhost:8080`.
 So it should not be cross-origin.
 
-- I think I am missing the message because the React component and the worker have different timing for completion of mounting.
+- You think I am missing the message because the React component and the worker have different timing for completion of mounting.
 
-I don't think that is related to `StrictMode`, as it does not occur when app run without `StrictMode`.
-Even if the worker, which is the last to complete the mount, sends a message when the mount is completed, the main thread still does not receive the message.
+I don't think that is related to `StrictMode`, as it does not occur when app runs without `StrictMode`.
 
 So I'm stuck.
 
@@ -140,7 +150,9 @@ Is there any limitation to communicate with a worker in React18 that cannot be d
 
 I am developing in `Strictmode` with React18, webpack5, but I wonder if there is any way to exchange messages with the worker without any problems.
 
-The following is the development environment and settings.
+My environment and settings.
+
+Node.js version 16
 
 ```JSON
 // tsconfig.json
@@ -180,7 +192,7 @@ module.exports = {
 	mode: 'development',
 	entry: {
 		index: './src/index.tsx',
-		FetcLibsWorker: './src/worker/bundle.worker.ts',
+		'bundle.worker': './src/worker/bundle.worker.ts',
 
 		// monaco-editor requirement:
 		'editor.worker': 'monaco-editor/esm/vs/editor/editor.worker.js',
@@ -247,7 +259,7 @@ module.exports = {
 };
 ```
 
-Thanks.
+Thank you.
 
 ---- 原文
 
