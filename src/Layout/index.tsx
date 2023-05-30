@@ -3,6 +3,10 @@ import EditorSection from "./EditorSection";
 import PreviewSection from "./PreviewSection";
 import Header from "./Header";
 import MainContainer from "./MainContainer";
+import NavigationSection from "./NavigationSection";
+import SplitPane from "./SplitPane";
+import Pane from "./PaneSection";
+
 // import Resizable from "../components/Resizable";
 
 const Layout = (): JSX.Element => {
@@ -16,6 +20,7 @@ const Layout = (): JSX.Element => {
   }, []);
   
   
+  // DEBUG:
   const calcElementRect = () => {
     const elementList = [
       "div.main-container",
@@ -36,25 +41,18 @@ const Layout = (): JSX.Element => {
   };
 
   return (
-    <div>
+    <>
       <Header />
       <MainContainer>
-        <EditorSection/>
-        <PreviewSection />
+        <NavigationSection />
+        <SplitPane>
+          <Pane />
+          <EditorSection/>
+          <PreviewSection />
+        </SplitPane>
       </MainContainer>
-    </div>
+    </>
   );
-  // return (
-  //   <div>
-  //     <Header />
-  //     <MainContainer>
-  //       <Resizable direction={"horizontal"} >
-  //         <EditorSection />
-  //       </Resizable>
-  //       <PreviewSection />
-  //     </MainContainer>
-  //   </div>
-  // );
 };
 
 export default Layout;
