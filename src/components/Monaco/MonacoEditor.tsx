@@ -9,6 +9,7 @@ import willMountMonacoProcess from './monacoWillMountProcess';
 import viewStateFiles from '../../data/viewStates';
 import { getModelByPath } from '../../utils/getModelByPath';
 import type { iFile, iFiles } from '../../data/files';
+import '../index.css';
 
 interface iModel {
     model: monaco.editor.ITextModel;
@@ -228,17 +229,25 @@ const MonacoEditor = (props: iProps): JSX.Element => {
         _refEditor.current && _refEditor.current.dispose();
 
         _refEditorNode.current && _refEditorNode.current.removeEventListener('resize', _onResize);
-    };
+    };  
 
     return (
-        <section style={{width: "100%", height: "90vh"}}>
+        <>
             <div 
                 className="monaco-editor" 
                 ref={_refEditorNode}
-                style={{width: "100%", height: "100%"}}
             ></div>
-        </section>
+        </>
     );
+    // return (
+    //     <section style={{width: "100%", height: "90vh"}}>
+    //         <div 
+    //             className="monaco-editor" 
+    //             ref={_refEditorNode}
+    //             style={{width: "100%", height: "100%"}}
+    //         ></div>
+    //     </section>
+    // );
 };
 
 export default MonacoEditor;
