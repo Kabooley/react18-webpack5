@@ -46,7 +46,9 @@ const Layout = (): JSX.Element => {
       <MainContainer>
         <NavigationSection />
         <SplitPane>
+          {/* wrap pane by resizablebox */}
           <Pane />
+          {/* wrap EditorSection by resizableBox */}
           <EditorSection/>
           <PreviewSection />
         </SplitPane>

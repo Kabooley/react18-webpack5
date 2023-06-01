@@ -55,14 +55,15 @@
 	width: 100%;
   }
   
-  .pane-section {
-	height: 100vh;
+  .pane {
+	/* height: 100vh; */
+	height: 100%;
 	border-right: 1px solid rgb(52, 52, 52);
-	width: 16%;
+	margin: 0;
+	/* width: 16%; */
   }
   
-  .pain2 {
-  }
+  .pain2 {}
   
   .editor-section {
 	width: 50%;
@@ -72,16 +73,18 @@
   .monaco-container {
 	display: flex;
 	flex-direction: column;
+	height: 100vh;
   }
   
-  /* .tabs-area {
+  .tabs-area {
 	background-color: rgb(21, 21, 21);
 	--title-border-bottom-color: #343434;
 	overflow: hidden;
 	height: 35px;
-  } */
+  }
   
   .monaco-editor {
+	height: 100%;
   }
 
   .preview-section {
@@ -98,38 +101,31 @@
 	background-color: white;
   }
   
-
-/* .Editor {
-	width: 800px;
-	height: 600px;
-	border: 1px solid #ccc;
-}
-
-.header-container {
-	color: white;
-	width: 100%;
-	height: 40px;
-	background-color: black;
-	border: solid 1px white;
-	margin: 0;
+/* custom handle */
+.custom-handle {
+	position: absolute;
+  }
+  .custom-handle:hover {
+	transition: all 0.3s ease;
+	opacity: 0.4;
   }
   
-  .main-container {
-	display: flex;
-	flex-direction: row;
+  .custom-handle-e {
+	top: 0;
+	right: 0;
+	width: 11px;
+	height: 100%;
+	margin: 0 -5px;
+	border-left: 5px solid transparent;
+	border-right: 5px solid transparent;
+	cursor: col-resize;
   }
   
-  .editor-section {
-	color: white;
-	width: 100%;
-	height: 100vh;
-	background-color: black;
-	border: solid 1px white;
+  
+  .custom-handle-e:hover {
+	width: 4px;
   }
   
-  .preview-section {
-	width: 50%;
-	height: 100vh;
-	background-color: floralwhite;
-	border: solid 1px white;
-  } */
+  .custom-resize-handle-component {
+  }
+  

@@ -1,10 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { ResizableBox } from "react-resizable";
+import type { ResizeCallbackData } from "react-resizable";
+import '../index.css';
 
 const PaneSection = (): JSX.Element => {
+  const [paneWidth, setPaneWidth] = useState<number>(300);
+
+  const onPaneResize: (
+    e: React.SyntheticEvent,
+    data: ResizeCallbackData
+  ) => any = (event, { node, size, handle }) => {
+    setPaneWidth(size.width);
+  };
+
   return (
-    <div className="pane">
-        PANE
-    </div>
+    <ResizableBox
+      width={paneWidth}
+      height={Infinity}
+      minConstraints={[100, Infinity]}
+      onResize={onPaneResize}
+      resizeHandles={["e"]}
+      handle={(h, ref) => (
+      <span className={`custom-handle custom-handle-${h}`} ref={ref} />
+      )}
+    >
+      <div className="pane" style={{ width: paneWidth }}>
+        pane
+      </div>
+    </ResizableBox>
   );
 };
 
