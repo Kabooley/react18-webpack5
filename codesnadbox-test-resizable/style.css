@@ -73,6 +73,7 @@ body {
 .monaco-container {
   display: flex;
   flex-direction: column;
+  height: 100vh;
 }
 
 .tabs-area {
@@ -83,7 +84,9 @@ body {
 }
 
 .monaco-editor {
+  height: 100%;
 }
+
 .preview {
   visibility: visible;
   max-width: 100%;
@@ -96,4 +99,32 @@ body {
 
   /* iframe内部だけど */
   background-color: white;
+}
+
+/* custom handle */
+.custom-handle {
+  position: absolute;
+}
+.custom-handle:hover {
+  transition: all 0.3s ease;
+  opacity: 0.4;
+}
+
+.custom-handle-e {
+  top: 0;
+  right: 0;
+  width: 11px;
+  height: 100%;
+  margin: 0 -5px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  cursor: col-resize;
+}
+
+
+.custom-handle-e:hover {
+  width: 4px;
+}
+
+.custom-resize-handle-component {
 }
