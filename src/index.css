@@ -38,7 +38,6 @@
 	height: 100%;
   }
   
-  /* TODO: position: fixedじゃない方法で並べることはできないか？ */
   .navigation-section {
 	height: 100vh;
 	padding: 8px;
@@ -56,11 +55,9 @@
   }
   
   .pane {
-	/* height: 100vh; */
 	height: 100%;
 	border-right: 1px solid rgb(52, 52, 52);
 	margin: 0;
-	/* width: 16%; */
   }
   
   .pain2 {}
@@ -80,8 +77,24 @@
 	background-color: rgb(21, 21, 21);
 	--title-border-bottom-color: #343434;
 	overflow: hidden;
-	height: 35px;
   }
+
+  .tab {
+    line-height: 1.4rem;
+    box-sizing: border-box;
+    color: #999;
+    padding: 0 8px;
+    border: 1px solid #999;
+    border-bottom: 0;
+    cursor: pointer;
+    float: left;
+}
+
+.tab.active {
+    color: black;
+    border-bottom: 1px solid white;
+    background-color: violet;
+}
   
   .monaco-editor {
 	height: 100%;
@@ -123,9 +136,5 @@
   
   
   .custom-handle-e:hover {
-	width: 4px;
+	width: 12px;
   }
-  
-  .custom-resize-handle-component {
-  }
-  

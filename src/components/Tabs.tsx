@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { files } from '../data/files';
 import type { iFile } from '../data/files';
-import './Tabs.css';
+import '../index.css';
 
 // NOTE: 無理やり型を合わせている。
 // 本来`child: Node`でclassNameというpropertyを持たないが、iJSXNode.classNameをoptionalにすることによって
@@ -41,7 +41,7 @@ const Tabs = ({ path, onChangeFile }: iProps) => {
 
 
     return (
-        <div className="tab-area" ref={_refTabArea}>
+        <div className="tabs-area" ref={_refTabArea}>
             {
                 Object.keys(files).map((key, index) => {
                     const file: iFile = files[key];
