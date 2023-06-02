@@ -182,7 +182,7 @@ https://github.com/WICG/resize-observer/issues/38
                 <nav class="navigation">NAV</nav>
                 <div class="split-pane horizontal">
                     <div class="pane1">pane-1</div>
-                    <div class="editor-section">
+                    <div class="editor-section">  
                         <div class="monaco-container">
                             <div class="tabs-area">TABS</div>
                             <div class="monaco-editor">EDITOR</div>
@@ -196,3 +196,5 @@ https://github.com/WICG/resize-observer/issues/38
 ```
 
 TODO: cssの重複の解消
+TODO: tab
+TODO: (別ブランチに切って)paneを閉じたり開いたりできるようにする
