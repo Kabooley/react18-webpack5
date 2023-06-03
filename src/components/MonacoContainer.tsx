@@ -1,12 +1,7 @@
-/**********************************************************
- * Monaco Editor that enables Multiple files.
+/*****************************************
  * 
- * NOTE:
- * - Temporary disable workers to implement only multi-file functionality.
- *  Back up has saved @ evacuation/App.tsx.backupyyyymmdd
- * NOTE: added bundle.worker and enable worker.
- * ********************************************************/ 
-import React, { useState, useRef, useMemo, useEffect } from "react";
+ * ***************************************/
+import React from "react";
 import * as monaco from 'monaco-editor';
 import MonacoEditor from './Monaco/MonacoEditor';
 import Tabs from './Tabs';
@@ -15,11 +10,9 @@ import './index.css';
 // // NOTE: added:
 import type { iMessageBundleWorker } from "../worker/types";
 
-// import bundler from '../Bundle';
-
 interface iProps {
     onBundled: (bundledCode: string) => void;
-}
+};
 
 
 // @ts-ignore
@@ -52,74 +45,72 @@ const editorConstructOptions: monaco.editor.IStandaloneEditorConstructionOptions
 };
 
 
-const MonacoContainer = ({
-    onBundled
-}: iProps) => {
-    const [value, setValue] = useState<string>("");
-    const [currentFilePath, setCurrentFilePath] = useState<string>(files['react-typescript'].path);
-    // NOTE: added bundle worker
-    const bundleWorker = useMemo(
-        () => new Worker(new URL('/src/worker/bundle.worker.ts', import.meta.url), { type: "module" }
-        ), []);
+class MonacoContainer extends React.Component<iProps> {
+    state = {
+        value: "",
+        currentFilePath: files['react-typescript'].path
+    };
+    bundleWorker: Worker | undefined;
 
-    useEffect(() => {
+    componentDidMount = (): void => {
         // DEBUG:
-        console.log("[App] on did mount");
+        console.log("[MonacoContainer] on did mount");
 
         if(window.Worker) {
-            bundleWorker.addEventListener('message', _cbBundledMessage, false);
+            this.bundleWorker = new Worker(
+                new URL('/src/worker/bundle.worker.ts', import.meta.url), 
+                { type: "module" }
+            );
+            this.bundleWorker.addEventListener('message', this._cbBundledMessage, false);
         }
+    };
 
-        return () => {
-            _onUnmount();
-        }
-    }, []);
+    componentDidUpdate = (): void => {};
+
+    componentWillUnmount(): void {
+        // DEBUG:
+        console.log("[MonacoContainer] onUnmount():");
+
+        this.bundleWorker && this.bundleWorker.removeEventListener('message', this._cbBundledMessage, false);
+        this.bundleWorker && this.bundleWorker.terminate();
+    }
 
     
-    const onWillMount = () => {
+    onWillMount = () => {
         // DEBUG:
-        console.log("[App] Will mount.");
+        console.log("[MonacoContainer] Will mount.");
     };
     
-    const onDidMount = () => {
+    onDidMount = () => {
         // DEBUG:
-        console.log("[App] Did mount.");
+        console.log("[MonacoContainer] Did mount.");
     };
 
-    const onValueChange = (v: string) => {
+    onValueChange = (v: string) => {
         // DEBUG:
-        console.log("[App] On value change.");
+        console.log("[MonacoContainer] On value change.");
 
-        setValue(v);
-    };
-
-
-    const _onUnmount = () => {
-        // DEBUG:
-        console.log("[App] onUnmount():");
-        bundleWorker && bundleWorker.removeEventListener('message', _cbBundledMessage, false);
-        bundleWorker && bundleWorker.terminate();
+        this.setState({value: v})
     };
 
     
-    const onChangeFile = (path: string) => {
+    onChangeFile = (path: string) => {
         // DEBUG:
         console.log(`[MonacoContainer] onChangeFile: change to ${path}`);
 
-        setCurrentFilePath(path);
+        this.setState({currentFilePath: path});
     };
 
     /**
      * Send code to bundler.
-     * 
      * */ 
-    const _onSubmit = () => {
+    _onSubmit = () => {
         // DEBUG:
         console.log("[MonacoContainer] submit");
 
-        bundleWorker.postMessage({
+        this.bundleWorker && this.bundleWorker.postMessage({
             order: "bundle",
-            code: value
+            code: this.state.value
         });
 
         // bundler(value)
@@ -130,7 +121,7 @@ const MonacoContainer = ({
         // .catch(e => console.error(e.message));
     };
 
-    const _cbBundledMessage = (e: MessageEvent<iMessageBundleWorker>) => {
+    _cbBundledMessage = (e: MessageEvent<iMessageBundleWorker>) => {
 
         // DEBUG:
         console.log("[MonacoContainer] got bundled code");
@@ -140,24 +131,27 @@ const MonacoContainer = ({
         // DEBUG:
         console.log(bundledCode);
 
-        bundledCode && onBundled(bundledCode);
+        bundledCode && this.props.onBundled(bundledCode);
     };
 
-    return (
-        <div className="monaco-container">
-            <Tabs path={currentFilePath} onChangeFile={onChangeFile}/>
-            <MonacoEditor 
-                files={files}
-                // 'react-typescript' as default path
-                path={currentFilePath}   
-                onWillMount={onWillMount}
-                onValueChange={onValueChange}
-                onDidMount={onDidMount}
-                {...editorConstructOptions}
-            />
-            <button onClick={_onSubmit}>submit</button>
-        </div>
-    );
+    render() {
+        return (
+            <div className="monaco-container">
+                <Tabs path={this.state.currentFilePath} onChangeFile={this.onChangeFile}/>
+                <MonacoEditor 
+                    files={files}
+                    // 'react-typescript' as default path
+                    path={this.state.currentFilePath}   
+                    onWillMount={this.onWillMount}
+                    onValueChange={this.onValueChange}
+                    onDidMount={this.onDidMount}
+                    {...editorConstructOptions}
+                />
+                <button onClick={this._onSubmit}>submit</button>
+            </div>
+        );
+    }
+
 };
 
 export default MonacoContainer;

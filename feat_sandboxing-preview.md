@@ -2,7 +2,6 @@
 
 iframeで囲ったpreviewへ如何にして安全にコードを送信し実行させるか
 
-NOTE: やっぱりなぜかwokrerが使えないのでfetchすることにする
 
 ## タスク
 
@@ -17,22 +16,10 @@ TODO: EditorSection.tsxからPreviewSection.tsxへバンドル済のコードを
 
 ## 問題
 
-- eval()じゃないと渡したコードを実行する手段がない
+- [eval()でいいのか？](#eval()でいいのか？)
 - [workerがStrcitModeだとうまくいかない件](#workerがStrcitModeだとうまくいかない件)
 
-
-## iframe
-
-#### バンドルコードを渡す
-
-バンドリングコードを取得する流れ：
-
-- （ひとまず用意した）submitボタンが押されたらeditorのコードを取得してbundleを行うワーカへ投げる
-- workerがバンドリングして結果をメインスレッドへ返す
-- バンドリングコードをiframeへ何とか渡す(TODO: おさらい)
-
-
-#### 渡されたコードを実行させる
+## eval()でいいのか？
 
 #### 参考：公式playgroundの解析
 
@@ -45,58 +32,13 @@ https://github.com/microsoft/monaco-editor/blob/bad3c34056624dca34ac8be5028ae345
 
 	結局eval()してましたわ。
 	eval()でいいわ。
+	まぁたいそうなもの作りたいわけはないし...
 
 
-## 実装
 
-## 実装：バンドリング
+## workerがStrcitModeだとうまくいかない件
 
-stephanのレポジトリの方のやつを移すだけなんだけどね。
-
-esbuild-wasm, axios, localforage, 
-
-```bash
-$ yarn add esbuild-wasm axios localforage
-$ yarn add @types/localforage 
-```
-生成：
-
-src/worker/bundle.worker.ts
-src/Bundle/index.ts
-src/Bundle/plugins/fetchPlugin.ts
-src/Bundle/plugins/unpkgPathPlugins.ts
-
-```JavaScript
-// webpack.config.js
-
-module.exports = {
-	mode: 'development',
-	entry: {
-		index: './src/index.tsx',
-		'bundle.worker': './src/worker/bundle.worker.ts',
-	},
-    // ...
-};
-```
-
-workerを有効にするので、
-
-```JSON
-// tsconfig.json
-{
-    "lib": [
-      "WebWorker", "DOM"
-      ],
-}
-```
-
-```TypeScript
-// 
-```
-
-## 他
-
-#### workerがStrcitModeだとうまくいかない件
+解決：[わかったこと](#わかったこと)
 
 ひとまずworkerの利用はやめてメインスレッドから直接fetchするようにした。
 
@@ -185,36 +127,289 @@ Access to fetch at 'https://unpkg.com/esbuild-wasm@0.17.16/esbuild.wasm' (redire
 - TODO: 'Access-Control-Allow-Methods' を絞り込む
 
 
-## cross origin
 
-https://fetch.spec.whatwg.org/#access-control-allow-headers-response-header
+#### わかったこと
 
-https://fetch.spec.whatwg.org/#access-control-allow-methods-response-header
+NOTE: 原因：useMemo()が一度terminateされたworkerを保持し続けているからかも。
+解決策：workerとやりとりするコンポーネントはclassコンポーネントにして、field変数としてworkerを保持することで回避できる。
 
-https://fetch.spec.whatwg.org/#access-control-allow-origin-response-header
+- monaco-editorとかサードパーティのライブラリは関係なく、strictmode且つ現状のコードだとworkerと通信できない
 
-#### webpack cross origin
+最小コードで走らせてみたところ確認できたのでこのとおり。
 
-https://stackoverflow.com/questions/31602697/webpack-dev-server-cors-issue
+- useMemo()が、useEffect()の2度実行にまたがってworkerを保持している可能性がある。そのために、一度目のuseEffect()の実行時にworker.terminateされるが、useMemo()に依存関係がないためにterminateされたままのworkerを保持しているのである。
 
-#### webpack dev server
+NOTE: 憶測の域である。確認できないため。
 
-https://webpack.js.org/configuration/dev-server/#devserver-headers-
+となるとuseMemo()で保持しない方がいいというのが解になるが...
 
-`devServer.allowedHosts`: dev serverへアクセスするのを許されるホストのリストを指定できる
+そうなるとclass化するのがいいのでは？となるなぁ
 
-`all`とするのは非推奨である。
+#### 検証：class component化
 
-`autp`とすると常に`localhost`, `host`, `client.webSocketURL.hostname:`が許可される。
+結論：解決。workerを扱うコンポーネントはクラスにするべき。
+
+workerの方はそのまま。
+
+なぜclass化が有効だと思ったのか？
+
+useMemo()はレンダリングにまたがって変数を保持するから、terminate()済のworkerを保持し続けてしまう。
+
+一方class fieldとして保持する場合、new worker() --> terminate --> new worker()で再生成されたworkerをちゃんと取得できるから。
+
+```TypeScript
+import React from 'react';
+import type { iMessageBundleWorker } from './worker/temp.worker';
+
+interface iProps {};
+
+class Test extends React.Component<iProps> {
+    public tempWorker: Worker | undefined;
+
+    constructor(props: iProps) {
+        super(props);
+    }
 
 
+    componentDidMount = () => {
+        // DEBUG:
+        console.log("[Test.tsx] on did mount");
 
-## esbuild
+        this.tempWorker = new Worker(
+            new URL('/src/worker/temp.worker.ts', import.meta.url), 
+            { type: "module" }
+        );
+        this.tempWorker.addEventListener('message', this._cbMessageHandler, false);
+        this.tempWorker.postMessage({
+            order: "order",
+            message: "test.tsx is ready"
+        });
 
-#### esbuild.BuildOptions
+        console.log(this.tempWorker);
+    };
 
-entryPoints:
+    componentWillUnmount = () => {
+        // DEBUG:
+        console.log("[Test.tsx] on will unmount");
 
-https://esbuild.github.io/api/#entry-points
+        this.tempWorker && this.tempWorker.removeEventListener('message', this._cbMessageHandler, false);
+        this.tempWorker && this.tempWorker.terminate();
+    };
 
-出力されるファイルのこと。そのエントリーポイント。
+    _cbMessageHandler = (e: MessageEvent<iMessageBundleWorker>) => {
+        const { order, ...rest } = e.data;
+
+        
+        if(order !== "order") return;
+
+        // DEBUG:
+        console.log('[test.tsx] got message');
+        console.log(rest);
+    };
+
+    onClickHandler = () => {
+        // DEBUG:
+        console.log('[test.tsx] clicked');
+        console.log(this.tempWorker);
+
+        this.tempWorker && this.tempWorker.postMessage({
+            order: "order",
+            message: "button clicked"
+        });
+    };
+
+    render() {
+        return (
+            <div className="test">
+                TEST
+                <button onClick={this.onClickHandler}>send message</button>
+            </div>
+        );
+    }
+};
+
+export default Test;
+```
+```bash
+reportWebVitals.ts:6 [reportWebVitals]
+temp.worker.ts:6 [worker] running...
+temp.worker.ts:7 Window
+TestClass.tsx:16 [Test.tsx] on did mount
+TestClass.tsx:28 Worker
+TestClass.tsx:33 [Test.tsx] on will unmount
+TestClass.tsx:16 [Test.tsx] on did mount
+TestClass.tsx:28 Worker
+temp.worker.ts:15 [worker] got message
+temp.worker.ts:16 Object
+temp.worker.ts:6 [worker] running...
+temp.worker.ts:7 DedicatedWorkerGlobalScope
+TestClass.tsx:46 [test.tsx] got message
+TestClass.tsx:47 Object
+temp.worker.ts:15 [worker] got message
+temp.worker.ts:16 Object
+TestClass.tsx:52 [test.tsx] clicked
+TestClass.tsx:53 Worker {onmessage: null, onerror: null}
+temp.worker.ts:15 [worker] got message
+temp.worker.ts:16 {message: 'button clicked'}
+```
+
+見たところ、
+
+componentDidMount --> componentWillUnmount --> componentDidMountで、
+
+useEffect()の場合と同じく2度実行されているが、
+
+workerと通信がちゃんとできている！
+
+となると、
+
+やはり問題の原因はuseMemo()がterminateしたworkerを保持し続けている可能性があることである。
+
+
+#### test環境
+
+```TypeScript
+// NOTE: class化する前の関数コンポーネント
+import React, { useEffect, useMemo, useRef } from 'react';
+import type { iMessageBundleWorker } from './worker/temp.worker';
+
+const Test = () => {
+    const tempWorker = useMemo(
+        () => new Worker(new URL('/src/worker/temp.worker.ts', import.meta.url), { type: "module" }
+    ), []);
+
+    useEffect(() => {
+        
+        
+        // DEBUG:
+        console.log("[test.tsx] on did mount");
+
+        if(window.Worker) {
+            // DEBUG:
+            console.log("[test.tsx] setup worker");
+
+            tempWorker.addEventListener('message', _cbMessageHandler, false);
+            tempWorker.postMessage({
+                order: "order",
+                message: "test.tsx is ready"
+            });
+        }
+
+        return () => _unmount();
+    }, []);
+
+    const _unmount = () => {
+        // DEBUG:
+        console.log("[test.tsx] on unmount");
+
+        tempWorker && tempWorker.removeEventListener('message', _cbMessageHandler, false);
+        tempWorker && tempWorker.terminate();
+    };
+
+    const _cbMessageHandler = (e: MessageEvent<iMessageBundleWorker>) => {
+        const { order, ...rest } = e.data;
+
+        
+        if(order !== "order") return;
+
+        // DEBUG:
+        console.log('[test.tsx] got message');
+        console.log(rest);
+    };
+
+    
+    return (
+        <div className="test">
+            TEST
+        </div>
+    );
+};
+
+export default Test;
+```
+
+```TypeScript
+export interface iMessageBundleWorker {
+    order: "order";
+    err: Error;
+};
+
+console.log("[worker] running...");
+console.log(self);
+
+self.addEventListener('message', (e: MessageEvent<iMessageBundleWorker>) => {
+    const { order, ...rest } = e.data;
+
+    if(order !== "order") return;
+
+    // DEBUG:
+    console.log('[worker] got message');
+    console.log(rest);
+});
+
+self.postMessage({
+    order: "order",
+    message: "worker is ready"
+});
+```
+
+```TypeScript
+import React from "react";
+import ReactDOM from "react-dom/client";
+import Test from "./Test";
+import reportWebVitals from './reportWebVitals';
+
+const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
+root.render(
+  <React.StrictMode>
+    <Test />
+  </React.StrictMode>
+);
+
+reportWebVitals();
+```
+
+
+## 実装
+
+## 実装：バンドリング
+
+stephanのレポジトリの方のやつを移すだけなんだけどね。
+
+esbuild-wasm, axios, localforage, 
+
+```bash
+$ yarn add esbuild-wasm axios localforage
+$ yarn add @types/localforage 
+```
+生成：
+
+src/worker/bundle.worker.ts
+src/Bundle/index.ts
+src/Bundle/plugins/fetchPlugin.ts
+src/Bundle/plugins/unpkgPathPlugins.ts
+
+```JavaScript
+// webpack.config.js
+
+module.exports = {
+	mode: 'development',
+	entry: {
+		index: './src/index.tsx',
+		'bundle.worker': './src/worker/bundle.worker.ts',
+	},
+    // ...
+};
+```
+
+workerを有効にするので、
+
+```JSON
+// tsconfig.json
+{
+    "lib": [
+      "WebWorker", "DOM"
+      ],
+}
+```
+

@@ -1,6 +1,5 @@
 import * as esbuild from 'esbuild-wasm';
-import { unpkgPathPlugin } from '../Bundle/plugins/unpgkPathPlugin';
-import { fetchPlugins } from '../Bundle/plugins/fetchPlugins';
+import { fetchPlugins, unpkgPathPlugin } from '../Bundle';
 import type { iMessageBundleWorker } from './types';
 
 interface iBuildResult {
@@ -15,16 +14,6 @@ const initializeOptions: esbuild.InitializeOptions = {
 };
 
 let isInitialized: boolean = false;
-
-// /**
-//  * Validate origin is valid or not.
-//  * */ 
-// const validateOrigin = (origin: string): boolean => {
-//     const expression = /^http:\/\/localhost\:8080\/?/;
-//     const regex = new RegExp(expression);
-
-//     return origin.match(regex) ? true : false;
-// };
 
 /**
  * @param { string } rawCode - The code that user typed and submitted.
@@ -54,8 +43,6 @@ const bundler = async (rawCode: string): Promise<iBuildResult> => {
 
        const result = await esbuild.build(buildOptions);
 
-       console.log(result);
-
        // TODO: エラー内容を詳細にして
        if(result === undefined) throw new Error;
 
@@ -77,9 +64,7 @@ const bundler = async (rawCode: string): Promise<iBuildResult> => {
 
 
 /***
- * NOTE: Validate MessageEvent.origin is unavailable.
- * 
- * Origin of Message from Main thread includes empty string.  
+ * NOTE: Validate MessageEvent.origin is unavailable because origin is always empty string...
  * 
  * */ 
 self.onmessage = (e:MessageEvent<iMessageBundleWorker>): void => {
@@ -89,14 +74,9 @@ self.onmessage = (e:MessageEvent<iMessageBundleWorker>): void => {
     console.log("[bundle.worker.ts] got message on onmessage()");
     console.log(e);
 
-    // // Validate origin
-    // if(!validateOrigin(e.origin)) return;
-    
     // Filter necessary message
     if(e.data.order !== "bundle") return;
 
-
-    
     // DEBUG: 
     console.log("[bundle.worker.ts] start bundle process...");
 
@@ -127,12 +107,3 @@ self.onmessage = (e:MessageEvent<iMessageBundleWorker>): void => {
         });
     }
 };
-
-
-self.addEventListener('message', (e) => {
-    console.log("message:");
-    console.log(e);
-});
-
-
-console.log("[bundle.worker] running...");
