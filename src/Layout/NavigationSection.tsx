@@ -1,8 +1,7 @@
 import React from 'react';
-import { PropsWithChildren } from "react";
 import Navigation from '../components/Navigation';
 
-const NavigationSection = (props: PropsWithChildren): JSX.Element => {
+const NavigationSection = (): JSX.Element => {
   return (
     <div className="navigation-section">
       <Navigation />

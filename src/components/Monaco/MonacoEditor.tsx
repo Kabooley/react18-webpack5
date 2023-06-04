@@ -239,15 +239,6 @@ const MonacoEditor = (props: iProps): JSX.Element => {
             ></div>
         </>
     );
-    // return (
-    //     <section style={{width: "100%", height: "90vh"}}>
-    //         <div 
-    //             className="monaco-editor" 
-    //             ref={_refEditorNode}
-    //             style={{width: "100%", height: "100%"}}
-    //         ></div>
-    //     </section>
-    // );
 };
 
 export default MonacoEditor;
