@@ -14,26 +14,30 @@ const EditorSection = (): JSX.Element => {
     setEditorSectionWidth(size.width);
   };
 
+  // NOTE: temporary. onBundled will be removed to another.
+  const onBundled = (bundledCode: string) => {
+    // manage bundled code.
+  };
 
-    return (
-      <ResizableBox
-        width={editorSectionWidth}
-        height={Infinity}
-        minConstraints={[200, Infinity]}
-        onResize={onEditorSecResize}
-        resizeHandles={["e"]}
-        handle={(h, ref) => (
-          <span className={`custom-handle custom-handle-${h}`} ref={ref} />
-        )}
+  return (
+    <ResizableBox
+      width={editorSectionWidth}
+      height={Infinity}
+      minConstraints={[200, Infinity]}
+      onResize={onEditorSecResize}
+      resizeHandles={["e"]}
+      handle={(h, ref) => (
+        <span className={`custom-handle custom-handle-${h}`} ref={ref} />
+      )}
+    >
+      <div
+        className="editor-section"
+        style={{ width: editorSectionWidth }}
       >
-        <div
-          className="editor-section"
-          style={{ width: editorSectionWidth }}
-        >
-          <MonacoContainer />
-        </div>
-      </ResizableBox>
-    );
+        <MonacoContainer onBundled={onBundled}/>
+      </div>
+    </ResizableBox>
+  );
 };
   
 export default EditorSection;

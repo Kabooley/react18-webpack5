@@ -11,6 +11,7 @@ module.exports = {
 		// ESLintWorker: './src/workers/ESLint.worker.ts',
 		// JSXHighlightWorker: './src/workers/JSXHighlight.worker.ts',
 		// FetcLibsWorker: './src/workers/FetchLibs.worker.ts',
+		'bundle.worker': './src/worker/bundle.worker.ts',
 
 		// monaco-editor requirement:
 		'editor.worker': 'monaco-editor/esm/vs/editor/editor.worker.js',
@@ -66,11 +67,18 @@ module.exports = {
 	].filter(Boolean),
 	devtool: 'inline-source-map',
 	devServer: {
-		static: './dist',
+		static: './dist',	
 		hot: true,
 		port: 8080,
-		// allowedHosts: ["localhost:8080", "172.22.72.243:8080"]
-
+		allowedHosts: 'auto',
+		// DEBUG:
+		// Only for development mode
+		headers: {
+			'Access-Control-Allow-Origin': '*',		// unpkg.com
+			// 'Access-Control-Allow-Origin': 'unpkg.com',		// unpkg.com
+			'Access-Control-Allow-Headers': '*',	// GET
+			'Access-Control-Allow-Methods': '*',
+		}
 	},
 	/**
 	 * https://webpack.js.org/guides/code-splitting/#splitchunksplugin
