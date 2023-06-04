@@ -6,9 +6,8 @@ import * as monaco from 'monaco-editor';
 import MonacoEditor from './Monaco/MonacoEditor';
 import Tabs from './Tabs';
 import { files } from "../data/files";
-import './index.css';
-// // NOTE: added:
 import type { iMessageBundleWorker } from "../worker/types";
+import './index.css';
 
 interface iProps {
     onBundled: (bundledCode: string) => void;
@@ -46,6 +45,11 @@ const editorConstructOptions: monaco.editor.IStandaloneEditorConstructionOptions
 };
 
 
+/***
+ * NOTE: Component must be class component to treat with workers.
+ * 
+ * 
+ * */ 
 class MonacoContainer extends React.Component<iProps> {
     state = {
         value: "",
@@ -113,13 +117,6 @@ class MonacoContainer extends React.Component<iProps> {
             order: "bundle",
             code: this.state.value
         });
-
-        // bundler(value)
-        // .then(({ code, err }) => {
-        //     if(err) throw err;
-        //     console.log(code);
-        // })
-        // .catch(e => console.error(e.message));
     };
 
     _cbBundledMessage = (e: MessageEvent<iMessageBundleWorker>) => {
