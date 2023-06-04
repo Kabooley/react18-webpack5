@@ -50,6 +50,7 @@ const Tabs = ({ path, onChangeFile }: iProps) => {
                                 className={file.path === path ? "tab active": "tab"}
                                 ref={_refTabs.current[index]}
                                 onClick={() => changeTab(_refTabs.current[index].current!, file.path)}
+                                key={index}
                             >
                                 {/*
                                  TODO: "/main.js"なので一番初めの'/'を取り除きたい 

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import EditorSection from "./EditorSection";
 import PreviewSection from "./PreviewSection";
 import Header from "./Header";
@@ -9,6 +9,14 @@ import Pane from "./PaneSection";
 
 const Layout = (): JSX.Element => {
 
+  // NOTE: temporary, manage bundledcode til app adopted react-redux.
+  const [bundledCode, setBundledCode] = useState<string>("");
+
+  const onBundled = (code: string) => {
+    setBundledCode(code);
+  };
+  
+  
   return (
     <>
       <Header />
@@ -16,8 +24,9 @@ const Layout = (): JSX.Element => {
         <NavigationSection />
         <SplitPane>
           <Pane />
-          <EditorSection/>
-          <PreviewSection />
+          {/* NOTE: props: onBundled and bundledCode are temporarily til react-redux. */}
+          <EditorSection onBundled={onBundled} />
+          <PreviewSection bundledCode={bundledCode} />
         </SplitPane>
       </MainContainer>
     </>

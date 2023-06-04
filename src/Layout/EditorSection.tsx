@@ -4,7 +4,12 @@ import { ResizableBox } from "react-resizable";
 import type { ResizeCallbackData } from "react-resizable";
 import '../index.css';
 
-const EditorSection = (): JSX.Element => {
+// NOTE: onBundled is temporarily til react-redux.
+interface iProps {
+  onBundled: (code: string) => void;
+};
+
+const EditorSection = ({ onBundled }: iProps): JSX.Element => {
   const [editorSectionWidth, setEditorSectionWidth] = useState<number>(500);
 
   const onEditorSecResize: (
@@ -12,11 +17,6 @@ const EditorSection = (): JSX.Element => {
     data: ResizeCallbackData
   ) => any = (event, { node, size, handle }) => {
     setEditorSectionWidth(size.width);
-  };
-
-  // NOTE: temporary. onBundled will be removed to another.
-  const onBundled = (bundledCode: string) => {
-    // manage bundled code.
   };
 
   return (

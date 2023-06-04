@@ -7,7 +7,9 @@ iframeで囲ったpreviewへ如何にして安全にコードを送信し実行�
 
 TODO: EditorSection.tsxからPreviewSection.tsxへバンドル済のコードを渡す手段の模索
 
+別件：TODO: マウントされたらstate.codeを更新すること。いったんeditorを編集しないとどこかのコンポーネントのstate.codeが空のままでバンドルするコードが空のままになってしまう。
 
+TODO: `postMessage(, "http://localhost:8080")`にすると`ailed to execute 'postMessage' on 'DOMWindow': The target origin provided ('http://localhost:8080') does not match the recipient window's origin ('null').`エラーが起きる件。
 
 ## 参考
 
@@ -413,3 +415,66 @@ workerを有効にするので、
 }
 ```
 
+#### bundledcodeをpreviewへ渡す
+
+NOTE: どうせreduxを使ってディスパッチするので、ひとまずなわけだけど。
+
+まぁ難しいことは考える必要なし。
+
+バケツリレーする場合の流れ：
+
+worker --> MonacoContainer.tsx --> EditorSection.tsx
+--> Layout/index.tsx --> PreviewSection.tsx --> Preview.tsx
+
+```bash
+# component nest
+Layout/index.tsx
+    MainContainer
+        SplitPane
+            EditorSection
+                MonacoContainer     # have bundledCode
+            PreviewSection          # pass here!
+```
+
+ひとまず番d載るコードを渡すことはできている。
+
+なんだか怪しいけれど。
+
+#### test: エディタを編集して別内容にしたらちゃんとバンドルされたコードに更新出来るか？
+
+```JavaScript
+// エディタ内に貼り付ける別コード
+import React, { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+
+const products = [
+  { title: 'Cabbage', isFruit: false, id: 1 },
+  { title: 'Garlic', isFruit: false, id: 2 },
+  { title: 'Apple', isFruit: true, id: 3 },
+];
+
+function ShoppingList() {
+  const listItems = products.map(product =>
+    <li
+      key={product.id}
+      style={{
+        color: product.isFruit ? 'magenta' : 'darkgreen'
+      }}
+    >
+      {product.title}
+    </li>
+  );
+
+  return (
+    <ul>{listItems}</ul>
+  );
+}
+
+
+const root = createRoot(document.getElementById("root"));
+root.render(
+  <StrictMode>
+    <ShoppingList />
+  </StrictMode>
+);
+```

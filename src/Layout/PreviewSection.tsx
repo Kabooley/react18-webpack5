@@ -1,10 +1,16 @@
 import React from "react";
 import Preview from "../components/Preview";
 
-const PreviewSection = (): JSX.Element => {
+
+// NOTE: temporarily til react-redux.
+interface iProps {
+  bundledCode: string;
+};
+
+const PreviewSection = ({ bundledCode }: iProps): JSX.Element => {
     return (
       <div className="preview-section">
-        <Preview />
+        <Preview bundledCode={bundledCode} />
       </div>);
 };
   
