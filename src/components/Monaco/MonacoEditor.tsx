@@ -5,7 +5,6 @@ import React, { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
 import type * as Monaco from 'monaco-editor';
 
-import willMountMonacoProcess from './monacoWillMountProcess';
 import viewStateFiles from '../../data/viewStates';
 import { getModelByPath } from '../../utils/getModelByPath';
 import type { iFile, iFiles } from '../../data/files';
@@ -36,9 +35,6 @@ interface iProps
     onDidMount: () => void;
 };
 
-
-// Preprocess before mount monaco editor.
-willMountMonacoProcess();
 
 
 /**

@@ -10,7 +10,7 @@ module.exports = {
 		index: './src/index.tsx',
 		// ESLintWorker: './src/workers/ESLint.worker.ts',
 		// JSXHighlightWorker: './src/workers/JSXHighlight.worker.ts',
-		// FetcLibsWorker: './src/workers/FetchLibs.worker.ts',
+		'fetcLibs.worker': './src/worker/fetchLibs.worker.ts',
 		'bundle.worker': './src/worker/bundle.worker.ts',
 
 		// monaco-editor requirement:

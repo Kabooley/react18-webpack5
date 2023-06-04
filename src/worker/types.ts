@@ -1,4 +1,6 @@
-type iOrder = "order" | "bundle" | "jsxhighlight" | "eslint" | "featch-libs";
+import { iFetchedPaths } from "./fetchLibs.worker";
+
+type iOrder = "order" | "bundle" | "jsxhighlight" | "eslint" | "fetch-libs";
 
 /***
  * Common property which must be included in any messages.
@@ -16,7 +18,22 @@ interface iMessage {
  * @property {string} bundledCode - Bundled code to be send to main thread.
  * 
  * */ 
-export interface iMessageBundleWorker extends iMessage {
+interface iMessageBundleWorker extends iMessage {
     code?: string;
     bundledCode?: string;
-}
+};
+
+/**
+ * 
+ * */ 
+interface iMessageFetchLibs extends iMessage {
+    name: string;
+    version: string;
+    typings?: iFetchedPaths;
+};
+
+export {
+    iMessageBundleWorker,
+    iMessageFetchLibs,
+    iFetchedPaths
+};
