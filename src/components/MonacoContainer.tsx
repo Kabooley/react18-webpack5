@@ -54,7 +54,9 @@ const editorConstructOptions: monaco.editor.IStandaloneEditorConstructionOptions
 	scrollBeyondLastLine: false,
 	readOnly: false,
 	theme: "vs-dark",
+    automaticLayout: true       // これ設定しておかないとリサイズ時に壊れる
 };
+
 
 
 const MonacoContainer = () => {
