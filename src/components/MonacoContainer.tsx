@@ -166,8 +166,11 @@ class MonacoContainer extends React.Component<iProps> {
             typings[path],
             path
           );
-    
-          extraLibs.set(path, extraLib);
+            // NOTE:
+            // modelもつくるらしい
+            monaco.editor.createModel(typings[path], "typescript", new monaco.Uri().with({path}));
+        
+            extraLibs.set(path, extraLib);
         });
     };
 

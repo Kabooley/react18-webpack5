@@ -54,7 +54,7 @@ const MonacoEditor = (props: iProps): JSX.Element => {
      * - createModel() according to files
      * - editor.setModel()
      * - reset subscription
-     * - set unmount process
+     * - set unmount process        
      * */ 
     useEffect(() => {
         if(!_refEditorNode.current) throw new Error("Error: monaco-editor dom is not exist.");

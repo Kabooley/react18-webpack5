@@ -19,7 +19,8 @@ const defaultCompilerOptions: Monaco.languages.typescript.CompilerOptions = {
     esModuleInterop: true,
     jsx: monaco.languages.typescript.JsxEmit.React,
     reactNamespace: "React",
-    typeRoots: ["node_modules/@types"],
+    // typeRoots: ["node_modules/"],
+    // typeRoots: ["node_modules/@types"],
 };
 
 
@@ -49,30 +50,23 @@ const setFormatter = (): void => {
 		});
 };
 
-/**
- * monaco.language.typescript.typescriptDefault.addExtraLibs()
- * 
- * */ 
-const files = {
-    'react': ``,
-    'react-dom': ``,
-}
 
-// const addExtraLibraries = () => {
-//     monaco.languages.typescript.typescriptDefaults.addExtraLib();
-// };
 
 /***
  * willMountMonacoProcess will be invoked before monaco is mounted.
  * */ 
 const willMountMonacoProcess = () => {
+    // DEBUG:
+    console.log("[willMountMonacoProcess]");
+
     // set theme. va-dark as default.
     monaco.editor.setTheme(defaultTheme);
 
-    // monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-    //     noSemanticValidation: true,
-    //     noSyntaxValidation: true,
-    // });
+    // validation settings
+    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: false,
+    });
 
     monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
     monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
