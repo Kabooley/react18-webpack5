@@ -173,29 +173,112 @@ const resolver = (path: string, nodeType: "file" | "Dir") => {
 };
 
 (function () {
-  const result = dummy.forEach(d => resolver(d));
+  let result = {};
+  dummy.forEach(d => {
+    const r = resolver(d.path, d.nodeType);
+    reuslt = { ...result, ...r };
+  });
   console.log(result);
 })();
 
 
 
-
-// const resolver = (path: string, nodeType: string) => {
-//   const nodesNames = path.split('/').map(n => {
-//     const nodeProps = {
-//       parentNode: "",
-
-//     }
-//   })
+// ---
 
 
-// }
-/** 
- * やっぱりpathと一緒にディレクトリなのかファイルなのかの情報が予め必要ですわ。
- * 
- * 拡張子のあるなしで判断できないから。
- * 
- * あとoathは(src/をrootとして)絶対パスでないといけない。
- * 
- * */ 
+const resolver = (path, nodeType) => {
+  let container = [];
+  path.split("/").reduce((a, currentNode, currentIndex, arr) => {
+    const d = {
+      id: "xxxxxxx" + currentNode,
+      name: currentNode,
+      parentNode: a === undefined ? "src" : a.id,
+      // TODO: fix this process
+      nodeType: currentIndex < arr.length ? "Dir" : nodeType
+    };
+    container.push(d);
+    console.log("<------");
+    console.log(a);
+    console.log(d);
+    console.log(container);
+    console.log("------>");
+    return d;
+  });
+  return container;
+};
+
+// const resolver = (path, nodeType) => {
+//   let root = {
+//     id: "root",
+//     name: "src/",
+//     parentNode: undefined,
+//     nodeType: "Dir"
+//   };
+//   const result = path.split("/").reduce((a, currentNode, currentIndex, arr) => {
+//     const d = {
+//       id: "xxxxxxx" + currentNode,
+//       name: currentNode,
+//       parentNode: a === undefined ? "src" : a.id,
+//       // TODO: fix this process
+//       nodeType: currentIndex < arr.length ? "Dir" : nodeType
+//     };
+//     console.log("<----");
+//     console.log(a);
+//     console.log(d);
+//     console.log("---->");
+//     return [...a, d];
+//   }, [root]);
+//   return result;
+// };
+
+
+(function () {
+  dummy.forEach(d => {
+    const r = resolver(d.path, d.nodeType);
+    console.log('result');
+    console.log(r);
+  });
+})();
+
+
+
  ```
+
+ dummyからdummyTreeExplorerのようなオブジェクトを生成する
+
+## JavaScript: Array.prototype.reduce
+
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
+
+```TypeScript
+const array = [15, 16, 17, 18, 19];
+
+function reducer(accumulator, currentValue, index) {
+  const returns = accumulator + currentValue;
+  console.log(
+    `accumulator: ${accumulator}, currentValue: ${currentValue}, index: ${index}, returns: ${returns}`,
+  );
+  return returns;
+};
+
+// In case no initialValue:
+console.log(array.reduce(reducer));
+// accumulator: 15, currentValue: 16, index: 1, returns: 31 
+// accumulator: 31, currentValue: 17, index: 2, returns: 48 
+// accumulator: 48, currentValue: 18, index: 3, returns: 66 
+// accumulator: 66, currentValue: 19, index: 4, returns: 85 
+// 85
+
+
+// In case with initialValue:
+console.log(array.reduce(reducer, array[0]));
+// accumulator: 15, currentValue: 15, index: 0, returns: 30 
+// accumulator: 30, currentValue: 16, index: 1, returns: 46 
+// accumulator: 46, currentValue: 17, index: 2, returns: 63 
+// accumulator: 63, currentValue: 18, index: 3, returns: 81 
+// accumulator: 81, currentValue: 19, index: 4, returns: 100 
+// 100
+```
+
+initialValueなしだと一巡目がaccumulatorがarray[0]で、currentValueがarray[1]になる。
+
