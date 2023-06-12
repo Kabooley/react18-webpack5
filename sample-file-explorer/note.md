@@ -197,72 +197,202 @@ insertNode(explorerData, 7, "newInSrc", true);
 同様の処理で再利用できる
 
 ```TypeScript
-  const useTraverseTree = () => {
-    function insertNode(
-      tree: iExplorer,
-      folderId: string,
-      item: string,
-      isFolder: boolean
-    ): iExplorer {
-      // Add folder or file:
-      if (tree.id === folderId && tree.isFolder) {
-        console.log(`Generate new folder under ${folderId}`);
-        tree.items.unshift({
-          id: "" + new Date().getTime(),
-          name: item,
-          isFolder,
+import "./styles.css";
+
+
+export interface iExplorer {
+  id: string;
+  name: string;
+  isFolder: boolean;
+  items: iExplorer[];
+}
+
+const explorer: iExplorer = {
+  id: "1",
+  name: "root",
+  isFolder: true,
+  items: [
+    {
+      id: "2",
+      name: "public",
+      isFolder: true,
+      items: [
+        {
+          id: "3",
+          name: "public nested 1",
+          isFolder: true,
+          items: [
+            {
+              id: "4",
+              name: "index.html",
+              isFolder: false,
+              items: []
+            },
+            {
+              id: "5",
+              name: "hello.html",
+              isFolder: false,
+              items: []
+            }
+          ]
+        },
+        {
+          id: "6",
+          name: "public_nested_file",
+          isFolder: false,
           items: []
-        });
-  
-        return tree;
-      }
-  
-      // update its tree's items property.
-      let latestNode: iExplorer[] = [];
-      latestNode = tree.items.map((ob) => {
-        console.log("----");
-        console.log(ob);
-        console.log("----");
-        return insertNode(ob, folderId, item, isFolder);
-      });
-  
-      return { ...tree, items: latestNode };
+        }
+      ]
+    },
+    {
+      id: "7",
+      name: "src",
+      isFolder: true,
+      items: [
+        {
+          id: "8",
+          name: "App.js",
+          isFolder: false,
+          items: []
+        },
+        {
+          id: "9",
+          name: "Index.js",
+          isFolder: false,
+          items: []
+        },
+        {
+          id: "10",
+          name: "styles.css",
+          isFolder: false,
+          items: []
+        }
+      ]
+    },
+    {
+      id: "11",
+      name: "package.json",
+      isFolder: false,
+      items: []
     }
-  
-    // TODO: implement this yourself.
-    const deleteNode = (
-      tree: iExplorer,
-      folderId: string, // 削除されるアイテムが含まれているフォルダのid
-      deleteId: string, // 削除するアイテムのid
-      item: string,
-      isFolder: boolean
-    ): iExplorer => {
-      // Add folder or file:
-      if (tree.id === deleteId) {
-        console.log(`Delete item`);
-        
-        // TODO: 削除反映済のtreeを返す
-        tree.items.pop()
-  
-        return tree;
-      }
-  
-      // update its tree's items property.
-      let latestNode: iExplorer[] = [];
-      latestNode = tree.items.map((ob) => {
-        console.log("----");
-        console.log(ob);
-        console.log("----");
-        return insertNode(ob, folderId, item, isFolder);
+  ]
+};
+
+
+
+const useTraverseTree = () => {
+  // 
+  function insertNode(
+    tree: iExplorer,
+    folderId: string,
+    item: string,
+    isFolder: boolean
+  ): iExplorer {
+    // Add folder or file:
+    if (tree.id === folderId && tree.isFolder) {
+      console.log(`Generate new folder under ${folderId}`);
+      tree.items.unshift({
+        id: "" + new Date().getTime(),
+        name: item,
+        isFolder,
+        items: []
       });
-  
-      return { ...tree, items: latestNode };
-    };
-  
-    // TODO: implement this yourself.
-    const updateNode = () => {};
-  
-    return { insertNode };
+
+      return tree;
+    }
+
+    let latestNode: iExplorer[] = [];
+    latestNode = tree.items.map((ob) => {
+      return insertNode(ob, folderId, item, isFolder);
+    });
+
+    return { ...tree, items: latestNode };
+  }
+
+  //
+  const deleteNode = (
+    tree: iExplorer,
+    folderId: string, // 削除されるアイテムが含まれているフォルダのid
+    itemId: string, // 削除するアイテムのid
+  ): iExplorer => {
+
+    if (tree.id === folderId) {
+      console.log(`Delete item`);
+      return {
+        id: tree.id,
+        name: tree.name,
+        isFolder: tree.isFolder,
+        items: tree.items.filter(item => item.id !== itemId)
+      };
+    }
+
+    let latestNode: iExplorer[] = [];
+    latestNode = tree.items.map((ob) => {
+      return deleteNode(ob, folderId, itemId);
+    });
+
+    return { ...tree, items: latestNode };
   };
 
+  // 
+  const updateNode = (
+    tree: iExplorer,
+    folderId: string,
+    item: string,
+    isFolder: boolean
+  ) => {
+    if (tree.id === folderId && tree.isFolder) {
+      // TODO: modify folder
+      // possibly...
+      // name of item is changed,
+      // dnd to move file,
+    }
+    else if(tree.id === folderId && !tree.isFolder) {
+      // TODO: mpdify file
+    }
+
+    let latestNode: iExplorer[] = [];
+    latestNode = tree.items.map((ob) => {
+      return updateNode(ob, folderId, item, isFolder);
+    });
+
+    return { ...tree, items: latestNode };
+
+  };
+
+  return { insertNode, deleteNode, updateNode };
+};
+
+(function() {
+  // -- USAGE --
+  const { insertNode, deleteNode, updateNode } = useTraverseTree();
+  /*** 
+   * どのフォルダに、何（フォルダなのかファイルなのか）を追加するのかを指定すれば
+   * それを追加してくれる
+   * 
+   * @param {string} folderid - アイテム追加するフォルダのid
+   * @param {string} item - 追加するアイテムの名前
+   * @param {boolean} isFolder - フォルダかファイルか
+   * */ 
+  const handleInsertNode = (folderId: string, item: string, isFolder: boolean) => {
+    // @return {iExplorer} finalTree - アイテム追加が反映されたexplorerデータ 
+    const finalTree = insertNode(explorer, folderId, item, isFolder);
+    console.log(finalTree);
+  };
+
+  /***** 
+   * どのフォルダのどのアイテムなのか、idで指定すれば削除する
+   * 
+   * @param {string} folderId - 削除するアイテムを所有しているフォルダのid
+   * @param {string} item - 削除するアイテムの名前
+   * @param {string} itemId - 削除するアイテムの名前
+   * @param {boolean} isFolder - 削除するアイテムはフォルダかファイルか   多分要らない。
+   * */ 
+  const handleDeleteNode = (folderId: string, itemId: string) => {
+    const updatedTree = deleteNode(explorer, folderId, itemId);
+    console.log(updatedTree);
+  };
+
+  // handleDeleteNode("7", "9");
+})();
 ```
