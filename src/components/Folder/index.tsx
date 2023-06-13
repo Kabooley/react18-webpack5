@@ -2,16 +2,12 @@ import React, { useState } from "react";
 import type { iExplorer } from "../../data/folderData";
 
 interface iProps {
-  key: string;
   explorer: iExplorer;
   handleInsertNode: (folderId: string, item: string, isFolder: boolean) => void;
-  // handleDeleteNode: (folderId: string, itemId: string) => void;
+  handleDeleteNode: (itemId: string, isFolder: boolean) => void;
 }
 
-const Folder = ({ 
-  explorer, handleInsertNode, 
-  // handleDeleteNode 
-}: iProps) => {
+const Folder = ({ explorer, handleInsertNode, handleDeleteNode }: iProps) => {
   const [expand, setExpand] = useState<boolean>(false);
   const [showInput, setShowInput] = useState({
     visible: false,
@@ -38,16 +34,16 @@ const Folder = ({
     }
   };
 
-  // 
+  //
   // TODO: `explorer.id`だけで削除処理が完了するようにする
-  // 
-  // const onDelete = (
-  //   e: React.MouseEvent<HTMLButtonElement>,
-  //   isFolder: boolean
-  // ) => {
-  //   e.stopPropagation();
-  //   handleDeleteNode(explorer.id)
-  // };
+  //
+  const onDelete = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    isFolder: boolean
+  ) => {
+    e.stopPropagation();
+    handleDeleteNode(explorer.id, isFolder);
+  };
 
   if (explorer.isFolder) {
     return (
@@ -69,9 +65,9 @@ const Folder = ({
             >
               File +
             </button>
-            {/* <button onClick={(e) => onDelete(e, true)}>
-              <span>❌</span>
-            </button> */}
+            <button onClick={(e) => onDelete(e, true)}>
+              <span>-x-</span>
+            </button>
           </div>
         </div>
         <div style={{ display: expand ? "block" : "none", paddingLeft: 25 }}>
@@ -90,9 +86,9 @@ const Folder = ({
           {explorer.items.map((exp: iExplorer) => {
             return (
               <Folder
-                key={exp.id}
                 explorer={exp}
                 handleInsertNode={handleInsertNode}
+                handleDeleteNode={handleDeleteNode}
               />
             );
           })}
@@ -103,9 +99,9 @@ const Folder = ({
     return (
       <span className="file">
         📄 {explorer.name}{" "}
-        {/* <button onClick={(e) => onDelete(e, true)}>
-          <span>❌</span>
-        </button> */}
+        <button onClick={(e) => onDelete(e, false)}>
+          <span>-x-</span>
+        </button>
       </span>
     );
   }
