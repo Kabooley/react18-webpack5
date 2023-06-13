@@ -2,11 +2,16 @@ import React, { useState } from "react";
 import type { iExplorer } from "../../data/folderData";
 
 interface iProps {
+  key: string;
   explorer: iExplorer;
   handleInsertNode: (folderId: string, item: string, isFolder: boolean) => void;
+  // handleDeleteNode: (folderId: string, itemId: string) => void;
 }
 
-const Folder = ({ explorer, handleInsertNode }: iProps) => {
+const Folder = ({ 
+  explorer, handleInsertNode, 
+  // handleDeleteNode 
+}: iProps) => {
   const [expand, setExpand] = useState<boolean>(false);
   const [showInput, setShowInput] = useState({
     visible: false,
@@ -33,18 +38,16 @@ const Folder = ({ explorer, handleInsertNode }: iProps) => {
     }
   };
 
-  const onDelete = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    isFolder: boolean
-  ) => {
-    e.stopPropagation();
-    // TODO: implement delete logic.
-    if (isFolder) {
-      // delete folder
-    } else {
-      // delete file
-    }
-  };
+  // 
+  // TODO: `explorer.id`だけで削除処理が完了するようにする
+  // 
+  // const onDelete = (
+  //   e: React.MouseEvent<HTMLButtonElement>,
+  //   isFolder: boolean
+  // ) => {
+  //   e.stopPropagation();
+  //   handleDeleteNode(explorer.id)
+  // };
 
   if (explorer.isFolder) {
     return (
@@ -66,9 +69,9 @@ const Folder = ({ explorer, handleInsertNode }: iProps) => {
             >
               File +
             </button>
-            <button onClick={(e) => onDelete(e, true)}>
+            {/* <button onClick={(e) => onDelete(e, true)}>
               <span>❌</span>
-            </button>
+            </button> */}
           </div>
         </div>
         <div style={{ display: expand ? "block" : "none", paddingLeft: 25 }}>

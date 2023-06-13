@@ -2,6 +2,11 @@
 
 file explorerのために、dndできるreact componentを習得する。
 
+
+## Watch!
+
+本来のsrc/をこのブランチにおいてのみsrc2/にしている
+
 ## はじめるまえに
 
 TODO: codesandboxでプロジェクトを保存する方法を知る。
