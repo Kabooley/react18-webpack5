@@ -3,6 +3,8 @@ import Folder from "./components/Folder";
 import useTraverseTree from "./hooks/use-traverse-tree";
 import explorer from "./data/folderData";
 import "./styles.css";
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
+import type * as typeOfRBD from "react-beautiful-dnd";
 
 export default function App() {
   const [explorerData, setExplorerData] = useState(explorer);
@@ -33,13 +35,35 @@ export default function App() {
     console.log(updatedTree);
   };
 
+  const onDragEnd: typeOfRBD.OnDragEndResponder = (result) => {
+    const { destination, source, draggableId } = result;
+
+    if (!destination) {
+      return;
+    }
+
+    // TODO: implement on drag end process
+  };
+
+  // DragDropContextは特に子要素に独自のpropertyを渡す必要がない
+  //
+  // 独自コンポーネントにrefを渡せないので、FolderをforwardRef()で囲う必要がある
   return (
     <div className="App">
-      <Folder
-        handleInsertNode={handleInsertNode}
-        handleDeleteNode={handleDeleteNode}
-        explorer={explorerData}
-      />
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId={explorerData.id}>
+          {(provided) => (
+            <Folder
+              handleInsertNode={handleInsertNode}
+              handleDeleteNode={handleDeleteNode}
+              explorer={explorerData}
+              // RBD requirements
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            />
+          )}
+        </Droppable>
+      </DragDropContext>
     </div>
   );
 }
