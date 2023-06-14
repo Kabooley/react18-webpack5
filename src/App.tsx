@@ -3,7 +3,7 @@ import Folder from "./components/Folder";
 import useTraverseTree from "./hooks/use-traverse-tree";
 import explorer from "./data/folderData";
 import "./styles.css";
-import { DragDropContext, Droppable } from "react-beautiful-dnd";
+import { DragDropContext } from "react-beautiful-dnd";
 import type * as typeOfRBD from "react-beautiful-dnd";
 
 export default function App() {
@@ -23,49 +23,40 @@ export default function App() {
   /*****
    * どのフォルダのどのアイテムなのか、idで指定すれば削除する
    *
-   * @param {string} folderId - 削除するアイテムを所有しているフォルダのid
-   * @param {string} item - 削除するアイテムの名前
    * @param {string} itemId - 削除するアイテムの名前
    * @param {boolean} isFolder - 削除するアイテムはフォルダかファイルか   多分要らない。
    * */
-
   const handleDeleteNode = (itemId: string, isFolder: boolean) => {
     const updatedTree = deleteNode(explorer, itemId, isFolder);
     setExplorerData(updatedTree);
     console.log(updatedTree);
   };
 
+
+  // TODO: implement on drag start process
+  const onDragStart: typeOfRBD.OnDragStartResponder = () => {
+
+  }
+
+  // TODO: implement on drag end process
   const onDragEnd: typeOfRBD.OnDragEndResponder = (result) => {
     const { destination, source, draggableId } = result;
 
     if (!destination) {
       return;
     }
-
-    // TODO: implement on drag end process
+    // ...
   };
 
-  // DragDropContextは特に子要素に独自のpropertyを渡す必要がない
-  //
-  // 独自コンポーネントにrefを渡せないので、FolderをforwardRef()で囲う必要がある
   return (
     <div className="App">
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId={explorerData.id}>
-          {(provided) => (
-            <Folder
-              handleInsertNode={handleInsertNode}
-              handleDeleteNode={handleDeleteNode}
-              explorer={explorerData}
-              // RBD requirements
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-            />
-          )}
-        </Droppable>
+      <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
+        <Folder
+          handleInsertNode={handleInsertNode}
+          handleDeleteNode={handleDeleteNode}
+          explorer={explorerData}
+        />
       </DragDropContext>
     </div>
   );
-}
-
-// fix connect script in latest video
+};
