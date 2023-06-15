@@ -88,3 +88,37 @@ const MyComponent = ({ domRef, provided }:iProps) => {
 }
 ```
 
+## DragDropContext Responders
+
+https://github.com/atlassian/react-beautiful-dnd/blob/master/docs/guides/responders.md
+
+#### onBeforeCapture
+
+> このレスポンダーは、ドラッグが開始されることがわかった後、DOM からディメンションが収集される前に呼び出されます。これは次のことを行う機会です。
+
+- `<Draggable />`や`<Droppable />`コンポーネントを除去する
+- 要素のサイズを変更する
+
+#### onBeforeDragStart
+
+> ドラッグを開始するために必要な情報をすべて取得したら、onBeforeDragStart 関数を呼び出します。これは、 <Draggable /> コンポーネントと <Droppable /> コンポーネントのスナップショット値を更新する直前に呼び出されます。
+> この時点では、アプリケーションはドラッグ状態ではないため、isDropDisabled などのプロパティの変更は失敗します。 onBeforeDragStart レスポンダーは、テーブルの並べ替えに必要なディメンションのロックを実行する良い機会です。
+
+できる：
+
+- 現状のコンポーネントにサイズのロックをかけるなどはできる
+
+できない：
+
+- `<Draggable />`や`<Droppable />`の追加・除去
+- `<Draggable />`や`<Droppable />`のサイズの変更
+
+
+#### provided: ResponderProvided
+
+> onDragStart、onDragUpdate、および onDragEnd には、指定された ResponderProvided オブジェクトが与えられます。このオブジェクトには、announce というプロパティが 1 つあります。この関数は、スクリーン リーダーにメッセージを同期してアナウンスするために使用されます。この機能を使用しない場合は、デフォルトの英語メッセージがアナウンスされます。スクリーン リーダーの使用方法に関するガイドを作成しました。スクリーン リーダーのメッセージを自分で制御し、国際化をサポートすることに興味がある場合は、このガイドを使用することをお勧めします。アナウンスを使用している場合は、同期的に呼び出す必要があります。
+
+
+#### onDragStart
+
+> onDragStart はドラッグが開始されると通知を受け取ります。このレスポンダはオプションであるため、指定する必要はありません。この関数を使用して、ドラッグ中にすべての <Draggable /> および <Droppable /> コンポーネントの更新をブロックすることを強くお勧めします。 (下記のドラッグ中の更新をブロックするを参照してください)

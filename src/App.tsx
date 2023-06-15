@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import Folder from "./components/Folder";
+// import Folder from "./components/Folder";
+import Folder from "./components/Folder/index2";
 import useTraverseTree from "./hooks/use-traverse-tree";
 import explorer from "./data/folderData";
 import "./styles.css";
@@ -34,12 +35,28 @@ export default function App() {
 
 
   // TODO: implement on drag start process
-  const onDragStart: typeOfRBD.OnDragStartResponder = () => {
+  // https://github.com/atlassian/react-beautiful-dnd/blob/master/docs/guides/responders.md#ondragstart
+  /**
+   * TODO: Note about properties of ondragstart
+   * 
+   * @param {typeOfRBD.DragStart extends DraggableRubric} start - 
+   *  start.draggableId: DraggableId
+   *  start.type: TypeId
+   *  start.source: DraggableLocation
+   * 
+   *  
+   * @param {typeOfRBD.ResponderProvided} provided - 
+   * */ 
+  const onDragStart: typeOfRBD.OnDragStartResponder = (start, provided) => {
+    console.log("[App] on drag start");
+
 
   }
 
   // TODO: implement on drag end process
   const onDragEnd: typeOfRBD.OnDragEndResponder = (result) => {
+    console.log("[App] on drag end");
+
     const { destination, source, draggableId } = result;
 
     if (!destination) {
