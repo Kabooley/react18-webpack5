@@ -40,9 +40,13 @@ export default function App() {
    * TODO: Note about properties of ondragstart
    * 
    * @param {typeOfRBD.DragStart extends DraggableRubric} start - 
-   *  start.draggableId: DraggableId
-   *  start.type: TypeId
-   *  start.source: DraggableLocation
+   *  DragStart.mode: MovementMode,   // 'FLUID' | 'SNAP'
+   *  DraggableRubric.draggableId: DraggableId
+   *  DraggableRubric.type: TypeId
+   *  DraggableRubric.source: DraggableLocation
+   * 
+   *  DraggableLocation.droppableId: DroppableId,
+   *  DraggableLocation.index: number,
    * 
    *  
    * @param {typeOfRBD.ResponderProvided} provided - 
@@ -51,23 +55,50 @@ export default function App() {
     console.log("[App] on drag start");
 
 
+  };
+
+  /***
+   * @param {typeOfRBD.DragUpdate} update - 
+   *    DragStart,
+   *    DragUpdate.destination?: DraggableLocation,
+   *    DragUpdate.combine?: Combine, 
+   * 
+   *    DragUpdate.destination: the location of where the dragging item is now.
+   *    This can be null if the user is currently not dragging over any <Droppable />.
+   * */ 
+  const onDragUpdate: typeOfRBD.OnDragUpdateResponder = (update, provided) => {
+    console.log("[App] on drag start");
+
   }
 
   // TODO: implement on drag end process
+  /**
+   * @param {typeOfRBD.DropResult} result -
+   *    ...DragUpdate
+   *    DropResult.reason: 'DROP' | 'CANCEL'
+   * 
+   *    reason: A reason of drop occured.
+   * 
+   * */ 
   const onDragEnd: typeOfRBD.OnDragEndResponder = (result) => {
     console.log("[App] on drag end");
+    console.log(result);
 
-    const { destination, source, draggableId } = result;
+    const { destination, source, draggableId, reason } = result;
 
     if (!destination) {
       return;
     }
+
     // ...
   };
 
   return (
     <div className="App">
-      <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
+      <DragDropContext 
+        onDragEnd={onDragEnd} onDragStart={onDragStart}
+        onDragUpdate={onDragUpdate} 
+      >
         <Folder
           handleInsertNode={handleInsertNode}
           handleDeleteNode={handleDeleteNode}

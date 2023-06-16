@@ -51,61 +51,63 @@ const Folder = ({
 
     if (explorer.isFolder) {
       return (
-        <StrictModeDroppable droppableId={explorer.id}>
-          {(provided) => (
-            <div 
-              style={{ marginTop: 5 }} 
-              ref={provided.innerRef} 
-              {...provided.droppableProps}
-            >
-              <div className="folder" onClick={() => setExpand(!expand)}>
-                <span>📁 {explorer.name}</span>
-                <div>
-                  <button
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                      handleNewFolder(e, true)
-                    }
-                  >
-                    Folder +
-                  </button>
-                  <button
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                      handleNewFolder(e, false)
-                    }
-                  >
-                    File +
-                  </button>
-                  <button onClick={(e) => onDelete(e, true)}>
-                    <span>-x-</span>
-                  </button>
+        <>
+          <StrictModeDroppable droppableId={explorer.id}>
+            {(provided) => (
+              <div 
+                style={{ marginTop: 5 }} 
+                ref={provided.innerRef} 
+                {...provided.droppableProps}
+              >
+                <div className="folder" onClick={() => setExpand(!expand)}>
+                  <span>📁 {explorer.name}</span>
+                  <div>
+                    <button
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                        handleNewFolder(e, true)
+                      }
+                    >
+                      Folder +
+                    </button>
+                    <button
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                        handleNewFolder(e, false)
+                      }
+                    >
+                      File +
+                    </button>
+                    <button onClick={(e) => onDelete(e, true)}>
+                      <span>-x-</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div style={{ display: expand ? "block" : "none", paddingLeft: 25 }}>
-                {showInput.visible && (
-                  <div className="inputContainer">
-                    <span>{showInput.isFolder ? "📁" : "📄"}</span>
-                    <input
-                      type="text"
-                      className="inputContainer__input"
-                      onKeyDown={onAddFolder}
-                      onBlur={() => setShowInput({ ...showInput, visible: false })}
-                      autoFocus
-                    />
-                  </div>
-                )}
-                {explorer.items.map((exp: iExplorer) => {
-                  return (
-                    <Folder
-                      handleInsertNode={handleInsertNode}
-                      handleDeleteNode={handleDeleteNode}
-                      explorer={exp}
-                    />
-                  );
-                })}
-              </div>
+            )}
+          </StrictModeDroppable>
+          <div style={{ display: expand ? "block" : "none", paddingLeft: 25 }}>
+            {showInput.visible && (
+              <div className="inputContainer">
+                <span>{showInput.isFolder ? "📁" : "📄"}</span>
+                <input
+                  type="text"
+                  className="inputContainer__input"
+                  onKeyDown={onAddFolder}
+                  onBlur={() => setShowInput({ ...showInput, visible: false })}
+                  autoFocus
+                />
+                </div>
+            )}
+            {explorer.items.map((exp: iExplorer) => {
+              return (
+                <Folder
+                  handleInsertNode={handleInsertNode}
+                  handleDeleteNode={handleDeleteNode}
+                  explorer={exp}
+                />
+              );
+            })}
             </div>
-          )}
-        </StrictModeDroppable>
+        </>
       );
     } else {
       return (

@@ -33,6 +33,7 @@
     "webpack-dev-server": "^4.13.2"
   },
   "dependencies": {
+    "@atlaskit/tree": "^8.8.5",
     "@babel/core": "^7.21.4",
     "@babel/preset-env": "^7.21.4",
     "@babel/preset-react": "^7.18.6",

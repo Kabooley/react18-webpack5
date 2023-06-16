@@ -4,6 +4,9 @@ by `react-beautfuk-dnd`.
 
 file explorerのために、dndできるreact componentを習得する。
 
+## 問題
+
+- ネストされたdroppableは難しいかも？[RBDNDでnested-droppable](#RBDNDでnested-droppable)
 
 ## Watch!
 
@@ -37,8 +40,9 @@ https://github.com/atlassian/react-beautiful-dnd/tree/master/docs/guides
 
 https://github.com/atlassian/react-beautiful-dnd/tree/master/docs/api
 
+## Issue
 
-#### issue about using with React18
+#### RBD with React18
 
 https://github.com/atlassian/react-beautiful-dnd/issues/2399
 
@@ -122,3 +126,32 @@ https://github.com/atlassian/react-beautiful-dnd/blob/master/docs/guides/respond
 #### onDragStart
 
 > onDragStart はドラッグが開始されると通知を受け取ります。このレスポンダはオプションであるため、指定する必要はありません。この関数を使用して、ドラッグ中にすべての <Draggable /> および <Droppable /> コンポーネントの更新をブロックすることを強くお勧めします。 (下記のドラッグ中の更新をブロックするを参照してください)
+
+
+#### onDragUpdate
+
+> onDragUpdate は、ドラッグ中に何かが変更されるたびに呼び出されます。考えられる変更は次のとおりです。 
+
+> - <Draggable /> の位置が変更されました 
+> - <Draggable /> は別の <Droppable /> の上にあります。 
+> - <Draggable /> は <Droppable /> ではなくなりました 
+
+> この機能を使用するとドラッグの速度が低下するため、作業をしすぎないようにすることが重要です。
+
+## RBDNDでnested-droppable
+
+参考：RBDNDを基にtreeを実現してくれるnpmパッケージ：
+
+https://atlaskit.atlassian.com/packages/confluence/tree
+
+https://bitbucket.org/atlassian/atlassian-frontend-mirror/src/master/confluence/tree/
+
+参考：RBDNDでネストされたリストを実現しているまともな例
+
+https://www.taniarascia.com/simplifying-drag-and-drop/
+
+[実践：参考サイトを基にnested-list](#実践：参考サイトを基にnested-list)
+
+#### 実践：参考サイトを基にnested-list
+
+https://www.taniarascia.com/simplifying-drag-and-drop/
