@@ -1,11 +1,11 @@
+/**************************************************
+ * Droppableの領域が他と重複しないようにするために
+ * Droppableを囲うコンポーネントを増やした。
+ * 
+ * 重複はないはず。
+ * ************************************************/ 
 import React, { useState } from "react";
 import type { iExplorer } from "../../data/folderData";
-
-// import { Droppable } from "react-beautiful-dnd";
-// import type * as typeOfRBD from "react-beautiful-dnd";
-// import { Draggable } from "react-beautiful-dnd";
-// import { StrictModeDroppable } from "../../strictMode/StrictModeDroppable";
-
 import { Drag, Drop } from '../../Tree';
 
 interface iProps {
@@ -55,8 +55,12 @@ const Folder = ({
     if (explorer.isFolder) {
       return (
         <div>
-          <Drop droppableId={explorer.id}>
-          <div 
+          <Drop droppableId={"folder-area-" + explorer.id}>
+            <Drag 
+              index={Number(explorer.id)} key={explorer.id} 
+              draggableId={explorer.id}
+            >
+              <div 
                 style={{ marginTop: 5 }}
               >
                 <div className="folder" onClick={() => setExpand(!expand)}>
@@ -82,48 +86,49 @@ const Folder = ({
                   </div>
                 </div>
               </div>
+            </Drag>
           </Drop>
-            <div 
-              style={{ display: expand ? "block" : "none", paddingLeft: 25 }}
-            >
-              {showInput.visible && (
-                <div className="inputContainer">
-                  <span>{showInput.isFolder ? "📁" : "📄"}</span>
-                  <input
-                    type="text"
-                    className="inputContainer__input"
-                    onKeyDown={onAddFolder}
-                    onBlur={() => setShowInput({ ...showInput, visible: false })}
-                    autoFocus
-                  />
-                  </div>
-              )}
-              {explorer.items.map((exp: iExplorer) => {
-                return (
-                  <Folder
-                    handleInsertNode={handleInsertNode}
-                    handleDeleteNode={handleDeleteNode}
-                    explorer={exp}
-                  />
-                );
-              })}
-              </div>
+          <div 
+            style={{ display: expand ? "block" : "none", paddingLeft: 25 }}
+          >
+            {showInput.visible && (
+              <div className="inputContainer">
+                <span>{showInput.isFolder ? "📁" : "📄"}</span>
+                <input
+                  type="text"
+                  className="inputContainer__input"
+                  onKeyDown={onAddFolder}
+                  onBlur={() => setShowInput({ ...showInput, visible: false })}
+                  autoFocus
+                />
+                </div>
+            )}
+            {explorer.items.map((exp: iExplorer) => {
+              return (
+                <Folder
+                  handleInsertNode={handleInsertNode}
+                  handleDeleteNode={handleDeleteNode}
+                  explorer={exp}
+                />
+              );
+            })}
+          </div>
         </div>
       );
     } else {
       return (
-        <Drop droppableId={explorer.id}>
-            <Drag 
-              index={Number(explorer.id)} key={explorer.id} 
-              draggableId={explorer.id}
-            >
-              <span className="file">
-                📄 {explorer.name}{" "}
-                <button onClick={(e) => onDelete(e, false)}>
-                  <span>-x-</span>
-                </button>
-              </span>
-            </Drag>
+        <Drop droppableId={"file-area" + explorer.id}>
+          <Drag 
+            index={Number(explorer.id)} key={explorer.id} 
+            draggableId={explorer.id}
+          >
+            <span className="file">
+              📄 {explorer.name}{" "}
+              <button onClick={(e) => onDelete(e, false)}>
+                <span>-x-</span>
+              </button>
+            </span>
+          </Drag>
         </Drop>
       );
     }

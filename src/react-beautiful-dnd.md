@@ -140,18 +140,99 @@ https://github.com/atlassian/react-beautiful-dnd/blob/master/docs/guides/respond
 
 ## RBDNDでnested-droppable
 
-参考：RBDNDを基にtreeを実現してくれるnpmパッケージ：
+Droppable領域が重複していると重なっている部分の下の方のDroppableを、
 
-https://atlaskit.atlassian.com/packages/confluence/tree
+destinationとして見てくれない。
 
-https://bitbucket.org/atlassian/atlassian-frontend-mirror/src/master/confluence/tree/
+そのため、
 
-参考：RBDNDでネストされたリストを実現しているまともな例
+各アイテムを細かくDroppableで囲うこととした。
 
-https://www.taniarascia.com/simplifying-drag-and-drop/
+```TypeScript
+// Droppable, Draggableの簡易化したコンポーネント
+import { Drag, Drop } from '../../Tree';
 
-[実践：参考サイトを基にnested-list](#実践：参考サイトを基にnested-list)
+const Folder = ({ 
+  explorer, 
+  handleInsertNode, handleDeleteNode,
+}: iProps) => {
 
-#### 実践：参考サイトを基にnested-list
+    // ...
 
-https://www.taniarascia.com/simplifying-drag-and-drop/
+    if (explorer.isFolder) {
+      return (
+        // 
+        // 1. フォルダの行部分だけをDropで囲う
+        // 
+        <div>
+          <Drop droppableId={"folder-area-" + explorer.id}>
+          <div 
+                style={{ marginTop: 5 }}
+              >
+                <div className="folder" onClick={() => setExpand(!expand)}>
+                  <span>📁 {explorer.name}</span>
+                  <div>
+                    <button
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                        handleNewFolder(e, true)
+                      }
+                    >
+                      Folder +
+                    </button>
+                    <button
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                        handleNewFolder(e, false)
+                      }
+                    >
+                      File +
+                    </button>
+                    <button onClick={(e) => onDelete(e, true)}>
+                      <span>-x-</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+          </Drop>
+            // 2. フォルダ行を広げた領域は囲わない
+            <div 
+              style={{ display: expand ? "block" : "none", paddingLeft: 25 }}
+            >
+            // ...
+              {explorer.items.map((exp: iExplorer) => {
+                return (
+                  <Folder
+                    handleInsertNode={handleInsertNode}
+                    handleDeleteNode={handleDeleteNode}
+                    explorer={exp}
+                  />
+                );
+              })}
+              </div>
+        </div>
+      );
+    } else {
+      return (
+        // 3. ファイル自体をDropで囲う
+        <Drop droppableId={"file-area" + explorer.id}>
+            <Drag 
+              index={Number(explorer.id)} key={explorer.id} 
+              draggableId={explorer.id}
+            >
+              <span className="file">
+                📄 {explorer.name}{" "}
+                <button onClick={(e) => onDelete(e, false)}>
+                  <span>-x-</span>
+                </button>
+              </span>
+            </Drag>
+        </Drop>
+      );
+    }
+  };
+```
+
+
+## Draggable ハンドル
+
+draggableコンポーネントのハンドルは必須なのか？どうやってハンドルなしでも使えるようにするか
+

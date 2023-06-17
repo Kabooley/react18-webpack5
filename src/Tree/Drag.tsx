@@ -13,8 +13,12 @@ const Drag: React.FC<iDragProps> = ({ draggableId, index, ...props }) => {
     <Draggable draggableId={draggableId} index={index}>
       {(provided, snapshot) => {
         return (
-          <div ref={provided.innerRef} {...provided.draggableProps} {...props}>
-            <div {...provided.dragHandleProps}>Drag handle</div>
+          <div ref={provided.innerRef} 
+            {...provided.draggableProps} 
+            {...provided.dragHandleProps}
+            {...props}
+          >
+            {/* <div {...provided.dragHandleProps}>Drag handle</div> */}
             {props.children}
           </div>
         )
