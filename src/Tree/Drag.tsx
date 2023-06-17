@@ -18,7 +18,6 @@ const Drag: React.FC<iDragProps> = ({ draggableId, index, ...props }) => {
             {...provided.dragHandleProps}
             {...props}
           >
-            {/* <div {...provided.dragHandleProps}>Drag handle</div> */}
             {props.children}
           </div>
         )

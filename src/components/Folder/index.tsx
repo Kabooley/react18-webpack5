@@ -1,9 +1,12 @@
+/**************************************************
+ * Droppableの領域が他と重複しないようにするために
+ * Droppableを囲うコンポーネントを増やした。
+ * 
+ * 重複はないはず。
+ * ************************************************/ 
 import React, { useState } from "react";
 import type { iExplorer } from "../../data/folderData";
-
-// import { Droppable } from "react-beautiful-dnd";
-import type * as typeOfRBD from "react-beautiful-dnd";
-import { StrictModeDroppable } from "../../strictMode/StrictModeDroppable";
+import { Drag, Drop } from '../../Tree';
 
 interface iProps {
   explorer: iExplorer;
@@ -51,13 +54,14 @@ const Folder = ({
 
     if (explorer.isFolder) {
       return (
-        <>
-          <StrictModeDroppable droppableId={explorer.id}>
-            {(provided) => (
+        <div>
+          <Drop droppableId={"folder-area-" + explorer.id}>
+            <Drag 
+              index={Number(explorer.id)} key={explorer.id} 
+              draggableId={explorer.id}
+            >
               <div 
-                style={{ marginTop: 5 }} 
-                ref={provided.innerRef} 
-                {...provided.droppableProps}
+                style={{ marginTop: 5 }}
               >
                 <div className="folder" onClick={() => setExpand(!expand)}>
                   <span>📁 {explorer.name}</span>
@@ -82,9 +86,11 @@ const Folder = ({
                   </div>
                 </div>
               </div>
-            )}
-          </StrictModeDroppable>
-          <div style={{ display: expand ? "block" : "none", paddingLeft: 25 }}>
+            </Drag>
+          </Drop>
+          <div 
+            style={{ display: expand ? "block" : "none", paddingLeft: 25 }}
+          >
             {showInput.visible && (
               <div className="inputContainer">
                 <span>{showInput.isFolder ? "📁" : "📄"}</span>
@@ -106,17 +112,24 @@ const Folder = ({
                 />
               );
             })}
-            </div>
-        </>
+          </div>
+        </div>
       );
     } else {
       return (
-        <span className="file">
-          📄 {explorer.name}{" "}
-          <button onClick={(e) => onDelete(e, false)}>
-            <span>-x-</span>
-          </button>
-        </span>
+        <Drop droppableId={"file-area" + explorer.id}>
+          <Drag 
+            index={Number(explorer.id)} key={explorer.id} 
+            draggableId={explorer.id}
+          >
+            <span className="file">
+              📄 {explorer.name}{" "}
+              <button onClick={(e) => onDelete(e, false)}>
+                <span>-x-</span>
+              </button>
+            </span>
+          </Drag>
+        </Drop>
       );
     }
   };
