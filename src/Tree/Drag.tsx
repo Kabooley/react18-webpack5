@@ -5,9 +5,10 @@ import { Draggable } from 'react-beautiful-dnd';
 interface iDragProps {
     draggableId: string;
     index: number;
+    children: React.ReactNode;
 };
 
-export const Drag = ({ draggableId, index, ...props }: iDragProps) => {
+const Drag: React.FC<iDragProps> = ({ draggableId, index, ...props }) => {
   return (
     <Draggable draggableId={draggableId} index={index}>
       {(provided, snapshot) => {
@@ -19,5 +20,7 @@ export const Drag = ({ draggableId, index, ...props }: iDragProps) => {
         )
       }}
     </Draggable>
-  )
-}
+  );
+};
+
+export default Drag;

@@ -1,27 +1,28 @@
 import React from 'react';
-import { Droppable } from 'react-beautiful-dnd';
+import { StrictModeDroppable } from '../strictMode/StrictModeDroppable';
+// import { Droppable } from 'react-beautiful-dnd';
 // import type * as rdbnd from 'react-beautiful-dnd';
 
 interface iDropProps {
     droppableId: string;
-    type: string;
-}
+    type?: string;
+    children: React.ReactNode;
+};
 
-// TODO: how to pass children to this Drop compnent
-const Drop = ({droppableId, type, ...props}: iDropProps) => {
+const Drop: React.FC<iDropProps> = ({droppableId, type, children, ...props}) => {
     return (
-        <Droppable droppableId={droppableId}>
+        <StrictModeDroppable droppableId={droppableId}>
             {(provided) => (
                 <div 
                     ref={provided.innerRef} 
                     {...provided.droppableProps} 
                     {...props}
                 >
-                    {props.children}
+                    {children}
                     {provided.placeholder}
                 </div>
             )}
-        </Droppable>
+        </StrictModeDroppable>
     );
 };
 

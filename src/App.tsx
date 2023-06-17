@@ -6,6 +6,7 @@ import explorer from "./data/folderData";
 import "./styles.css";
 import { DragDropContext } from "react-beautiful-dnd";
 import type * as typeOfRBD from "react-beautiful-dnd";
+import { reorder } from './Tree';
 
 export default function App() {
   const [explorerData, setExplorerData] = useState(explorer);
@@ -74,22 +75,67 @@ export default function App() {
   // TODO: implement on drag end process
   /**
    * @param {typeOfRBD.DropResult} result -
-   *    ...DragUpdate
-   *    DropResult.reason: 'DROP' | 'CANCEL'
-   * 
-   *    reason: A reason of drop occured.
+   *    DropResult extends DragUpdate extends DragStart extends DraggableRubric
    * 
    * */ 
   const onDragEnd: typeOfRBD.OnDragEndResponder = (result) => {
     console.log("[App] on drag end");
     console.log(result);
 
-    const { destination, source, draggableId, reason } = result;
+    const { destination, source, draggableId, reason, type } = result;
 
     if (!destination) {
       return;
     }
 
+    const sourceCategoryId = source.droppableId
+    const destinationCategoryId = destination.droppableId
+
+    // Reordering items
+    if (type === 'droppable-item') {
+      // If reordering within the same category
+      if (sourceCategoryId === destinationCategoryId) {
+        const updatedOrder = reorder(
+          categories.find((category) => category.id === sourceCategoryId).items,
+          source.index,
+          destination.index
+        )
+        const updatedCategories = categories.map((category) =>
+          category.id !== sourceCategoryId ? category : { ...category, items: updatedOrder }
+        )
+
+        setCategories(updatedCategories)
+      } else {
+        // Dragging to a different category
+        const sourceOrder = categories.find((category) => category.id === sourceCategoryId).items
+        const destinationOrder = categories.find(
+          (category) => category.id === destinationCategoryId
+        ).items
+
+        const [removed] = sourceOrder.splice(source.index, 1)
+        destinationOrder.splice(destination.index, 0, removed)
+
+        destinationOrder[removed] = sourceOrder[removed]
+        delete sourceOrder[removed]
+
+        const updatedCategories = categories.map((category) =>
+          category.id === sourceCategoryId
+            ? { ...category, items: sourceOrder }
+            : category.id === destinationCategoryId
+            ? { ...category, items: destinationOrder }
+            : category
+        )
+
+        setCategories(updatedCategories)
+      }
+    }
+
+    // Reordering categories
+    if (type === 'droppable-category') {
+      const updatedCategories = reorder(categories, source.index, destination.index)
+
+      setCategories(updatedCategories)
+    }
     // ...
   };
 
