@@ -78,6 +78,11 @@ export default function App() {
    * 
    *    reason: A reason of drop occured.
    * 
+   * destination:
+   * source:
+   * draggableId: DraggableLocation
+   * reason:      "DROP" | "CANCEL"
+   * 
    * */ 
   const onDragEnd: typeOfRBD.OnDragEndResponder = (result) => {
     console.log("[App] on drag end");

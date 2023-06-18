@@ -237,3 +237,161 @@ const Folder = ({
 
 ではdnd操作ができるようになったので捜査結果の反映ができるように実装していく
 
+- fileが上位の別フォルダに移動した場合
+- fileが下位の別フォルダに移動した場合
+
+そのファイルが属しているフォルダのexplorer.itemsからそのアイテムを除去して、
+
+移動先のexplorer.itemsへ追加する
+
+
+- フォルダが上位の別フォルダに移動した場合
+- フォルダが下位の別フォルダに移動した場合
+
+
+Draggable.type: 好きに命名できるっぽい
+
+```TypeScript
+import "./styles.css";
+
+export interface iExplorer {
+  id: string;
+  name: string;
+  isFolder: boolean;
+  items: iExplorer[];
+}
+
+const explorer: iExplorer = {
+  id: "1",
+  name: "root",
+  isFolder: true,
+  items: [
+    {
+      id: "2",
+      name: "public",
+      isFolder: true,
+      items: [
+        {
+          id: "3",
+          name: "public nested 1",
+          isFolder: true,
+          items: [
+            {
+              id: "4",
+              name: "index.html",
+              isFolder: false,
+              items: []
+            },
+            {
+              id: "5",
+              name: "hello.html",
+              isFolder: false,
+              items: []
+            }
+          ]
+        },
+        {
+          id: "6",
+          name: "public_nested_file",
+          isFolder: false,
+          items: []
+        }
+      ]
+    },
+    {
+      id: "7",
+      name: "src",
+      isFolder: true,
+      items: [
+        {
+          id: "8",
+          name: "App.js",
+          isFolder: false,
+          items: []
+        },
+        {
+          id: "9",
+          name: "Index.js",
+          isFolder: false,
+          items: []
+        },
+        {
+          id: "10",
+          name: "styles.css",
+          isFolder: false,
+          items: []
+        }
+      ]
+    },
+    {
+      id: "11",
+      name: "package.json",
+      isFolder: false,
+      items: []
+    }
+  ]
+};
+
+
+/***
+ * 
+ * @return { iExplorer | undefined }
+ * 
+ * https://stackoverflow.com/a/40025777/22007575
+ * 
+ * nested以下の各item.idがlookForに一致したら
+ * そのnestedの要素を返す。
+ * */ 
+const findParentNodeByChildId = (nested: iExplorer[], lookFor: string) => {
+  console.log("[findParentNodeByChildId] nested:");
+  console.log(nested);
+
+  // こっちの方法だと、一致する要素をitemsにもつ親要素を返すことになる
+  return nested.find((exp) => exp.items.some((item) => item.id === lookFor));
+
+  // 一方、こっちの方法は一致する要素自体を返す
+  // return nested.find((exp) => exp.id === lookFor);
+};
+
+
+/***
+ * Returns parent node from explorerData by its items id via recursive way.
+ * @return { iExplorer | undefined }
+ * */ 
+const getParentNodeById = (items: iExplorer[], id: string): iExplorer | undefined => {
+
+  let e: iExplorer | undefined;
+  const result = findParentNodeByChildId(items, id);
+  e =  result ? result : items.find(item => getParentNodeById(item.items, id));
+
+  // DEBUG:
+  // 
+  console.log('----');
+  console.log("item: ");
+  console.log(items);
+  console.log("r: ");
+  console.log(result);
+  console.log("e: ");
+  console.log(e);
+
+  return e;
+};
+
+
+// lookForIdをitemsに含むexplorerオブジェクトを取得する
+(function() {
+  const lookForId = "11";
+  let result: iExplorer | undefined;
+  // TODO: 以下のrを得る手段をgetParentNodeByIdに統合できないかしら？
+  const r = explorer.items.find(item => item.id === lookForId);
+  if(!r){
+    result = getParentNodeById(explorer.items, lookForId);
+  }
+  else {
+    // rがundefinedでない場合、explorerが親要素
+    result = explorer;
+  };
+  console.log(result);
+})();
+
+```
