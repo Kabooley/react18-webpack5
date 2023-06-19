@@ -266,69 +266,7 @@ const explorer: iExplorer = {
   name: "root",
   isFolder: true,
   items: [
-    {
-      id: "2",
-      name: "public",
-      isFolder: true,
-      items: [
-        {
-          id: "3",
-          name: "public nested 1",
-          isFolder: true,
-          items: [
-            {
-              id: "4",
-              name: "index.html",
-              isFolder: false,
-              items: []
-            },
-            {
-              id: "5",
-              name: "hello.html",
-              isFolder: false,
-              items: []
-            }
-          ]
-        },
-        {
-          id: "6",
-          name: "public_nested_file",
-          isFolder: false,
-          items: []
-        }
-      ]
-    },
-    {
-      id: "7",
-      name: "src",
-      isFolder: true,
-      items: [
-        {
-          id: "8",
-          name: "App.js",
-          isFolder: false,
-          items: []
-        },
-        {
-          id: "9",
-          name: "Index.js",
-          isFolder: false,
-          items: []
-        },
-        {
-          id: "10",
-          name: "styles.css",
-          isFolder: false,
-          items: []
-        }
-      ]
-    },
-    {
-      id: "11",
-      name: "package.json",
-      isFolder: false,
-      items: []
-    }
+    // ...
   ]
 };
 
@@ -393,5 +331,52 @@ const getParentNodeById = (items: iExplorer[], id: string): iExplorer | undefine
   };
   console.log(result);
 })();
+```
+
+Responderが取得できる情報のまとめ：
+
+src/Appファイルをpublic/public_nested1/以下へdndした。
+
+
+```bash
+# src/Appファイルをpublic/public_nested1/以下へdndした。
+{
+    "draggableId": "8",     # dragしたコンポーネントのdraggableid
+    "type": "DEFAULT",      # 特に指定していないのでDEFAULT
+    # Dragコンポーネントがいた場所（そのDragコンポーネントが属していたDroppableコンポーネント）
+    "source": {
+        "index": 8,
+        "droppableId": "file-area-8"
+    },
+    # Dropされたのかキャンセルだったのか
+    "reason": "DROP",
+    # 今のところ気にしなくていいかも
+    "mode": "FLUID",
+    # DragしていたアイテムをどこのDroppableへ落としたのかの情報
+    "destination": {
+        "droppableId": "file-area-4",
+        "index": 5
+    },
+    "combine": null
+}
+# src/フォルダをsrc/以下の領域へdndした
+# 
+# これはデフォルトの挙動を制限しないといかんなぁE
+{
+    "draggableId": "7",
+    "type": "DEFAULT",
+    "source": {
+        "index": 7,
+        "droppableId": "folder-area-7"
+    },
+    "reason": "DROP",
+    "mode": "FLUID",
+    "destination": {
+        "droppableId": "file-area-10",
+        "index": 11
+    },
+    "combine": null
+}
 
 ```
+TODO: `file-area-`や`folder-area-`は検索の邪魔になっているのでやめよう。

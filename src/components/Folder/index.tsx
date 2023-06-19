@@ -55,7 +55,7 @@ const Folder = ({
     if (explorer.isFolder) {
       return (
         <div>
-          <Drop droppableId={"folder-area-" + explorer.id}>
+          <Drop droppableId={explorer.id} type={"folder"}>
             <Drag 
               index={Number(explorer.id)} key={explorer.id} 
               draggableId={explorer.id}
@@ -117,7 +117,7 @@ const Folder = ({
       );
     } else {
       return (
-        <Drop droppableId={"file-area-" + explorer.id}>
+        <Drop droppableId={explorer.id} type={"file"}>
           <Drag 
             index={Number(explorer.id)} key={explorer.id} 
             draggableId={explorer.id}

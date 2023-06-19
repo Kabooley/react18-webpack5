@@ -5,6 +5,7 @@ import explorer from "./data/folderData";
 import "./styles.css";
 import { DragDropContext } from "react-beautiful-dnd";
 import type * as typeOfRBD from "react-beautiful-dnd";
+import { getParentIdByChildeNodeId } from './Tree';
 
 export default function App() {
   const [explorerData, setExplorerData] = useState(explorer);
@@ -94,7 +95,12 @@ export default function App() {
       return;
     }
 
-    // ...
+    // Check which folder draggable has been belonged.
+    const prevParentId =  getParentIdByChildeNodeId(explorerData, draggableId);
+    if(!prevParentId) throw new Error("Something went wrong but draggableId is not belongs to any parent explorer object.");
+
+    // Check where the dropped area.
+    // it 
   };
 
   return (
