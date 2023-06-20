@@ -279,6 +279,13 @@ const explorer: iExplorer = {
  * 
  * nested以下の各item.idがlookForに一致したら
  * そのnestedの要素を返す。
+ * 
+ * in case lookFor: "5"
+ * 
+ * nested:
+ * [2, 7, 11] r: undefined
+ * [3, 6] r: explorer which id is "3" and contains explorer which id is "5"
+ * 
  * */ 
 const findParentNodeByChildId = (nested: iExplorer[], lookFor: string) => {
   console.log("[findParentNodeByChildId] nested:");
@@ -332,6 +339,20 @@ const getParentNodeById = (items: iExplorer[], id: string): iExplorer | undefine
   console.log(result);
 })();
 ```
+lookForId: "4"
+
+explorer.id: 1
+getParentNodeById((explorer.id: 1).items, lookForId) // 2, 7, 11
+    findParentNodeByChildId((explorer.id: 1).items, lookForId)  // 2, 7, 11
+      returns undefined
+    result = undefined
+    e = 未定なのでgetParentNodeById((explorer.id: 2).items, lookForId))
+        findParentNodeByChildId((explorer.id: 3).items, lookForId)
+          returns 3
+        result = 3
+        e = 3
+    e = 2   // ここでid:2になってしまう
+
 
 Responderが取得できる情報のまとめ：
 
