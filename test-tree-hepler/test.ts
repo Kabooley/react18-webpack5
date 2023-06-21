@@ -78,83 +78,63 @@ const explorer: iExplorer = {
 
 export default explorer;
 
-
 /***
+ * @param {iExplorer[]} nested - あるiExplorer.items
+ * @param {string} lookFor - 探しているitemのidで、nestedに含まれているかどうかを調べる
+ * @return { iExplorer | undefined } - lookForのidをもつitemがnestedのなかのexplorerに含まれていた場合、そのexplorerを返す。
  * 
- * @return { iExplorer | undefined }
- * 
- * https://stackoverflow.com/a/40025777/22007575
- * 
- * nested以下の各item.idがlookForに一致したら
- * そのnestedの要素を返す。
+ * 参考: https://stackoverflow.com/a/40025777/22007575
  * */ 
 const findParentNodeByChildId = (nested: iExplorer[], lookFor: string) => {
-  console.log("[findParentNodeByChildId] nested:");
-  console.log(nested);
-
-  // こっちの方法だと、一致する要素をitemsにもつ親要素を返すことになる
-  // return nested.find((exp) => exp.items.some((item) => item.id === lookFor));
   const r = nested.find((exp) => exp.items.some((item) => item.id === lookFor));
-  
-  console.log("[findParentNodeByChildId] r:");
-  console.log(r);
 
   return r;
 };
 
 
-
-/***
- * Returns parent node from explorerData by its items id via recursive way.
- * @return { iExplorer | undefined }
+/****
+ * @param {iExplorer[]} items - 検索範囲となるexplorer
+ * @param {string} id - 探しているitemのidで、引数itemsにそのitemが含まれているかどうかを調べる
+ * @return {iExplorer | undefined} - findParentNodeByChildId()の結果を返す。
+ * 
+ * 再帰呼出を行うことで、引数のitems以下のexplorerのitemsを続けて捜索する。
  * */ 
-const getParentNodeById = (items: iExplorer[], id: string): iExplorer | undefined => {
+const _getParentNodeByChildId = (items: iExplorer[], id: string): iExplorer | undefined => {
 
   let e: iExplorer | undefined;
   const result = findParentNodeByChildId(items, id);
 
-  // DEBUG:
-  console.log("[getParentNodeById] result:");
-  console.log(result);
+  if(!result) {
+    // NOTE: items.find()は配列をひとつずつ再帰呼出し、実行結果を得るために使用しており、findからの戻り値は必要としない。
+    items.find(item => {
+      e = _getParentNodeByChildId(item.items, id);
+      return e;
+    })
+  }
+  else e = result;
 
-  e =  result ? result : items.find(item => getParentNodeById(item.items, id));
-
-  // DEBUG:
-  console.log("[getParentNodeById] e:");
-  console.log(e);
-  
   return e;
 };
 
-
-// // lookForIdをitemsに含むexplorerオブジェクトを取得する
-// (function() {
-//   const lookForId = "4";
-//   let result: iExplorer | undefined;
-//   // TODO: 以下のrを得る手段をgetParentNodeByIdに統合できないかしら？
-//   const r = explorer.items.find(item => item.id === lookForId);
-//   if(!r){
-//     result = getParentNodeById(explorer.items, lookForId);
-//   }
-//   else {
-//     // rがundefinedでない場合、explorerが親要素
-//     result = explorer;
-//   };
-//   console.log(result);
-// })();
-
-export const tester = () => {
-    const lookForId = "4";
+/***
+ *  _getParentNodeByChildId()はexplorerの1段階の深さを捜索できない。
+ * そのためこの関数はその部分をカバーする。
+ * */ 
+export const getParentNodeByChildId = (explorer: iExplorer,lookForId: string) => {
     let result: iExplorer | undefined;
-    // TODO: 以下のrを得る手段をgetParentNodeByIdに統合できないかしら？
     const r = explorer.items.find(item => item.id === lookForId);
     if(!r){
-      result = getParentNodeById(explorer.items, lookForId);
+      result = _getParentNodeByChildId(explorer.items, lookForId);
     }
     else {
       // rがundefinedでない場合、explorerが親要素
       result = explorer;
     };
-    console.log(result);
+    return result;
+};
 
+// -- USAGE --
+export const tester = () => {
+  const r = getParentNodeByChildId(explorer, "8");
+  console.log(r);
 }
