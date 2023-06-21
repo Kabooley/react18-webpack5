@@ -6,15 +6,13 @@ file explorerのために、dndできるreact componentを習得する。
 
 ## 問題
 
-- ネストされたdroppableは難しいかも？[RBDNDでnested-droppable](#RBDNDでnested-droppable)
+- 済：ネストされたdroppableは難しいかも？[RBDNDでnested-droppable](#RBDNDでnested-droppable)
 
 ## Watch!
 
 本来のsrc/をこのブランチにおいてのみsrc2/にしている
 
 ## はじめるまえに
-
-TODO: codesandboxでプロジェクトを保存する方法を知る。
 
 スターターコード：
 
@@ -219,7 +217,7 @@ const Folder = ({
               draggableId={explorer.id}
             >
               <span className="file">
-                📄 {explorer.name}{" "}
+                📄 {explorer.name}{" "} 
                 <button onClick={(e) => onDelete(e, false)}>
                   <span>-x-</span>
                 </button>
@@ -250,108 +248,6 @@ const Folder = ({
 
 
 Draggable.type: 好きに命名できるっぽい
-
-```TypeScript
-import "./styles.css";
-
-export interface iExplorer {
-  id: string;
-  name: string;
-  isFolder: boolean;
-  items: iExplorer[];
-}
-
-const explorer: iExplorer = {
-  id: "1",
-  name: "root",
-  isFolder: true,
-  items: [
-    // ...
-  ]
-};
-
-
-/***
- * 
- * @return { iExplorer | undefined }
- * 
- * https://stackoverflow.com/a/40025777/22007575
- * 
- * nested以下の各item.idがlookForに一致したら
- * そのnestedの要素を返す。
- * 
- * in case lookFor: "5"
- * 
- * nested:
- * [2, 7, 11] r: undefined
- * [3, 6] r: explorer which id is "3" and contains explorer which id is "5"
- * 
- * */ 
-const findParentNodeByChildId = (nested: iExplorer[], lookFor: string) => {
-  console.log("[findParentNodeByChildId] nested:");
-  console.log(nested);
-
-  // こっちの方法だと、一致する要素をitemsにもつ親要素を返すことになる
-  return nested.find((exp) => exp.items.some((item) => item.id === lookFor));
-
-  // 一方、こっちの方法は一致する要素自体を返す
-  // return nested.find((exp) => exp.id === lookFor);
-};
-
-
-/***
- * Returns parent node from explorerData by its items id via recursive way.
- * @return { iExplorer | undefined }
- * */ 
-const getParentNodeById = (items: iExplorer[], id: string): iExplorer | undefined => {
-
-  let e: iExplorer | undefined;
-  const result = findParentNodeByChildId(items, id);
-  e =  result ? result : items.find(item => getParentNodeById(item.items, id));
-
-  // DEBUG:
-  // 
-  console.log('----');
-  console.log("item: ");
-  console.log(items);
-  console.log("r: ");
-  console.log(result);
-  console.log("e: ");
-  console.log(e);
-
-  return e;
-};
-
-
-// lookForIdをitemsに含むexplorerオブジェクトを取得する
-(function() {
-  const lookForId = "11";
-  let result: iExplorer | undefined;
-  // TODO: 以下のrを得る手段をgetParentNodeByIdに統合できないかしら？
-  const r = explorer.items.find(item => item.id === lookForId);
-  if(!r){
-    result = getParentNodeById(explorer.items, lookForId);
-  }
-  else {
-    // rがundefinedでない場合、explorerが親要素
-    result = explorer;
-  };
-  console.log(result);
-})();
-```
-lookForId: "4"
-
-explorer.id: 1
-getParentNodeById((explorer.id: 1).items, lookForId) // 2, 7, 11
-    findParentNodeByChildId((explorer.id: 1).items, lookForId)  // 2, 7, 11
-      returns undefined
-    result = undefined
-    e = 未定なのでgetParentNodeById((explorer.id: 2).items, lookForId))
-        findParentNodeByChildId((explorer.id: 3).items, lookForId)
-          returns 3
-        result = 3
-        e = 3
-    e = 2   // ここでid:2になってしまう
 
 
 Responderが取得できる情報のまとめ：
@@ -402,6 +298,15 @@ src/Appファイルをpublic/public_nested1/以下へdndした。
 ```
 TODO: `file-area-`や`folder-area-`は検索の邪魔になっているのでやめよう。
 
+## 実装： onDragEnd
+
+TODO: 別のノートにまとめた方法を移しておいて！
+
+## 実装: droppable範囲外に出たときの挙動
+
+## 実装: drag中、他のアイテムが動かないようにする
+
+## 実装: rename機能
 
 ## 実装：helper
 
@@ -470,3 +375,22 @@ export const tester = () => {
   console.log(r);
 }
 ```
+
+## 実装：スタイリング
+
+まぁまずはcodesandboxをね。
+
+#### svg icon
+
+webpack準備:
+
+https://webpack.js.org/guides/asset-management/#loading-images
+
+typescript準備：
+
+https://stackoverflow.com/questions/44717164/unable-to-import-svg-files-in-typescript
+
+iconはネットから拾ってきたやつをひとまず：
+
+https://www.svgrepo.com/svg/42233/pencil-edit-button
+

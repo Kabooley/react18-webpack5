@@ -8,6 +8,11 @@ import React, { useState } from "react";
 import type { iExplorer } from "../../data/folderData";
 import { Drag, Drop } from '../../Tree';
 
+import editPencil from '../../assets/pencil-edit.svg';
+import addFolder from '../../assets/add-folder.svg';
+import addFile from '../../assets/add-file.svg';
+import closeButton from '../../assets/close-button.svg';
+
 interface iProps {
   explorer: iExplorer;
   handleInsertNode: (folderId: string, item: string, isFolder: boolean) => void;
@@ -25,7 +30,7 @@ const Folder = ({
     });
 
     const handleNewFolder = (
-      e: React.MouseEvent<HTMLButtonElement>,
+      e: React.MouseEvent<HTMLDivElement>,
       isFolder: boolean
     ) => {
       e.stopPropagation();
@@ -45,7 +50,7 @@ const Folder = ({
     };
 
     const onDelete = (
-      e: React.MouseEvent<HTMLButtonElement>,
+      e: React.MouseEvent<HTMLDivElement>,
       isFolder: boolean
     ) => {
       e.stopPropagation();
@@ -60,29 +65,25 @@ const Folder = ({
               index={Number(explorer.id)} key={explorer.id} 
               draggableId={explorer.id}
             >
-              <div 
-                style={{ marginTop: 5 }}
-              >
-                <div className="folder" onClick={() => setExpand(!expand)}>
-                  <span>📁 {explorer.name}</span>
-                  <div>
-                    <button
-                      onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                        handleNewFolder(e, true)
-                      }
-                    >
-                      Folder +
-                    </button>
-                    <button
-                      onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                        handleNewFolder(e, false)
-                      }
-                    >
-                      File +
-                    </button>
-                    <button onClick={(e) => onDelete(e, true)}>
-                      <span>-x-</span>
-                    </button>
+              <div className="folder" onClick={() => setExpand(!expand)}>
+                <span>📁 {explorer.name}</span>
+                <div className="folder-function">
+                  <div
+                    onClick={(e: React.MouseEvent<HTMLDivElement>) =>
+                      handleNewFolder(e, true)
+                    }
+                  >
+                    <img src={addFolder} alt="add folder" />
+                  </div>
+                  <div
+                    onClick={(e: React.MouseEvent<HTMLDivElement>) =>
+                      handleNewFolder(e, false)
+                    }
+                  >
+                  <img src={addFile} alt="add file" />
+                  </div>
+                  <div onClick={(e) => onDelete(e, true)}>
+                    <img src={closeButton} alt="delete folder" />
                   </div>
                 </div>
               </div>
@@ -122,12 +123,17 @@ const Folder = ({
             index={Number(explorer.id)} key={explorer.id} 
             draggableId={explorer.id}
           >
-            <span className="file">
-              📄 {explorer.name}{" "}
-              <button onClick={(e) => onDelete(e, false)}>
-                <span>-x-</span>
-              </button>
-            </span>
+            <div className="file">
+              <span className="file-name">
+                📄 {explorer.name}{" "}
+              </span>
+              <div 
+                onClick={(e) => onDelete(e, false)} 
+                className="file-function"
+              >
+                <img src={closeButton} alt="delete file" />
+              </div>
+            </div>
           </Drag>
         </Drop>
       );

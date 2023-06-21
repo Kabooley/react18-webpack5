@@ -12,7 +12,7 @@ export interface iExplorer {
     items: [
       {
         id: "2",
-        name: "public",
+        name: "public so much long name",
         isFolder: true,
         items: [
           {

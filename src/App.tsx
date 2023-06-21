@@ -5,7 +5,7 @@ import explorer from "./data/folderData";
 import "./styles.css";
 import { DragDropContext } from "react-beautiful-dnd";
 import type * as typeOfRBD from "react-beautiful-dnd";
-import { getParentIdByChildeNodeId } from './Tree';
+import { getParentNodeByChildId } from './Tree';
 
 export default function App() {
   const [explorerData, setExplorerData] = useState(explorer);
@@ -71,18 +71,9 @@ export default function App() {
 
   }
 
-  // TODO: implement on drag end process
   /**
    * @param {typeOfRBD.DropResult} result -
-   *    ...DragUpdate
-   *    DropResult.reason: 'DROP' | 'CANCEL'
    * 
-   *    reason: A reason of drop occured.
-   * 
-   * destination:
-   * source:
-   * draggableId: DraggableLocation
-   * reason:      "DROP" | "CANCEL"
    * 
    * */ 
   const onDragEnd: typeOfRBD.OnDragEndResponder = (result) => {
@@ -96,11 +87,19 @@ export default function App() {
     }
 
     // Check which folder draggable has been belonged.
-    const prevParentId =  getParentIdByChildeNodeId(explorerData, draggableId);
-    if(!prevParentId) throw new Error("Something went wrong but draggableId is not belongs to any parent explorer object.");
+    const prevFolder =  getParentNodeByChildId(explorerData, draggableId);
+    const droppedFolder = getParentNodeByChildId(explorerData, destination.droppableId);
+    if(!prevFolder || !droppedFolder) throw new Error("[App] draggableId/destination.droppableId is not belongs to any parent explorer object.");
 
-    // Check where the dropped area.
-    // it 
+    // DEBUG:
+    console.log(prevFolder);
+    console.log(droppedFolder);
+
+    if(prevFolder.id === droppedFolder.id) {return;}
+    
+    // update explorer
+    // retrieve item from prevFolder explorer
+    // push retrieved item into dropped area folder explorer
   };
 
   return (
