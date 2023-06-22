@@ -70,4 +70,39 @@ export const getParentNodeByChildId = (explorer: iExplorer,lookForId: string) =>
     };
     return result;
 };
+
+
+const retrieveFromExplorer = (explorer: iExplorer, id: string): iExplorer | undefined => {
+  console.log("[retrievefromExplorer]");
+  // 親の親を返してしまっている
+  const parent = getParentNodeByChildId(explorer, id);
+  console.log("parent:");
+  console.log(parent);
+  const retrieved = parent && parent.items.find(item => item.id === id);
+  console.log("retrieved:");
+  console.log(retrieved);
+  const index = parent && parent.items.map(item => item.id).indexOf(id);
+  console.log("index:");
+  console.log(index);
+  if(index! > -1) parent && parent.items.splice(index!, 1);
+  return retrieved;
+};
+
+const pushIntoExplorer = (explorer: iExplorer, toBePushed: iExplorer, destinationId: string): void => {
+  console.log("[pushIntoExplorer]");
+  const destination = getParentNodeByChildId(explorer, destinationId);
+  console.log(destination);
+  destination && destination.items.push(toBePushed);
+
+  if(!destination) throw new Error("something went wrong but destinationId is not belong to any explorer.");
+};
+
+(function() {
+  // const toBeMovedId = "5";
+  // const destinationId = "7";
+
+  // const retrieved = retrieveFromExplorer(explorer, toBeMovedId);
+  // pushIntoExplorer(explorer, retrieved!, destinationId);
+  console.log(getParentIdByChildeNodeId(explorer, "5"));
+})();
   
