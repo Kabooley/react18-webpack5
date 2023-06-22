@@ -1,16 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Folder from "./components/Folder";
 import useTraverseTree from "./hooks/use-traverse-tree";
 import explorer from "./data/folderData";
 import "./styles.css";
 import { DragDropContext } from "react-beautiful-dnd";
 import type * as typeOfRBD from "react-beautiful-dnd";
-import { getParentNodeByChildId } from './Tree';
+import { 
+    getParentNodeByChildId, 
+    retrieveFromExplorer, 
+    pushIntoExplorer 
+  } from './Tree';
 
 export default function App() {
   const [explorerData, setExplorerData] = useState(explorer);
+  
+  useEffect(() => {
+    console.log("[App] component did update");
+  }, []);
 
   const { insertNode, deleteNode, updateNode } = useTraverseTree();
+
 
   const handleInsertNode = (
     folderId: string,
@@ -54,10 +63,6 @@ export default function App() {
   const onDragStart: typeOfRBD.OnDragStartResponder = (start, provided) => {
     console.log("[App] on drag start");
     console.log(start);
-
-    
-
-
   };
 
   /***
@@ -101,10 +106,18 @@ export default function App() {
     console.log(droppedFolder);
 
     if(prevFolder.id === droppedFolder.id) {return;}
+
+    console.log("[onDragEnd] reorder item");
     
-    // update explorer
-    // retrieve item from prevFolder explorer
-    // push retrieved item into dropped area folder explorer
+    const retrieved = retrieveFromExplorer(explorerData, draggableId);
+    console.log("[onDragEnd] retrieved:");
+    console.log(retrieved);
+    const exp = retrieved && pushIntoExplorer(explorerData, retrieved, droppedFolder.id);
+    
+    console.log(exp);
+
+    // NOTE: なんでか知らんが更新されん
+    setExplorerData(exp!);
   };
 
   return (

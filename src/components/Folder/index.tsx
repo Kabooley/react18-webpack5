@@ -9,7 +9,7 @@ import type { iExplorer } from "../../data/folderData";
 import { Drag, Drop } from '../../Tree';
 
 // Icons
-import editPencil from '../../assets/pencil-edit.svg';
+// import editPencil from '../../assets/pencil-edit.svg';
 import addFolder from '../../assets/add-folder.svg';
 import addFile from '../../assets/add-file.svg';
 import closeButton from '../../assets/close-button.svg';

@@ -1,5 +1,11 @@
 import Drop from './Drop';
 import Drag from './Drag';
-import { reorder, getParentNodeByChildId } from './helper';
+import { getParentNodeByChildId, getNodeById, retrieveFromExplorer, pushIntoExplorer } from './helper';
 
-export { Drop, Drag, reorder, getParentNodeByChildId};
+export { 
+    Drop, Drag, 
+    getParentNodeByChildId,
+    getNodeById,
+    retrieveFromExplorer,
+    pushIntoExplorer
+};
