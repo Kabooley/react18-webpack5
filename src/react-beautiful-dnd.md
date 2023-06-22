@@ -302,9 +302,64 @@ TODO: `file-area-`や`folder-area-`は検索の邪魔になっているのでや
 
 TODO: 別のノートにまとめた方法を移しておいて！
 
+## 実装： drag中のdragしているアイテムの表現
+
+- 半透明にする。
+
+参考：
+
+https://egghead.io/lessons/react-customise-the-appearance-of-an-app-during-a-drag-using-react-beautiful-dnd-snapshot-values
+
+snapshotを使う。
+
+```TypeScript
+// Drag.tsx
+
+const Drag: React.FC<iDragProps> = ({ draggableId, index, ...props }) => {
+  return (
+    <Draggable draggableId={draggableId} index={index} >
+      {(provided, snapshot) => {
+        return (
+          <div ref={provided.innerRef} 
+            {...provided.draggableProps} 
+            {...provided.dragHandleProps}
+            {...props}
+            // NOTE: こうする
+            className={snapshot.isDragging ? "dragging" : ""}
+          >
+            {props.children}
+          </div>
+        )
+      }}
+    </Draggable>
+  );
+};
+```
+```css
+.dragging {
+  opacity: 0.5;
+}
+```
+
+## Dragginc中のコンポーネントは、drop確定するまで元の場所にいたままにさせる
+
+codesandboxと同様にするというわけで。
+
+これ、動的にdraggableをつけて、他は基本的にdroppableにするという変更になるかも？
+
+
+
 ## 実装: droppable範囲外に出たときの挙動
 
+TODO:
+- ここにはdrop出来ないという表現をつける
+- ここにはdropできるという表現をつける
+- drag中のマウスがつかんでいるコンポーネントを透過させる
+
+
 ## 実装: drag中、他のアイテムが動かないようにする
+
+情報がない。難しいかも...
 
 ## 実装: rename機能
 

@@ -53,6 +53,9 @@ export default function App() {
    * */ 
   const onDragStart: typeOfRBD.OnDragStartResponder = (start, provided) => {
     console.log("[App] on drag start");
+    console.log(start);
+
+    
 
 
   };
@@ -67,7 +70,8 @@ export default function App() {
    *    This can be null if the user is currently not dragging over any <Droppable />.
    * */ 
   const onDragUpdate: typeOfRBD.OnDragUpdateResponder = (update, provided) => {
-    console.log("[App] on drag start");
+    console.log("[App] on drag update");
+    console.log(update);    // drag中ホバーしたdroppableをdestinaitonとして確認できる
 
   }
 
@@ -85,6 +89,7 @@ export default function App() {
     if (!destination) {
       return;
     }
+
 
     // Check which folder draggable has been belonged.
     const prevFolder =  getParentNodeByChildId(explorerData, draggableId);
