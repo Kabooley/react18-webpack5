@@ -1,9 +1,9 @@
 import Drop from './Drop';
-import Drag from './Drag';
+import DragNDrop from './DragNDrop';
 import { getParentNodeByChildId, getNodeById, retrieveFromExplorer, pushIntoExplorer } from './helper';
 
 export { 
-    Drop, Drag, 
+    Drop, DragNDrop, 
     getParentNodeByChildId,
     getNodeById,
     retrieveFromExplorer,
