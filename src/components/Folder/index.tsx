@@ -64,9 +64,11 @@ const Folder = ({
      * Fires when the user starts dragging an item.
      * 
      * */ 
-    const onDragStart = (e: React.DragEvent) => {
+    const onDragStart = (e: React.DragEvent, id: string) => {
       // DEBUG:
       console.log("[Folder] Start drag");
+      console.log(`[Folder] DraggindId: ${id}`);
+      e.dataTransfer.setData("draggingId", id);
     };
 
     /**
@@ -95,15 +97,21 @@ const Folder = ({
     const onDragOver = (e: React.DragEvent) => {
       // DEBUG:
       console.log("[Folder] on drag over");
+      e.preventDefault();
     };
 
     /***
      * Fires when a item is dropped on a valid drop target.
      * 
      * */ 
-    const onDrop = (e: React.DragEvent) => {
+    const onDrop = (e: React.DragEvent, droppedId: string) => {
       // DEBUG:
-      console.log("[Folder] on drop");
+      console.log("[Folder] on drop: ");
+      const draggedItemId = e.dataTransfer.getData("draggingId") as string;
+      console.log(`draggingId: ${draggedItemId}`);
+      console.log(`droppedId: ${droppedId}`);
+      e.dataTransfer.clearData("draggingId");
+      // Send id to reorder process;
     };
 
     if (explorer.isFolder) {
@@ -113,10 +121,10 @@ const Folder = ({
               id={explorer.id}
               index={Number(explorer.id)}
               isDraggable={true}
-              onDragStart={onDragStart}
+              onDragStart={(e) => onDragStart(e, explorer.id)}
               onDragEnter={onDragEnter}
               onDragLeave={onDragLeave}
-              onDrop={onDrop}
+              onDrop={(e) => onDrop(e, explorer.id)}
               onDragOver={onDragOver}
             >
               <div className="folder" onClick={() => setExpand(!expand)}>
@@ -175,10 +183,10 @@ const Folder = ({
           id={explorer.id}
           index={Number(explorer.id)}
           isDraggable={true}
-          onDragStart={onDragStart}
+          onDragStart={(e) => onDragStart(e, explorer.id)}
           onDragEnter={onDragEnter}
           onDragLeave={onDragLeave}
-          onDrop={onDrop}
+          onDrop={(e) => onDrop(e, explorer.id)}
           onDragOver={onDragOver}
         >
           <div className="file">
