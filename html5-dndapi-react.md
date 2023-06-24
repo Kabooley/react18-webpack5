@@ -130,3 +130,57 @@ const Folder = ({
 
 これで楽勝でdragしたアイテムのidとdropされたアイテムのidを取得できる。
 
+
+## explorerを直接参照しているため再レンダリングが起こっていない
+
+何が問題かというと、explorerDataを参照している変数を変更しているため、
+
+setExplorerData()で変更を適用する前に既にexplorerDataが変更していることから
+
+最終的にsetExplorerData()で変更を適用したつもりが「差分がない」と判断されて
+
+再レンダリングが起こらないのである。
+
+これの修正。
+
+- helper関数へ渡すオブジェクトはコピーにする（参照を持たない）
+
+deepcopyはJSONメソッドを使うほかないので処理が重い。
+
+- helper関数が常に次を実施する
+
+```TypeScript
+  function insertNode(
+    tree: iExplorer,
+    folderId: string,
+    item: string,
+    isFolder: boolean
+  ): iExplorer {
+
+    // ...
+
+    // NOTE: これ
+    let latestNode: iExplorer[] = [];
+    latestNode = tree.items.map((ob) => {
+      return insertNode(ob, folderId, item, isFolder);
+    });
+
+    return { ...tree, items: latestNode };
+  }
+```
+
+`tree.items.map()`は常に新しい配列を返し、
+
+spread構文で上書き保存している。
+
+だから最終的に新しいtree全体を返すので
+
+最終的なsetExplorerDataで再レンダリングが起こってくれる。
+
+修正項目：
+
+- getParentNodeByChildId(): 配列を変更しないので修正不要
+- getNodeById(): 不要
+- retrieveFromExplorer(): items.splice()しているのでこれを修正。
+  TODO: `retrieved`を取り出した後のexplorerのコピーも返す必要がある
+- pushIntoExplorer(): 修正済retrieveFromExplorer()からのコピーexplorerDataを基に処理を行いretrievedを反映したあらたなexplorerDataコピーを返す

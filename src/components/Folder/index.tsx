@@ -6,7 +6,7 @@
  * ************************************************/ 
 import React, { useState } from "react";
 import type { iExplorer } from "../../data/folderData";
-import { Drop, DragNDrop } from '../../Tree';
+import { DragNDrop } from '../../Tree';
 
 // Icons
 // import editPencil from '../../assets/pencil-edit.svg';
@@ -18,17 +18,19 @@ interface iProps {
   explorer: iExplorer;
   handleInsertNode: (folderId: string, item: string, isFolder: boolean) => void;
   handleDeleteNode: (itemId: string, isFolder: boolean) => void;
+  handleReorderNode: (droppedId: string, draggableId: string) => void;
 };
 
 const Folder = ({ 
   explorer, 
-  handleInsertNode, handleDeleteNode,
+  handleInsertNode, handleDeleteNode, handleReorderNode
 }: iProps) => {
     const [expand, setExpand] = useState<boolean>(false);
     const [showInput, setShowInput] = useState({
       visible: false,
       isFolder: false
     });
+    const [dragging, setDragging] = useState<boolean>(false);
 
     const handleNewFolder = (
       e: React.MouseEvent<HTMLDivElement>,
@@ -68,6 +70,7 @@ const Folder = ({
       // DEBUG:
       console.log("[Folder] Start drag");
       console.log(`[Folder] DraggindId: ${id}`);
+      setDragging(true);
       e.dataTransfer.setData("draggingId", id);
     };
 
@@ -111,7 +114,10 @@ const Folder = ({
       console.log(`draggingId: ${draggedItemId}`);
       console.log(`droppedId: ${droppedId}`);
       e.dataTransfer.clearData("draggingId");
-      // Send id to reorder process;
+
+      handleReorderNode(droppedId, draggedItemId);
+      setDragging(false);
+
     };
 
     if (explorer.isFolder) {
@@ -170,6 +176,7 @@ const Folder = ({
                 <Folder
                   handleInsertNode={handleInsertNode}
                   handleDeleteNode={handleDeleteNode}
+                  handleReorderNode={handleReorderNode}
                   explorer={exp}
                 />
               );
@@ -204,5 +211,6 @@ const Folder = ({
       );
     }
   };
+
 
 export default Folder;

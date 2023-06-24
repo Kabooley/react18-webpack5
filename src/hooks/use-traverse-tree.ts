@@ -21,6 +21,8 @@ const useTraverseTree = () => {
       return tree;
     }
 
+    // 特定のnodeだけ更新して
+    // { ...tree, items: latestNode }で更新を全体に反映している
     let latestNode: iExplorer[] = [];
     latestNode = tree.items.map((ob) => {
       return insertNode(ob, folderId, item, isFolder);

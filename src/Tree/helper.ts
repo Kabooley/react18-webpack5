@@ -1,5 +1,5 @@
 import React from 'react';
-import { iExplorer } from '../data/folderData';
+import type { iExplorer } from '../data/folderData';
 
 
 /***
@@ -92,8 +92,6 @@ export const getNodeById = (explorer: iExplorer, id: string): iExplorer | undefi
 
 
 export const retrieveFromExplorer = (explorer: iExplorer, id: string): iExplorer | undefined => {
-    
-    console.log("[retrievefromExplorer]");
 
     const parent = getParentNodeByChildId(explorer, id);
     const retrieved = parent && parent.items.find(item => item.id === id);
@@ -106,10 +104,7 @@ export const retrieveFromExplorer = (explorer: iExplorer, id: string): iExplorer
 
 
 export const pushIntoExplorer = (explorer: iExplorer, toBePushed: iExplorer, destinationId: string): iExplorer => {
-    console.log("[pushIntoExplorer]");
     const destination = getNodeById(explorer, destinationId);
-
-    console.log(destination);
 
     destination && destination.items.push(toBePushed);
 
