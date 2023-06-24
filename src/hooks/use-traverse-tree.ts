@@ -1,7 +1,10 @@
 import type { iExplorer } from "../data/folderData";
 
 const useTraverseTree = () => {
-  //
+  /**
+   * 
+   * 
+   * */
   function insertNode(
     tree: iExplorer,
     folderId: string,
@@ -21,8 +24,6 @@ const useTraverseTree = () => {
       return tree;
     }
 
-    // 特定のnodeだけ更新して
-    // { ...tree, items: latestNode }で更新を全体に反映している
     let latestNode: iExplorer[] = [];
     latestNode = tree.items.map((ob) => {
       return insertNode(ob, folderId, item, isFolder);
@@ -31,46 +32,23 @@ const useTraverseTree = () => {
     return { ...tree, items: latestNode };
   }
 
-  //
-  // TODO: `explorer.id`だけで削除処理が完了するようにする
-  //
-  const deleteNode = (
-    tree: iExplorer,
-    itemId: string, // 削除するアイテムのid
-    isFolder: boolean
-  ): iExplorer => {
-    // 削除したいアイテムをitemsに含んでいるか
-    let isItemIncluded: boolean = false;
-    tree.items.forEach((item) => {
-      isItemIncluded = item.id === itemId || isItemIncluded;
-    });
-    
-
-    // 削除したいアイテムをitemsに含んでいるフォルダならば：
-    if (isItemIncluded && isFolder) {
-      console.log(`Delete item`);
-      return {
-        id: tree.id,
-        name: tree.name,
-        isFolder: tree.isFolder,
-        items: tree.items.filter((item) => item.id !== itemId)
-      };
-    }
-
-    let latestNode: iExplorer[] = [];
-    latestNode = tree.items.map((ob) => {
-      return deleteNode(ob, itemId, ob.isFolder);
-    });
-
-    return { ...tree, items: latestNode };
-  };
-
+  // //
+  // // TODO: `explorer.id`だけで削除処理が完了するようにする
+  // //
   // const deleteNode = (
   //   tree: iExplorer,
-  //   folderId: string, // 削除されるアイテムが含まれているフォルダのid
-  //   itemId: string // 削除するアイテムのid
+  //   itemId: string, // 削除するアイテムのid
+  //   isFolder: boolean
   // ): iExplorer => {
-  //   if (tree.id === folderId) {
+  //   // 削除したいアイテムをitemsに含んでいるか
+  //   let isItemIncluded: boolean = false;
+  //   tree.items.forEach((item) => {
+  //     isItemIncluded = item.id === itemId || isItemIncluded;
+  //   });
+    
+
+  //   // 削除したいアイテムをitemsに含んでいるフォルダならば：
+  //   if (isItemIncluded && isFolder) {
   //     console.log(`Delete item`);
   //     return {
   //       id: tree.id,
@@ -82,13 +60,12 @@ const useTraverseTree = () => {
 
   //   let latestNode: iExplorer[] = [];
   //   latestNode = tree.items.map((ob) => {
-  //     return deleteNode(ob, folderId, itemId);
+  //     return deleteNode(ob, itemId, ob.isFolder);
   //   });
 
   //   return { ...tree, items: latestNode };
   // };
 
-  // NOTE: developing...
   const updateNode = (
     tree: iExplorer,
     folderId: string,
@@ -112,7 +89,89 @@ const useTraverseTree = () => {
     return { ...tree, items: latestNode };
   };
 
-  return { insertNode, deleteNode, updateNode };
+  /**
+   * TODO: Replace current `deleteNode` method to this.
+   *
+   * @param {iExplorer} tree - explorer object to be surveyed.
+   * @param {string} id - An explorer's id which is to be removed.
+   * @return {iExplorer} - Always returns new iExplorer object. No shallow copy.
+   * */
+  const deleteNode = (tree: iExplorer, id: string): iExplorer => {
+    // 引数idに一致するitemをtreeから見つけたら、
+    // 該当item削除を反映したitemsにしてtreeを返す。
+    if (tree.items.find((item) => item.id === id)) {
+      const m = tree.items.map((item) => (item.id !== id ? item : undefined));
+      const updatedTree = m.filter(
+        (item: iExplorer | undefined) => item !== undefined
+      ) as iExplorer[];
+      return { ...tree, items: updatedTree };
+    }
+    // 1. まずtree.itemsのitemすべてを呼び出し...
+    let latestNode: iExplorer[] = [];
+    latestNode = tree.items.map((ob) => deleteNode(ob, id));
+
+    // 2. ...常にtreeのitemsが更新されたtreeを返す
+    return { ...tree, items: latestNode };
+  };
+
+  const addNode = (
+    tree: iExplorer,
+    where: string,
+    toBeAdded: iExplorer
+  ): iExplorer => {
+    if (tree.items.find((item) => item.id === where)) {
+      const updatedItems = tree.items.map(item => item);
+      updatedItems.push(toBeAdded);
+      return {...tree, items: updatedItems}
+    }
+
+    let latestNode: iExplorer[] = [];
+    latestNode = tree.items.map((ob) => addNode(ob, where, toBeAdded));
+
+    return { ...tree, items: latestNode };
+  };
+
+  // TODO: 変更したitemsがtreeのitemsと異なるのでおかしな挙動になっている。
+  // これの修正を。
+  /**
+   * tree: {id: "1"}
+   * where: "2"
+   * この場合、
+   * w: {id: "2"}
+   * updatedItems: w.itemsが更新された
+   * {...tree, items: 更新されたw.items}    // ここ
+   * 
+   * 
+   * */ 
+  const addFolderNode = (
+    tree: iExplorer,
+    where: string,
+    toBeAdded: iExplorer
+  ): iExplorer => {
+    // DEBUG:
+    console.log("[addFolderNode]");
+    console.log("tree: ");
+    console.log(tree);
+    console.log(`where: ${where}`);
+
+    if (tree.id === where) {
+      const updatedItems = tree.items.map(item => item);
+      updatedItems.push(toBeAdded);
+      
+      console.log(`updatedItems:`);
+      console.log(updatedItems);
+
+      return {...tree, items: updatedItems}
+    }
+
+    let latestNode: iExplorer[] = [];
+    latestNode = tree.items.map((ob) => addFolderNode(ob, where, toBeAdded));
+
+    return { ...tree, items: latestNode };
+  };
+
+
+  return { insertNode, deleteNode, updateNode, addNode, addFolderNode };
 };
 
 export default useTraverseTree;

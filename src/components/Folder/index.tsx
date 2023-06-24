@@ -117,7 +117,6 @@ const Folder = ({
 
       handleReorderNode(droppedId, draggedItemId);
       setDragging(false);
-
     };
 
     if (explorer.isFolder) {
