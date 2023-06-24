@@ -112,3 +112,56 @@ export const pushIntoExplorer = (explorer: iExplorer, toBePushed: iExplorer, des
 
     return explorer;
 };
+
+
+// -- 6-25 --
+
+/***
+ * DND反映するための処理順序：
+ *
+ * 移動するアイテムのコピーをとる: getNodeByid()
+ * 移動するアイテムを元居た場所から削除する: deleteNode()
+ * 移動するアイテムのコピーを移動先へ追加する: addNode()
+ *
+ * */
+
+/**
+ * TODO: Replace current `deleteNode` method to this.
+ *
+ * @param {iExplorer} tree - explorer object to be surveyed.
+ * @param {string} id - An explorer's id which is to be removed.
+ * @return {iExplorer} - Always returns new iExplorer object. No shallow copy.
+ * */
+const deleteNode = (tree: iExplorer, id: string): iExplorer => {
+  // 引数idに一致するitemをtreeから見つけたら、
+  // 該当item削除を反映したitemsにしてtreeを返す。
+  if (tree.items.find((item) => item.id === id)) {
+    const m = tree.items.map((item) => (item.id !== id ? item : undefined));
+    const updatedTree = m.filter(
+      (item: iExplorer | undefined) => item !== undefined
+    ) as iExplorer[];
+    return { ...tree, items: updatedTree };
+  }
+  // 1. まずtree.itemsのitemすべてを呼び出し...
+  let latestNode: iExplorer[] = [];
+  latestNode = tree.items.map((ob) => deleteNode(ob, id));
+
+  // 2. ...常にtreeのitemsが更新されたtreeを返す
+  return { ...tree, items: latestNode };
+};
+
+const addNode = (
+  tree: iExplorer,
+  where: string,
+  toBeAdded: iExplorer
+): iExplorer => {
+  if (tree.items.find((item) => item.id === where)) {
+    // items.pushだと新規の配列にならないので別の手段を
+  }
+  // 1. まずtree.itemsのitemすべてを呼び出し...
+  let latestNode: iExplorer[] = [];
+  latestNode = tree.items.map((ob) => addNode(ob, where, toBeAdded));
+
+  // 2. ...常にtreeのitemsが更新されたtreeを返す
+  return { ...tree, items: latestNode };
+};
