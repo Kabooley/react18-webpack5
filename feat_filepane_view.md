@@ -2,283 +2,209 @@
 
 ## タスク
 
-TODO: 元となるデータ`files`を基にEXPLORERペインビューを実装する
-TODO: 元となるデータ`files`のロジックを固める必要がある（directoruかfileかとかの情報もつけるとか）
 
-## 参考
+## 枠組み
 
-snack expoのOSS：
+- FilePaneのベース：https://www.youtube.com/watch?v=20F_KzHPpvI
 
-https://github.com/expo/snack/blob/main/website/src/client/components/FileList/FileList.tsx
+- dnd機能：HTML5 drag and drop api
 
-
-他ggたやつ
-
-https://dev.to/siddharthvenkatesh/creating-a-simple-file-explorer-with-recursive-components-in-react-458h
-
-## 実装
-
-## filesのロジック
-
-どんな情報が含まれていれば必要十分か。
+サードパーティ製の方が面倒くさかった。
 
 
-例：
+## 実装：スタイリング
 
-```TypeScript
-const files = {
+#### svg icon
 
-}
+webpack準備:
+
+https://webpack.js.org/guides/asset-management/#loading-images
+
+typescript準備：
+
+https://stackoverflow.com/questions/44717164/unable-to-import-svg-files-in-typescript
+
+iconはネットから拾ってきたやつをひとまず：
+
+https://www.svgrepo.com/svg/42233/pencil-edit-button
 
 
-const files2 = [
-    { name: "index.js", path: "path/to/file", language: "javascript", value: "import React from \'react\'"},
-    { name: "component.tsx", path: "path/to/file", language: "typescript", value: "import React from \'react\'"},
-    { name: "FILENAME", path: "path/to/file", language: "javascript", value: "import React from \'react\'"},
-    { name: "FILENAME", path: "path/to/file", language: "javascript", value: "import React from \'react\'"},
-]
-```
+## DND機能
 
-pathからディレクトリなどを解決するようにする
+MDN:
 
-NOTE: 空のディレクトリとかはその情報を基に生成することはできない
+https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API
 
-#### 実装：pathからディレクトリを解決する仕組み
+その他：
 
-path:
+https://www.smashingmagazine.com/2020/02/html-drag-drop-api-react/
 
-root file: `/index.js`
+https://www.youtube.com/watch?v=u65Y-vqYNAk
 
-subdirectory file: `/components/Counter/index.js`
+## 手順
 
-filesのpathからexplorerの構成のもととなるビジネスモデルを生成する
+https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/Drag_operations#dragstart
 
-処理の流れ：
 
-path読取 --> path解決 --> ビジネスモデルの更新 --> renndering
+- dragしたいHTML要素に`draggable`属性に`true`を与える
+- `dragstart`イベントのリスナを定義する
+- `ondragstart`リスナで`DataTransfer:setData()`を呼び出す
+- `DragEvent.dataTransfer.setData()`でdndしたい情報を渡す
+- `ondrop`リスナで`DragEvent.dataTransfet.getData()`からdndされた情報を取得して処理をする
 
-```html
-<div className="rootDir" name="src/">
-    <div className="directory" name="components" >
-        <ul className="directory-ul" name="components">
-            <li className="directory-li" name="components">
-                <div className="file javascript-file" name="components/index.js">index.js</div>
-            </li>
-            <li className="directory-li" name="components">
-                <!-- SubDir Dir1 -->
-                <div className="directory" name="components/Dir1" >
-                    <ul className="directory-ul" name="components/Dir1">
-                        <li className="directory-li" name="components/Dir1">
-                            <div className="file javascript-file" name="components/Dir1/index.js">index.js</div>
-                        </li>
-                        <li className="directory-li" name="components/Dir1">
-                            
-                        </li>
-                        <li className="directory-li" name="components/Dir1"></li>
-                    </ul>
-                </div>
-            </li>
-            <li className="directory-li" name="components"></li>
-        </ul>
-    </div>
-</div>
+というのが基本的な流れ。
 
-<!-- DIRECOTRY-NAME must be absolute path -->
-<!-- Directory Base -->
-<div className="directory" name="DIRECTORY-NAME">
-    <ul className="directory-ul" name="DIRECTORY-NAME">
-        <li className="directory-li" name="DIRECTORY-NAME"><!-- file or subdirectory here --></li>
-        <li className="directory-li" name="DIRECTORY-NAME"><!-- file or subdirectory here --></li>
-        <li className="directory-li" name="DIRECTORY-NAME"><!-- file or subdirectory here --></li>
-        <li className="directory-li" name="DIRECTORY-NAME"><!-- file or subdirectory here --></li>
-    </ul>
-</div>
+Reactには組み込みでJSXにリスナが用意されている。なのでJavaScriptで実装するのよりもはるかに楽勝。
 
-<!-- File Base -->
-<div className="file javascript-file" name="PATH/TO/FILENAME">
-    <svg>file-icon</svg>
-    <span className="filename"></span>
-</div>
-
-```
-
-test codesandbox
+`React.DragEvent`
 
 ```TypeScript
-import "./styles.css";
-
-document.getElementById("app").innerHTML = `
-<h1>Hello Vanilla!</h1>
-<div>
-  We use the same configuration as Parcel to bundle this sandbox, you can find more
-  info about Parcel 
-  <a href="https://parceljs.org" target="_blank" rel="noopener noreferrer">here</a>.
-</div>`;
-interface iDirInfo {
-  path: string; 
-  nodeType: "file" | "Dir"
-};
-
-interface iTreeDirFileBase {
-  id: string;
-  name: string;
-  parentNode: string;
-  nodeType: "Dir" | "file"
-};
-
-const Root = "src/";
-
-// "src/" as Root.
-const dummy: iDirInfo[] = [
-  {path: "/index.js", nodeType: "file"},
-  {path: "/components/Dir1/index.js", nodeType: "file"},
-  {path: "/components/Dir1/subDir/index.js", nodeType: "file"},
-  {path: "/components/Dir2/index.js", nodeType: "file"}, 
-  {path: "/utils/Counter.js", nodeType: "file"}, 
-  {path: "/components/Di3", nodeType: "Dir"},    /* empty directory */ 
-  {path: "/components/Di3/something", nodeType: "file"},    /* file with no extension */ 
-];
-
-const dummyExplorerTree = {
-  root: {
-    name: "src"
-  },
-  // id: ランダム生成のハッシュ値
-  // NOTE: parentNodeはidの方がいいかも
-  dirs: [
-    {id: "", name: "components", parentNode: "src", nodeType: "Dir"},
-    {id: "", name: "Dir1", parentNode: "components", nodeType: "Dir"},
-    {id: "", name: "Dir2", parentNode: "Dir1", nodeType: "Dir"},
-    {id: "", name: "utils", parentNode: "src", nodeType: "Dir"},
-  ],
-  files: [
-    { name: "index.js", parentNode: "src", nodeType: "file"},
-    {id: "", name: "index.js", parentNode: "Dir1", nodeType: "file"},
-    {id: "", name: "index.js", parentNode: "Dir2", nodeType: "file"},
-    {id: "", name: "counter.js", parentNode: "utils", nodeType: "file"},
-  ]
-};
-
-const resolver = (path: string, nodeType: "file" | "Dir") => {
-  const result = path.split('/').reduce<iTreeDirFileBase[]>(
-    (a: iTreeDirFileBase, currentNode: string, currentIndex, arr) => {
-    return {
-      id: "xxxxxxx" + currentNode,
-      name: currentNode,
-      parentNode: a === undefined ? "src": a.id,
-      nodeType: currentIndex < arr.length ? "Dir" : nodeType
-    }
-  }, []);
-  return result;
-};
-
-(function () {
-  let result = {};
-  dummy.forEach(d => {
-    const r = resolver(d.path, d.nodeType);
-    reuslt = { ...result, ...r };
-  });
-  console.log(result);
-})();
+import React, { useState } from "react";
+import type { iExplorer } from "../../data/folderData";
+import { Drop, DragNDrop } from '../../Tree';
 
 
+const Folder = ({ 
+  explorer, 
+  handleInsertNode, handleDeleteNode,
+}: iProps) => {
 
-// ---
-
-
-const resolver = (path, nodeType) => {
-  let container = [];
-  path.split("/").reduce((a, currentNode, currentIndex, arr) => {
-    const d = {
-      id: "xxxxxxx" + currentNode,
-      name: currentNode,
-      parentNode: a === undefined ? "src" : a.id,
-      // TODO: fix this process
-      nodeType: currentIndex < arr.length ? "Dir" : nodeType
+    /***
+     * Fires when the user starts dragging an item.
+     * 
+     * */ 
+    const onDragStart = (e: React.DragEvent, id: string) => {
+      // DEBUG:
+      console.log("[Folder] Start drag");
+      console.log(`[Folder] DraggindId: ${id}`);
+      e.dataTransfer.setData("draggingId", id);
     };
-    container.push(d);
-    console.log("<------");
-    console.log(a);
-    console.log(d);
-    console.log(container);
-    console.log("------>");
-    return d;
-  });
-  return container;
-};
 
-// const resolver = (path, nodeType) => {
-//   let root = {
-//     id: "root",
-//     name: "src/",
-//     parentNode: undefined,
-//     nodeType: "Dir"
-//   };
-//   const result = path.split("/").reduce((a, currentNode, currentIndex, arr) => {
-//     const d = {
-//       id: "xxxxxxx" + currentNode,
-//       name: currentNode,
-//       parentNode: a === undefined ? "src" : a.id,
-//       // TODO: fix this process
-//       nodeType: currentIndex < arr.length ? "Dir" : nodeType
-//     };
-//     console.log("<----");
-//     console.log(a);
-//     console.log(d);
-//     console.log("---->");
-//     return [...a, d];
-//   }, [root]);
-//   return result;
-// };
+    /**
+     * Fires when dragged item evnters a valid drop target.
+     * 
+     * */ 
+    const onDragEnter = (e: React.DragEvent) => {
+      // DEBUG:
+      console.log("[Folder] on drag enter");
+    };
 
+    /***
+     * Fires when a draggaed item leaves a valid drop target.
+     * 
+     * */ 
+    const onDragLeave = (e: React.DragEvent) => {
+      // DEBUG:
+      console.log("[Folder] on drag leave");
+    };
 
-(function () {
-  dummy.forEach(d => {
-    const r = resolver(d.path, d.nodeType);
-    console.log('result');
-    console.log(r);
-  });
-})();
+    /**
+     * Fires when a dragged item is being dragged over a valid drop target,
+     * every handred milliseconds.
+     * 
+     * */ 
+    const onDragOver = (e: React.DragEvent) => {
+      // DEBUG:
+      console.log("[Folder] on drag over");
+      e.preventDefault();
+    };
 
+    /***
+     * Fires when a item is dropped on a valid drop target.
+     * 
+     * */ 
+    const onDrop = (e: React.DragEvent, droppedId: string) => {
+      // DEBUG:
+      console.log("[Folder] on drop: ");
+      const draggedItemId = e.dataTransfer.getData("draggingId") as string;
+      console.log(`draggingId: ${draggedItemId}`);
+      console.log(`droppedId: ${droppedId}`);
+      e.dataTransfer.clearData("draggingId");
+      // Send id to reorder process;
+    };
 
-
- ```
-
- dummyからdummyTreeExplorerのようなオブジェクトを生成する
-
-## JavaScript: Array.prototype.reduce
-
-https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
-
-```TypeScript
-const array = [15, 16, 17, 18, 19];
-
-function reducer(accumulator, currentValue, index) {
-  const returns = accumulator + currentValue;
-  console.log(
-    `accumulator: ${accumulator}, currentValue: ${currentValue}, index: ${index}, returns: ${returns}`,
-  );
-  return returns;
-};
-
-// In case no initialValue:
-console.log(array.reduce(reducer));
-// accumulator: 15, currentValue: 16, index: 1, returns: 31 
-// accumulator: 31, currentValue: 17, index: 2, returns: 48 
-// accumulator: 48, currentValue: 18, index: 3, returns: 66 
-// accumulator: 66, currentValue: 19, index: 4, returns: 85 
-// 85
-
-
-// In case with initialValue:
-console.log(array.reduce(reducer, array[0]));
-// accumulator: 15, currentValue: 15, index: 0, returns: 30 
-// accumulator: 30, currentValue: 16, index: 1, returns: 46 
-// accumulator: 46, currentValue: 17, index: 2, returns: 63 
-// accumulator: 63, currentValue: 18, index: 3, returns: 81 
-// accumulator: 81, currentValue: 19, index: 4, returns: 100 
-// 100
+    if (explorer.isFolder) {
+      return (
+        <div>
+            <DragNDrop
+              id={explorer.id}
+              index={Number(explorer.id)}
+              isDraggable={true}
+              onDragStart={(e) => onDragStart(e, explorer.id)}
+              onDragEnter={onDragEnter}
+              onDragLeave={onDragLeave}
+              onDrop={(e) => onDrop(e, explorer.id)}
+              onDragOver={onDragOver}
+            >
+                // ...
+            </DragNDrop>
+        </div>
+      );
+    } else {
+      return (
+        <DragNDrop
+          id={explorer.id}
+          index={Number(explorer.id)}
+          isDraggable={true}
+          onDragStart={(e) => onDragStart(e, explorer.id)}
+          onDragEnter={onDragEnter}
+          onDragLeave={onDragLeave}
+          onDrop={(e) => onDrop(e, explorer.id)}
+          onDragOver={onDragOver}
+        >
+            // ...
+        </DragNDrop>
+      );
+    }
+  };
 ```
 
-initialValueなしだと一巡目がaccumulatorがarray[0]で、currentValueがarray[1]になる。
+これで楽勝でdragしたアイテムのidとdropされたアイテムのidを取得できる。
+
+
+## explorerを直接参照しているため再レンダリングが起こっていない
+
+何が問題かというと、explorerDataを参照している変数を変更しているため、
+
+setExplorerData()で変更を適用する前に既にexplorerDataが変更していることから
+
+最終的にsetExplorerData()で変更を適用したつもりが「差分がない」と判断されて
+
+再レンダリングが起こらないのである。
+
+これの修正。
+
+- helper関数へ渡すオブジェクトはコピーにする（参照を持たない）
+
+deepcopyはJSONメソッドを使うほかないので処理が重い。
+
+- helper関数が常に次を実施する
+
+```TypeScript
+  function insertNode(
+    tree: iExplorer,
+    folderId: string,
+    item: string,
+    isFolder: boolean
+  ): iExplorer {
+
+    // ...
+
+    // NOTE: これ
+    let latestNode: iExplorer[] = [];
+    latestNode = tree.items.map((ob) => {
+      return insertNode(ob, folderId, item, isFolder);
+    });
+
+    return { ...tree, items: latestNode };
+  }
+```
+
+`tree.items.map()`は常に新しい配列を返し、
+
+spread構文で上書き保存している。
+
+だから最終的に新しいtree全体を返すので
+
+最終的なsetExplorerDataで再レンダリングが起こってくれる。
 
