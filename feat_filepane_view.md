@@ -1,8 +1,5 @@
 # Implement file pane 
 
-## タスク
-
-
 ## 枠組み
 
 - FilePaneのベース：https://www.youtube.com/watch?v=20F_KzHPpvI
@@ -29,7 +26,9 @@ iconはネットから拾ってきたやつをひとまず：
 https://www.svgrepo.com/svg/42233/pencil-edit-button
 
 
-## DND機能
+## 実装：DND機能
+
+HTML5 Drag and Drop API
 
 MDN:
 
@@ -41,7 +40,7 @@ https://www.smashingmagazine.com/2020/02/html-drag-drop-api-react/
 
 https://www.youtube.com/watch?v=u65Y-vqYNAk
 
-## 手順
+#### 手順
 
 https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/Drag_operations#dragstart
 
@@ -51,6 +50,7 @@ https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/Drag_ope
 - `ondragstart`リスナで`DataTransfer:setData()`を呼び出す
 - `DragEvent.dataTransfer.setData()`でdndしたい情報を渡す
 - `ondrop`リスナで`DragEvent.dataTransfet.getData()`からdndされた情報を取得して処理をする
+- droppableエリアとするには、そのdroppableにしたい要素に`ondropover`と`ondrop`イベントハンドラを渡し、ハンドラで`e.preventDefault()`すること。
 
 というのが基本的な流れ。
 
@@ -162,7 +162,11 @@ const Folder = ({
 これで楽勝でdragしたアイテムのidとdropされたアイテムのidを取得できる。
 
 
-## explorerを直接参照しているため再レンダリングが起こっていない
+#### explorerを直接参照しているため再レンダリングが起こっていない
+
+ネストされたオブジェクトをstateで管理する場合のあるあるかも。
+
+onDragEndでのdnd結果の反映による再レンダリングがされない。
 
 何が問題かというと、explorerDataを参照している変数を変更しているため、
 
@@ -178,7 +182,7 @@ setExplorerData()で変更を適用する前に既にexplorerDataが変更して
 
 deepcopyはJSONメソッドを使うほかないので処理が重い。
 
-- helper関数が常に次を実施する
+- helper関数が常に次のような新たなitemsを返すようにする
 
 ```TypeScript
   function insertNode(
@@ -208,3 +212,19 @@ spread構文で上書き保存している。
 
 最終的なsetExplorerDataで再レンダリングが起こってくれる。
 
+
+## branch: test_filepane_viewへ統合
+
+確認された問題など：
+
+- fontサイズ(CSSの統合)
+- 親フォルダを子フォルダにドロップすると消える。
+- 問題じゃないけど：Monacoエディタはdroppableだけどおとしてもfileexplorerの機能に影響はない。
+
+#### 親フォルダを子フォルダにドロップすると消える問題
+
+統合したことは関係ないのだけどね。
+
+親フォルダを子アイテムエリアにドロップしないために、
+
+dragstart時点で無効にするべき。
