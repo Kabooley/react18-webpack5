@@ -1,0 +1,90 @@
+.folder {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    overflow-x: hidden;
+
+    &:hover {
+        background-color: rgba(55, 147, 224, 0.25);
+    }
+
+    &:hover .folder-function {
+        opacity: 1;
+    }
+
+    > span {
+        /* margin: 0 5px; */
+        padding-left: calc(1rem - 2px);
+        border-right: 2px solid transparent;
+        min-height: 28px;
+        border-top-color: transparent;
+        border-bottom-color: transparent;
+        border-left-color: transparent;
+        white-space: nowrap;
+    }
+
+    > div > button {
+        font-size: 15px;
+        background-color: white;
+    }
+  }
+  
+  
+.inputContainer{
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    > span {
+        margin-top: 5px;
+    }
+
+    &__input {
+        margin: 6px 0 0px 0;
+        padding: 5px;
+        display: flex;
+        border: 1px solid lightgray;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+    }
+}
+  
+.folder-function {
+    display: flex;
+    flex-flow: row nowrap;
+    opacity: 0;
+
+    &:hover {
+        background-color: rgba(55, 147, 224, 0.25);
+    }
+
+    > .folder-function > div {
+        padding-left: 0.6rem;
+    }
+}
+
+
+.file {
+    display: flex;
+    justify-content: space-between;
+
+    &:hover .file-function {
+        opacity: 1;
+        }
+}
+
+// TODO: .file--functionにすること
+.file-function {
+    margin: auto 0;
+    opacity: 0;
+}
+
+// TODO: .file--nameにすること
+.file-name {
+padding-left: calc(1rem - 2px);
+display: flex;
+flex-direction: column;
+}
