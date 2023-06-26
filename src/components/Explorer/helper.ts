@@ -90,6 +90,26 @@ export const getNodeById = (explorer: iExplorer, id: string): iExplorer | undefi
 };
 
 
+/***
+ * Check if `nodeId` is under `from` item.
+ * 
+ * */ 
+export const isNodeIncludedUnderExplorer = (explorer: iExplorer, nodeId: string, from: string) => {
+  // DEBUG:
+  console.log("[isNodeIncludedUnderExplorer]: startPoint");
+  const startPoint = getNodeById(explorer, from);
+  console.log(startPoint);
+  if(startPoint && getParentNodeByChildId(startPoint, nodeId)) {
+    console.log("[isNodeIncludedUnderExplorer]: included.");
+    return true;
+  }
+  console.log("[isNodeIncludedUnderExplorer]: Not included.");
+  return false;
+};
+
+
+// DEPLICATED:
+// 
 // export const retrieveFromExplorer = (explorer: iExplorer, id: string): iExplorer | undefined => {
 
 //     const parent = getParentNodeByChildId(explorer, id);
@@ -111,12 +131,3 @@ export const getNodeById = (explorer: iExplorer, id: string): iExplorer | undefi
 
 //     return explorer;
 // };
-
-/***
- * `nodeId`: droppedId
- * `from`: draggableId
- * 
- * */ 
-const isNodeIncludedUnder = (nodeId: string, from: string) => {
-  
-}

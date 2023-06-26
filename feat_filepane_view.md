@@ -225,6 +225,37 @@ spread構文で上書き保存している。
 
 統合したことは関係ないのだけどね。
 
-親フォルダを子アイテムエリアにドロップしないために、
+親フォルダを子アイテムエリアにドロップしないための無効化の実装。
 
-dragstart時点で無効にするべき。
+TODO: 現状アイテムをdragしたままホバーするとdrop可能表示なので、dragstart時点でうまいこと無効にすること
+
+```TypeScript
+// helper.ts
+export const isNodeIncludedUnderExplorer = (explorer: iExplorer, nodeId: string, from: string) => {
+
+  const startPoint = getNodeById(explorer, from);
+  console.log(startPoint);
+  if(startPoint && getParentNodeByChildId(startPoint, nodeId)) {
+    return true;
+  }
+  return false;
+};
+
+// FileExplorer/index.tsx
+  const handleReorderNode = (droppedId: string, draggableId: string): void => {
+
+      // Check if the dropped area is under dragging item
+      if(isNodeIncludedUnderExplorer(explorerData, droppedId, draggableId)){
+        // DEBUG:
+        console.log("[onDragEnd] cancel drop on the area.");
+        return;
+      }
+
+      // ...
+  };
+```
+
+#### styleの統合とsass化
+
+別ブランチにしよう。
+
