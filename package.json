@@ -25,6 +25,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-refresh": "^0.14.0",
+    "sass": "^1.63.6",
+    "sass-loader": "^13.3.2",
     "style-loader": "^3.3.2",
     "ts-loader": "^9.4.2",
     "typescript": "^5.0.4",
@@ -33,12 +35,10 @@
     "webpack-dev-server": "^4.13.2"
   },
   "dependencies": {
-    "@atlaskit/tree": "^8.8.5",
     "@babel/core": "^7.21.4",
     "@babel/preset-env": "^7.21.4",
     "@babel/preset-react": "^7.18.6",
     "@types/localforage": "^0.0.34",
-    "@types/react-beautiful-dnd": "^13.1.4",
     "@types/react-resizable": "^3.0.4",
     "axios": "^1.4.0",
     "babel-loader": "^9.1.2",

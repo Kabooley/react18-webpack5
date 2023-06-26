@@ -1,5 +1,10 @@
 # Implement file pane 
 
+## TODOs
+
+- TODO: 現状アイテムをdragしたままホバーするとdrop可能表示なので、dragstart時点でうまいこと無効にすること
+- TODO: stylingの統一
+
 ## 枠組み
 
 - FilePaneのベース：https://www.youtube.com/watch?v=20F_KzHPpvI
@@ -213,17 +218,7 @@ spread構文で上書き保存している。
 最終的なsetExplorerDataで再レンダリングが起こってくれる。
 
 
-## branch: test_filepane_viewへ統合
-
-確認された問題など：
-
-- fontサイズ(CSSの統合)
-- 親フォルダを子フォルダにドロップすると消える。
-- 問題じゃないけど：Monacoエディタはdroppableだけどおとしてもfileexplorerの機能に影響はない。
-
 #### 親フォルダを子フォルダにドロップすると消える問題
-
-統合したことは関係ないのだけどね。
 
 親フォルダを子アイテムエリアにドロップしないための無効化の実装。
 
@@ -255,7 +250,16 @@ export const isNodeIncludedUnderExplorer = (explorer: iExplorer, nodeId: string,
   };
 ```
 
-#### styleの統合とsass化
+## styling統一
 
-別ブランチにしよう。
+sassを導入してみる。
 
+webpack設定： https://webpack.js.org/loaders/sass-loader/
+
+Dart SassかNode Sassどちらかを一緒にインストールしなくてはならないが、
+
+Dart Sassを使うことをwebpackは推奨している。
+
+Dart Sass: https://github.com/sass/dart-sass
+
+Jonasのsassコース復習...
