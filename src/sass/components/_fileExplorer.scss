@@ -1,3 +1,8 @@
+.file-explorer {
+    // editorのフォントサイズに準じる 
+    font-size: 1.4rem;
+}
+
 .folder {
     display: flex;
     flex-flow: row nowrap;
@@ -29,6 +34,21 @@
         font-size: 15px;
         background-color: white;
     }
+
+    &--function {
+        display: flex;
+        flex-flow: row nowrap;
+        opacity: 0;
+    
+        &:hover {
+            background-color: rgba(55, 147, 224, 0.25);
+        }
+    
+        > .folder-function > div {
+            padding-left: 0.6rem;
+        }
+    }
+    
   }
   
   
@@ -52,20 +72,6 @@
     }
 }
   
-.folder-function {
-    display: flex;
-    flex-flow: row nowrap;
-    opacity: 0;
-
-    &:hover {
-        background-color: rgba(55, 147, 224, 0.25);
-    }
-
-    > .folder-function > div {
-        padding-left: 0.6rem;
-    }
-}
-
 
 .file {
     display: flex;
@@ -73,18 +79,20 @@
 
     &:hover .file-function {
         opacity: 1;
-        }
-}
+    }
 
-// TODO: .file--functionにすること
-.file-function {
-    margin: auto 0;
-    opacity: 0;
-}
+    > span {
+        white-space: nowrap;
+    }
 
-// TODO: .file--nameにすること
-.file-name {
-padding-left: calc(1rem - 2px);
-display: flex;
-flex-direction: column;
+    &--function {
+        margin: auto 0;
+        opacity: 0;
+    }
+
+    &--name {
+        padding-left: calc(1rem - 2px);
+        display: flex;
+        flex-direction: column;
+    }
 }

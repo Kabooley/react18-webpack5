@@ -1,8 +1,8 @@
 .header-section {
-    border-bottom: 1px solid rgb(52, 52, 52);
-    border-top-color: rgb(52, 52, 52);
-    border-right-color: rgb(52, 52, 52);
-    border-left-color: rgb(52, 52, 52);
+    border-bottom: 1px solid $color-border;
+    border-top-color: $color-border;
+    border-right-color: $color-border;
+    border-left-color: $color-border;
 
     /* ひとまず */
     height: 48px;
@@ -17,11 +17,11 @@
 
 .navigation-section {
     height: 100vh;
-    padding: 8px;
-    border-right: 1px solid rgb(52, 52, 52);
-    color: rgb(153, 153, 153);
-    font-size: 1.4rem;
-    background-color: rgb(21, 21, 21);
+    padding: 0.8rem;    /* 8px */
+    border-right: 1px solid $color-border;
+    color: $color-font;
+    font-size: $default-font-size;
+    background-color: $color-bg-dark;
 }
 
 .split-pane {
@@ -37,9 +37,9 @@
 }
 
 .monaco-container {
-display: flex;
-flex-direction: column;
-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
 }
 
 .preview-section {

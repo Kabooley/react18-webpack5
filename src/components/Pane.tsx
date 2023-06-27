@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { ResizableBox } from "react-resizable";
 import type { ResizeCallbackData } from "react-resizable";
 import FileExplorer from './Explorer';
-import '../index.css';
 
 const PaneSection = (): JSX.Element => {
   const [paneWidth, setPaneWidth] = useState<number>(300);

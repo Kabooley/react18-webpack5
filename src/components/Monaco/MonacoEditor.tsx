@@ -9,7 +9,7 @@ import willMountMonacoProcess from './monacoWillMountProcess';
 import viewStateFiles from '../../data/viewStates';
 import { getModelByPath } from '../../utils/getModelByPath';
 import type { iFile, iFiles } from '../../data/files';
-import '../index.css';
+// import '../index.css';
 
 interface iModel {
     model: monaco.editor.ITextModel;

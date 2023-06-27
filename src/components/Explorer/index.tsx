@@ -4,7 +4,7 @@ import { isNodeIncludedUnderExplorer } from "./helper";
 import useTraverseTree from "../../hooks/use-traverse-tree";
 import explorer, { iExplorer } from "../../data/explorerData";
 import { getNodeById } from './helper';
-import "./styles.css";
+
 
 
 export default function FileExplorer() {

@@ -4,6 +4,10 @@
 
 - TODO: 現状アイテムをdragしたままホバーするとdrop可能表示なので、dragstart時点でうまいこと無効にすること
 - TODO: stylingの統一
+- TODO: resizeするとfileexplorerのアイテムが折り返して表示されるのでこれをoverflow:hiddenにする
+- TODO: .folder-functionのアイコンの間隔が狭すぎる
+- TODO: file:hoverの表現がなくなっている。
+- TODO: .folder-functionのアイコンのホバー表現を設けること
 
 ## 枠組み
 

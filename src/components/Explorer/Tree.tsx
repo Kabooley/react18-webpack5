@@ -131,7 +131,7 @@ const Tree = ({
             >
               <div className="folder" onClick={() => setExpand(!expand)}>
                 <span>📁 {explorer.name}</span>
-                <div className="folder-function">
+                <div className="folder--function">
                   <div
                     onClick={(e: React.MouseEvent<HTMLDivElement>) =>
                       handleNewFolder(e, true)
@@ -193,12 +193,12 @@ const Tree = ({
           onDragOver={onDragOver}
         >
           <div className="file">
-            <span className="file-name">
+            <span className="file--name">
               📄 {explorer.name}{" "}
             </span>
             <div 
               onClick={(e) => onDelete(e, false)} 
-              className="file-function"
+              className="file--function"
             >
               <img src={closeButton} alt="delete file" />
             </div>

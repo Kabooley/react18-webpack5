@@ -1,7 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { files } from '../data/files';
 import type { iFile } from '../data/files';
-import '../index.css';
 
 // NOTE: 無理やり型を合わせている。
 // 本来`child: Node`でclassNameというpropertyを持たないが、iJSXNode.classNameをoptionalにすることによって
@@ -13,7 +12,7 @@ interface iJSXNode extends Node {
 interface iProps {
     path: string;
     onChangeFile: (path: string) => void;
-}
+};
 
 
 /***

@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import MonacoContainer from "../components/MonacoContainer";
 import { ResizableBox } from "react-resizable";
 import type { ResizeCallbackData } from "react-resizable";
-import '../index.css';
+
 
 // NOTE: onBundled is temporarily til react-redux.
 interface iProps {

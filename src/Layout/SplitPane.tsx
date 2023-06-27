@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { PropsWithChildren } from "react";
-import "../index.css";
 
 
 const SplitPane = (props: PropsWithChildren): JSX.Element => {

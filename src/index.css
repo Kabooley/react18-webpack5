@@ -1,4 +1,4 @@
-* {
+/* * {
 	box-sizing: border-box;
   }
   
@@ -27,7 +27,6 @@
 	border-right-color: rgb(52, 52, 52);
 	border-left-color: rgb(52, 52, 52);
   
-	/* ひとまず */
 	height: 48px;
   }
   
@@ -72,8 +71,8 @@
 	flex-direction: column;
 	height: 100vh;
   }
-  
-  .tabs-area {
+   */
+  /* .tabs-area {
 	background-color: rgb(21, 21, 21);
 	--title-border-bottom-color: rgb(52, 52, 52);
 	overflow: hidden;
@@ -95,9 +94,9 @@
     color: #ce9178;;
     border-top: 1px solid #136ab5;
     background-color: #1e1e1e;
-}
+} */
   
-  .monaco-editor {
+  /* .monaco-editor {
 	height: 100%;
   }
 
@@ -111,11 +110,9 @@
 	position: relative;
 	outline: none;
   
-	/* iframe内部だけど */
 	background-color: white;
   }
   
-/* custom handle */
 .custom-handle {
 	position: absolute;
   }
@@ -138,4 +135,4 @@
   
   .custom-handle-e:hover {
 	width: 12px;
-  }
+  } */

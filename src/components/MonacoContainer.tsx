@@ -7,7 +7,7 @@ import MonacoEditor from './Monaco/MonacoEditor';
 import Tabs from './Tabs';
 import { files } from "../data/files";
 import type { iMessageBundleWorker } from "../worker/types";
-import './index.css';
+
 
 interface iProps {
     onBundled: (bundledCode: string) => void;
