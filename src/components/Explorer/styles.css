@@ -1,9 +1,8 @@
-.folder {
+/* .folder {
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
   justify-content: space-between;
-  /* width: 300px; */
   cursor: pointer;
   overflow-x: hidden;
 }
@@ -34,7 +33,6 @@
 }
 
 .folder > span {
-  /* margin: 0 5px; */
   padding-left: calc(1rem - 2px);
   border-right: 2px solid transparent;
   min-height: 28px;
@@ -90,7 +88,6 @@
   background-color: rgba(55, 147, 224, 0.25);
 }
 
-/* draggable */
 .dragging {
   opacity: 0.5;
-}
+} */

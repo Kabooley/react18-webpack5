@@ -15,7 +15,7 @@
         background-color: rgba(55, 147, 224, 0.25);
     }
 
-    &:hover .folder-function {
+    &:hover .folder--function {
         opacity: 1;
     }
 
@@ -44,8 +44,8 @@
             background-color: rgba(55, 147, 224, 0.25);
         }
     
-        > .folder-function > div {
-            padding-left: 0.6rem;
+        > div {
+            padding-left: 1rem;
         }
     }
     
@@ -77,7 +77,11 @@
     display: flex;
     justify-content: space-between;
 
-    &:hover .file-function {
+    &:hover {
+        background-color: rgba(55, 147, 224, 0.25);
+    }
+    
+    &:hover .file--function {
         opacity: 1;
     }
 
