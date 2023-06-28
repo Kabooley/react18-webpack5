@@ -200,3 +200,142 @@ entries.forEach(pathStr => {
 
 という感じでそのまま流用できそうである。
 
+## filesデータとeditor, explorerの連携
+
+考えうる関連処理：
+
+- explorerでファイルを移動など変更を行った場合に、filesデータをそれに合わせて更新
+- 
+
+```TypeScript
+export const files: iFiles = {
+    'javascript': {
+        path: '/main.js',
+        language: 'javascript',
+        value: `var salute = "salute!!";`
+    },
+    'typescript': {
+        path: '/main.ts',
+        language: 'typescript',
+        value: `const jungleBeats: string = "Holla at me, boo";`
+    },
+    // ...
+}
+```
+
+上記のようなオブジェクトから`path`の情報だけを抜き取る
+
+同時にfilesのデータを見直す。
+
+```TypeScript
+interface iFile {
+    path: string;
+    language: string;
+    value: string;
+};
+
+const files: iFiles[] = [
+    {
+        path: 'src/index.js',
+        language: 'javascript',
+        value: `var salute = "salute!!";`
+    },
+    {
+        path: 'src/index.ts',
+        language: 'typescript',
+        value: `const jungleBeats: string = "Holla at me, boo";`
+    },
+];
+```
+```TypeScript
+const collectPathFromFiles = (entries: iFiles[]) => {
+    return entries.map(file => file.path);
+};
+
+// 
+```
+
+#### filesデータの更新
+
+TODO: filesのデータ型を`iFiles`のオブジェクトから`File[]`へ変更したいが、それにあたって障害はあるか？確認、修正。
+
+fileデータはクラスにするべきか？
+
+マウント時に`files`から`File[]`を生成する。
+
+filesを直接使わないのは、File各々にメソッドを持たせたかったから...
+
+とはいえclassインスタンスを生成するタイミングがわからん。
+
+参考サイトを確認してみよう。
+
+```TypeScript
+class File {
+    constructor(
+        private _path: string,
+        private _language: string,
+        private _value: string
+    ){};
+
+    get path() {
+        return this._path;
+    };
+
+    get language() {
+        return this._language;
+    };
+
+    get value() {
+        return this._value;
+    };
+
+    // // 必須ではないけどあったら便利かも
+    // get name() {
+    //     // 正規表現を使ってpathの「ファイル名.拡張子」部分を返す
+    // };
+
+    set updatePath(p: string) {
+        this._path = p;
+    };
+
+    set changeLanguage(l: string) {
+        this._language = l;
+    };
+
+    set updateValue(v: string) {
+        this._value = v;
+    };
+};
+
+```
+おさらい：monacoでのfilesの使われ方：
+
+```TypeScript
+// MonacoEditor.tsx
+const { files, ...} = props;
+Object.keys(files).forEach(path => {
+    _initializeFiles(files[path]);
+    // file情報を基にmodelを生成する
+});
+
+// Tabs.tsx
+return (
+    // ...
+    {            
+        Object.keys(files).map((key, index) => {
+            const file: iFile = files[key];
+                return (
+                    <span 
+                        className={file.path === path ? "tab active": "tab"}
+                        ref={_refTabs.current[index]}
+                        onClick={() => changeTab(_refTabs.current[index].current!, file.path)}
+                        key={index}
+                    >
+                        {file.path}
+                    </span>
+                );
+            })
+        }
+    )}
+)
+```
