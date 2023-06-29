@@ -8,6 +8,10 @@ export interface iFile {
     value: string;
 };
 
+interface iFileWithId extends iFile {
+    id: number;
+}
+
 export const files: iFiles = {
     'javascript': {
         path: '/main.js',
@@ -54,46 +58,74 @@ export const filesTemporary: iFile[] = [
     },
 ];
 
-class File {
-    constructor(
-        private _path: string,
-        private _language: string,
-        private _value: string
-    ){};
 
-    get path() {
-        return this._path;
+
+const filesProxy = (function(filesTemporary: iFile[]) {
+    // 参照を持たせないため
+    let _files: iFileWithId[] = filesTemporary.map((d, index) => {
+        return {...d, id: index};
+    });
+
+    const _addFile = (newFile: iFile) => {
+        if(!_files.find(_f => _f.path === newFile.path)){
+            _files.push({
+                ...newFile, id: new Date().getTime()
+            });
+        }
     };
 
-    get language() {
-        return this._language;
+    const _getFile = (path: string) => {
+        const f = _files.find(_f => _f.path === path);
+        // 
+        // TODO: Make sure this way does return not a copy.
+        // 
+        return {
+            path: f?.path,
+            language: f?.language,
+            value: f?.value,
+            id: f?.id
+        };
     };
 
-    get value() {
-        return this._value;
+    const _removeFile = (path: string) => {
+        if(_files.find(_f => _f.path === path)) {
+            _files = _files.filter(f => f.path !== path);
+        }
     };
 
-    // // 必須ではないけどあったら便利かも
-    // get name() {
-    //     // 正規表現を使ってpathの「ファイル名.拡張子」部分を返す
-    // };
-
-    set updatePath(p: string) {
-        this._path = p;
+    const _updateFile = (
+        id: number,
+        {path, language, value}
+        :{path?: string, language?: string, value?: string}) => {
+            let found = _files.find(_f => _f.id === id);
+            if(found) {
+                found.path = path !== undefined ? path : found.path;
+                found.language = language !== undefined ? language : found.language;
+                found.value = value !== undefined ? value : found.value;
+            }
     };
 
-    set changeLanguage(l: string) {
-        this._language = l;
+
+    // Check if path is same
+    const _isFileAlreadyExist = (f: iFileWithId) => {
+        return _files.find(_f => _f.path === f.path) === undefined
+        ? true : false;
     };
 
-    set updateValue(v: string) {
-        this._value = v;
-    };
-};
+    // ひとまずクリアする前に_filesをfileへ保存する。
+    const clearAll = () => {
+        filesTemporary = _files.map(f => f);
+        // TODO: うまい配列の消し方は？
+        _files = undefined;
+    }
 
-// -- USAGE --
-// 
-// In case you need treat them as array.
-const genFiles: File[] = filesTemporary.map(f => new File(
-    f.path, f.language, f.value
-));
+
+    return {
+        addFile: _addFile,
+        getFile: _getFile,
+        removeFile: _removeFile,
+        updateFile: _updateFile,
+    }
+})(filesTemporary);
+
+// 要テスト

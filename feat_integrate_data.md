@@ -312,6 +312,8 @@ class File {
 
 ```TypeScript
 // MonacoEditor.tsx
+// 
+// modelの生成には必要だけど、stateとかで管理する必要はない
 const { files, ...} = props;
 Object.keys(files).forEach(path => {
     _initializeFiles(files[path]);
@@ -338,4 +340,21 @@ return (
         }
     )}
 )
+```
+と考えるとfilesは別にclassじゃなくてもいいなぁ
+
+```TypeScript
+const filesProxy = (function(initializeData: iFile[]) {
+    // 参照を持たせないため
+    const _files: iFile[] = initializeData.map(d => d);
+
+    const addFile = (newFile: iFile) => {
+
+    };
+
+
+    return {
+        addFile, 
+    }
+})(initializeData);
 ```
