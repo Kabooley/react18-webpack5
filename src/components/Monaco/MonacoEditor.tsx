@@ -8,8 +8,8 @@ import type * as Monaco from 'monaco-editor';
 import willMountMonacoProcess from './monacoWillMountProcess';
 import viewStateFiles from '../../data/viewStates';
 import { getModelByPath } from '../../utils/getModelByPath';
-import type { iFile, iFiles } from '../../data/files';
-// import '../index.css';
+import type { iFile } from '../../data/files';
+
 
 interface iModel {
     model: monaco.editor.ITextModel;
@@ -29,7 +29,7 @@ interface iModels {
  * */ 
 interface iProps 
     extends Monaco.editor.IStandaloneEditorConstructionOptions {
-    files: iFiles;
+    files: iFile[];
     path: string;
     onValueChange: (v: string) => void;
     onWillMount: () => void;
@@ -78,8 +78,8 @@ const MonacoEditor = (props: iProps): JSX.Element => {
         );
 
         // Generate models according to files prop
-        Object.keys(files).forEach(path => {
-            _initializeFiles(files[path]);
+        files.forEach(file => {
+            _initializeFiles(file);
         });
 
         // Apply file to editor according to path and value
@@ -101,9 +101,10 @@ const MonacoEditor = (props: iProps): JSX.Element => {
         const { path, files } = props;
 
         // Get key which matches its path property
-        const key = Object.keys(files).find(k => files[k].path === path);
+        // const key = Object.keys(files).find(k => files[k].path === path);
+        const selectedFile = files.find(file => file.path === path);
 
-        key && _initializeFiles(files[key]);
+        selectedFile && _initializeFiles(selectedFile);
         _modelChange(path);
     }, [props.path]);
 

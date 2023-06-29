@@ -170,6 +170,7 @@ const Tree = ({
             {explorer.items.map((exp: iExplorer) => {
               return (
                 <Tree
+                  key={exp.id}
                   handleInsertNode={handleInsertNode}
                   handleDeleteNode={handleDeleteNode}
                   handleReorderNode={handleReorderNode}

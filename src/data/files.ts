@@ -1,7 +1,3 @@
-export interface iFiles {
-    [path: string]: iFile
-};
-
 export interface iFile {
     path: string;
     language: string;
@@ -12,47 +8,39 @@ interface iFileWithId extends iFile {
     id: number;
 }
 
-export const files: iFiles = {
-    'javascript': {
-        path: '/main.js',
-        language: 'javascript',
-        value: `var salute = "salute!!";`
-    },
-    'typescript': {
-        path: '/main.ts',
-        language: 'typescript',
-        value: `const jungleBeats: string = "Holla at me, boo";`
-    },
-    'react': {
-        path: '/main.jsx',
-        language: 'javascript',
-        value: ``
-    },
-    'react-typescript': {
-        path: '/main.tsx',
-        language: 'typescript',
-        value: `import { createRoot } from 'react-dom/client';\r\nimport React from 'react';\r\nimport 'bulma/css/bulma.css';\r\n\r\nconst App = () => {\r\n    return (\r\n        <div className=\"container\">\r\n          <span>REACT</span>\r\n        </div>\r\n    );\r\n};\r\n\r\nconst root = createRoot(document.getElementById('root'));\r\nroot.render(<App />);`
-    },
-};
-
-export const filesTemporary: iFile[] = [
+const files: iFile[] = [
     {
-        path: '/main.js',
-        language: 'javascript',
-        value: `var salute = "salute!!";`
+        path: 'public/index.html',
+        language: 'html',
+        value: `<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<meta charset="utf-8" />\r\n<title>Monaco Editor Sample</title>\r\n</head>\r\n<body>\r\n<div id="root"></div>\r\n</body>\r\n</html>`
     },
     {
-        path: '/main.ts',
+        path: 'public/js/default.js',
+        language: 'javascript',
+        value: `var val = "This is public/js/default.js";`
+    },
+    {
+        path: 'public/js/jctajr.min.js',
+        language: 'javascript',
+        value: `var val = "This is public/js/jctajr.min.js";`
+    },
+    {
+        path: 'public/css/default.css',
+        language: 'css',
+        value: `html {\r\n// This defines what 1rem is\r\nfont-size: 62.5%; //1 rem = 10px; 10px/16px = 62.5%\r\n}`
+    },
+    {
+        path: 'src/vanilla.ts',
         language: 'typescript',
         value: `const jungleBeats: string = "Holla at me, boo";`
     },
     {
-        path: '/main.jsx',
+        path: 'src/react/some.jsx',
         language: 'javascript',
         value: ``
     },
     {
-        path: '/main.tsx',
+        path: 'src/index.tsx',
         language: 'typescript',
         value: `import { createRoot } from 'react-dom/client';\r\nimport React from 'react';\r\nimport 'bulma/css/bulma.css';\r\n\r\nconst App = () => {\r\n    return (\r\n        <div className=\"container\">\r\n          <span>REACT</span>\r\n        </div>\r\n    );\r\n};\r\n\r\nconst root = createRoot(document.getElementById('root'));\r\nroot.render(<App />);`
     },
@@ -61,9 +49,9 @@ export const filesTemporary: iFile[] = [
 
 
 
-export const filesProxy = (function(filesTemporary: iFile[]) {
+export const filesProxy = (function(files: iFile[]) {
   // 参照を持たせないため
-  let _files: iFileWithId[] = filesTemporary.map((d, index) => {
+  let _files: iFileWithId[] = files.map((d, index) => {
       return {...d, id: index};
   });
 
@@ -99,6 +87,14 @@ export const filesProxy = (function(filesTemporary: iFile[]) {
     });
   };
 
+  const _getNumberOfFiles = () => {
+    return _files.length;
+  };
+
+  const _getAllPaths = () => {
+    return _files.map(f => f.path);
+  };
+
   const _removeFile = (path: string) => {
       if(_files.find(_f => _f.path === path)) {
           _files = _files.filter(f => f.path !== path);
@@ -123,8 +119,10 @@ export const filesProxy = (function(filesTemporary: iFile[]) {
       getFiles: _getFiles,
       removeFile: _removeFile,
       updateFile: _updateFile,
-  }
-})(filesTemporary);
+      getNumberOfFiles: _getNumberOfFiles,
+      getAllPaths: _getAllPaths
+  };
+})(files);
 
 // TEST: filesProxy
 // (function() {
@@ -165,3 +163,33 @@ export const filesProxy = (function(filesTemporary: iFile[]) {
   // awesome2.path = "astro";
   // console.log(filesProxy.getFiles());
 // })();
+
+
+
+
+// interface iFiles {
+//     [path: string]: iFile
+// };
+
+// const files: iFiles = {
+//     'javascript': {
+//         path: '/main.js',
+//         language: 'javascript',
+//         value: `var salute = "salute!!";`
+//     },
+//     'typescript': {
+//         path: '/main.ts',
+//         language: 'typescript',
+//         value: `const jungleBeats: string = "Holla at me, boo";`
+//     },
+//     'react': {
+//         path: '/main.jsx',
+//         language: 'javascript',
+//         value: ``
+//     },
+//     'react-typescript': {
+//         path: '/main.tsx',
+//         language: 'typescript',
+//         value: `import { createRoot } from 'react-dom/client';\r\nimport React from 'react';\r\nimport 'bulma/css/bulma.css';\r\n\r\nconst App = () => {\r\n    return (\r\n        <div className=\"container\">\r\n          <span>REACT</span>\r\n        </div>\r\n    );\r\n};\r\n\r\nconst root = createRoot(document.getElementById('root'));\r\nroot.render(<App />);`
+//     },
+// };

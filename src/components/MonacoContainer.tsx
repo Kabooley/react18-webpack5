@@ -5,7 +5,7 @@ import React from "react";
 import * as monaco from 'monaco-editor';
 import MonacoEditor from './Monaco/MonacoEditor';
 import Tabs from './Tabs';
-import { files } from "../data/files";
+import { filesProxy } from "../data/files";
 import type { iMessageBundleWorker } from "../worker/types";
 
 
@@ -44,6 +44,8 @@ const editorConstructOptions: monaco.editor.IStandaloneEditorConstructionOptions
     automaticLayout: true       // これ設定しておかないとリサイズ時に壊れる
 };
 
+const defaultFilePath = "/main.tsx";
+
 
 /***
  * NOTE: Component must be class component to treat with workers.
@@ -53,7 +55,7 @@ const editorConstructOptions: monaco.editor.IStandaloneEditorConstructionOptions
 class MonacoContainer extends React.Component<iProps> {
     state = {
         value: "",
-        currentFilePath: files['react-typescript'].path
+        currentFilePath: filesProxy.getFile(defaultFilePath).path
     };
     bundleWorker: Worker | undefined;
 
@@ -135,11 +137,11 @@ class MonacoContainer extends React.Component<iProps> {
     render() {
         return (
             <div className="monaco-container">
-                <Tabs path={this.state.currentFilePath} onChangeFile={this.onChangeFile}/>
+                <Tabs path={this.state.currentFilePath!} onChangeFile={this.onChangeFile}/>
                 <MonacoEditor 
-                    files={files}
+                    files={filesProxy.getFiles()}
                     // 'react-typescript' as default path
-                    path={this.state.currentFilePath}   
+                    path={this.state.currentFilePath!}   
                     onWillMount={this.onWillMount}
                     onValueChange={this.onValueChange}
                     onDidMount={this.onDidMount}

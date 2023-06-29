@@ -5,6 +5,11 @@ fileexplorerとmonaco-editorの両者の前提とするファイルデータを�
 - FileExplorerのファイルをダブルクリックでmonaco-editorで表示する
 - monaco-editorの前提ファイルをexplorerDataへ変換する処理
 
+## TODOs
+
+TODO: 修正）tabareaのタブが一定以上の数になると折り返されてタブが表示される。
+TODO: 修正）tabをクリックすると「そのモデルは既に存在する」エラーが発生する
+
 ## 情報収集
 
 ディスカッション：
