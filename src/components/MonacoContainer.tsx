@@ -44,7 +44,7 @@ const editorConstructOptions: monaco.editor.IStandaloneEditorConstructionOptions
     automaticLayout: true       // これ設定しておかないとリサイズ時に壊れる
 };
 
-const defaultFilePath = "/main.tsx";
+const defaultFilePath = 'src/index.tsx';
 
 
 /***
@@ -70,6 +70,8 @@ class MonacoContainer extends React.Component<iProps> {
             );
             this.bundleWorker.addEventListener('message', this._cbBundledMessage, false);
         }
+
+        console.log(`[MonacoContainer] currentFilePath: ${this.state.currentFilePath}`);
     };
 
     componentDidUpdate = (): void => {};

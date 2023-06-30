@@ -87,6 +87,10 @@ const MonacoEditor = (props: iProps): JSX.Element => {
 
         _refEditorNode.current.addEventListener('resize', _onResize);
 
+        // DEBUG:
+        console.log("[MonacoEditor] is model created correctly?");
+        monaco.editor.getModels().forEach(m => console.log(m));
+
         // componentWillUnmount
         return () => {
             _onUnmount();
@@ -99,6 +103,9 @@ const MonacoEditor = (props: iProps): JSX.Element => {
         console.log("[MonacoEditor] useEffect(, [props.path])");
 
         const { path, files } = props;
+
+        console.log(`path: ${path}`);
+        console.log(files);
 
         // Get key which matches its path property
         // const key = Object.keys(files).find(k => files[k].path === path);
@@ -125,6 +132,7 @@ const MonacoEditor = (props: iProps): JSX.Element => {
     const _initializeFiles = (file: iFile) => {
         const { path, language, value } = file;
         let model = getModelByPath(monaco, path);
+        
         if(model) {
             // TODO: apply latest state to the model
         }

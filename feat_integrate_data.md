@@ -363,3 +363,6 @@ const filesProxy = (function(initializeData: iFile[]) {
     }
 })(initializeData);
 ```
+
+#### componentDidMount()してからfilesデータをstateに与えるようにすると、editorの挙動がおかしくなる件
+
