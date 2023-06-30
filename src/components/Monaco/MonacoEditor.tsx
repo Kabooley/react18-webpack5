@@ -7,21 +7,12 @@ import type * as Monaco from 'monaco-editor';
 
 import willMountMonacoProcess from './monacoWillMountProcess';
 import viewStateFiles from '../../data/viewStates';
-import { getModelByPath } from '../../utils/getModelByPath';
+import { getModelByPath } from '../../utils';
 import type { iFile } from '../../data/files';
 
 
-interface iModel {
-    model: monaco.editor.ITextModel;
-    state: monaco.editor.ICodeEditorViewState;
-};
-
-interface iModels {
-    [language: string]: iModel
-};
 
 /**
- * iProps contains...
  * - file information
  * - Monaco.editor.IStandaloneEditorConstructionOptions
  * - handlers from parent
@@ -87,11 +78,6 @@ const MonacoEditor = (props: iProps): JSX.Element => {
 
         _refEditorNode.current.addEventListener('resize', _onResize);
 
-        // DEBUG:
-        console.log("[MonacoEditor] is model created correctly?");
-        monaco.editor.getModels().forEach(m => console.log(m));
-
-        // componentWillUnmount
         return () => {
             _onUnmount();
         }
@@ -125,13 +111,11 @@ const MonacoEditor = (props: iProps): JSX.Element => {
      * fileが追加されたりするたびに呼び出されたりする
      * 生成されたmodelはmonaco-editor固有のstateに保存される
      * （取り出しはmonaco.editor.getModels()で生成済を取り出すことができる）
-     * TODO: `data`の更新
-     * TODO: applyFileと役割かぶっている
      * */
     // const _initializeFiles = (path: string, file: iFile) => {
     const _initializeFiles = (file: iFile) => {
         const { path, language, value } = file;
-        let model = getModelByPath(monaco, path);
+        let model = getModelByPath(path);
         
         if(model) {
             // TODO: apply latest state to the model
@@ -213,7 +197,7 @@ const MonacoEditor = (props: iProps): JSX.Element => {
 
 
         // 適用modelの切り替え
-        const model = getModelByPath(monaco, newModelUriPath);
+        const model = getModelByPath(newModelUriPath);
         model && _refEditor.current!.setModel(model);
         _refEditor.current!.restoreViewState(viewStateFiles.get(newModelUriPath));
         _refEditor.current!.focus();

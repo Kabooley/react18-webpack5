@@ -1,8 +1,32 @@
 .tabs-area {
+    display: flex;
+    min-height: 2.4rem;
+    // overflow-x: scroll;
     background-color: rgb(21, 21, 21);
     --title-border-bottom-color: rgb(52, 52, 52);
-    overflow: hidden;
     font-size: 14px;
+    overflow: hidden;
+
+    // This will make scrollbar appear only when hover.
+    &:hover {
+        overflow-x: scroll;
+    }
+    &::-webkit-scrollbar {
+        width: 4px;
+        height: 0.5rem;
+    }
+    &::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0);
+    }
+    &::-webkit-scrollbar-thumb{
+        background: rgba(55, 147, 224,0.2);
+    }
+    &::-webkit-scrollbar-thumb:hover{
+        background: rgba(55, 147, 224, 0.25);
+    }
+    &::-webkit-scrollbar-thumb:active{
+        background: rgba(55, 147, 224, 0.25);
+    }
 };
 
 .tab {

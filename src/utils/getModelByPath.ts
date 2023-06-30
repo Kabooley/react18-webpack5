@@ -1,20 +1,20 @@
 import * as monaco from 'monaco-editor';
 
-export const getModelByPath = (m: typeof monaco, path: string): monaco.editor.ITextModel | undefined=> {
-    console.log(`[getModelByPath] lookin for ${path}`);
-    return monaco.editor.getModels().find((_m, index) => {
-        console.log(`${index}:`);
-        console.log(`model.uri.path: ${_m.uri.path}`);
-        const result = _m.uri.path === path;
-        console.log(`result: ${result}`);
-        return result;
-    });
-    // return monaco.editor.getModels().find(
-    //     m => m.uri.path === path
-    // );
+/**
+ * Get model by using path as a clue.
+ * 
+ * NOTE: monaco.editor.ITextModel.uri.path returns string like this:
+ * `/src/index.js`.
+ * On the other hand, path parameter string is like this;
+ * `src/index.js`.
+ * To compare them correctly, 
+ * removing first slash of model.uri.path.
+ * 
+ * RE:
+ * https://stackoverflow.com/a/3840645/22007575
+ * */ 
+export const getModelByPath = (path: string): monaco.editor.ITextModel | undefined=> {
+    return monaco.editor.getModels().find(m => 
+        m.uri.path.replace(/^\/+|\/+$/gm, '') === path
+    );
 };
-
-// path: `src/index.tsx`
-// m.uri.path: `/src/index.tsx`
-
-// 原因は上記の通り

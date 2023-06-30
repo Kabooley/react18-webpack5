@@ -1,0 +1,1 @@
+export { getModelByPath } from './getModelByPath';

@@ -48,7 +48,11 @@ const files: iFile[] = [
 
 
 
-
+/***
+ * Property `id' is only for inside of this proxy.
+ * Reason adding `id` property is mainly for _updateFile method.
+ * 
+ * */ 
 export const filesProxy = (function(files: iFile[]) {
   // 参照を持たせないため
   let _files: iFileWithId[] = files.map((d, index) => {
@@ -65,9 +69,6 @@ export const filesProxy = (function(files: iFile[]) {
 
   const _getFile = (path: string) => {
       const f = _files.find(_f => _f.path === path);
-      // 
-      // TODO: Make sure this way does return not a copy.
-      // 
       return {
           path: f?.path,
           language: f?.language,
@@ -192,4 +193,42 @@ export const filesProxy = (function(files: iFile[]) {
 //         language: 'typescript',
 //         value: `import { createRoot } from 'react-dom/client';\r\nimport React from 'react';\r\nimport 'bulma/css/bulma.css';\r\n\r\nconst App = () => {\r\n    return (\r\n        <div className=\"container\">\r\n          <span>REACT</span>\r\n        </div>\r\n    );\r\n};\r\n\r\nconst root = createRoot(document.getElementById('root'));\r\nroot.render(<App />);`
 //     },
+// };
+
+
+// export class File {
+//     constructor(
+//         private _path: string,
+//         private _language: string,
+//         private _value: string
+//     ){};
+
+//     get path() {
+//         return this._path;
+//     };
+
+//     get language() {
+//         return this._language;
+//     };
+
+//     get value() {
+//         return this._value;
+//     };
+
+//     // // 必須ではないけどあったら便利かも
+//     // get name() {
+//     //     // 正規表現を使ってpathの「ファイル名.拡張子」部分を返す
+//     // };
+
+//     set updatePath(p: string) {
+//         this._path = p;
+//     };
+
+//     set changeLanguage(l: string) {
+//         this._language = l;
+//     };
+
+//     set updateValue(v: string) {
+//         this._value = v;
+//     };
 // };

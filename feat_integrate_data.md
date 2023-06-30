@@ -5,10 +5,15 @@ fileexplorerとmonaco-editorの両者の前提とするファイルデータを�
 - FileExplorerのファイルをダブルクリックでmonaco-editorで表示する
 - monaco-editorの前提ファイルをexplorerDataへ変換する処理
 
+## やったこと
+
+- filesデータはｵﾌﾞｼﾞｪｸﾄ型ではなく配列にした
+- filesデータをマウント時にfilesProxy()が読取、データを管理しやすい形で扱うことにする。
+
+
 ## TODOs
 
 TODO: 修正）tabareaのタブが一定以上の数になると折り返されてタブが表示される。
-TODO: 修正）tabをクリックすると「そのモデルは既に存在する」エラーが発生する
 
 ## 情報収集
 
@@ -363,6 +368,3 @@ const filesProxy = (function(initializeData: iFile[]) {
     }
 })(initializeData);
 ```
-
-#### componentDidMount()してからfilesデータをstateに与えるようにすると、editorの挙動がおかしくなる件
-
