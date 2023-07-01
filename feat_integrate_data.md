@@ -5,6 +5,15 @@ fileexplorerとmonaco-editorの両者の前提とするファイルデータを�
 - FileExplorerのファイルをダブルクリックでmonaco-editorで表示する
 - monaco-editorの前提ファイルをexplorerDataへ変換する処理
 
+## やること
+
+このブランチと関係ないけど...
+
+- tabsのうちエディタに表示中のファイルのタブは見えるところに表示させる
+- tabsのdnd
+- reduxの導入
+- fileexplorerでdrop不可能領域はホバー時点でわかるようにする
+
 ## やったこと
 
 - filesデータはｵﾌﾞｼﾞｪｸﾄ型ではなく配列にした
@@ -13,7 +22,7 @@ fileexplorerとmonaco-editorの両者の前提とするファイルデータを�
 
 ## TODOs
 
-TODO: 修正）tabareaのタブが一定以上の数になると折り返されてタブが表示される。
+- TODO: fileexplorer: dndしてdragIdとdropIdが同じ場合、dragしていたアイテムがexplorerから消える
 
 ## 情報収集
 
