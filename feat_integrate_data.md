@@ -2,23 +2,21 @@
 
 fileexplorerとmonaco-editorの両者の前提とするファイルデータを統合する。
 
-- FileExplorerのファイルをダブルクリックでmonaco-editorで表示する
+- FileExplorerのファイルを(ダブル)クリックでmonaco-editorで表示する
 - monaco-editorの前提ファイルをexplorerDataへ変換する処理
 
 ## やること
 
-- fileProxyの変更結果をfilesへ反映させる機能
-- fileExplorerのファイルをダブルクリックしたらエディタに表示する機能（ともなってtabも表示）
-    横断的すぎるからreduxみたいな機能が必要だなぁ
-    
-- fileExplorerのファイルを削除したらエディタ、タブ、filesから同データを削除する機能
+- iExplorerとiFileの連携
+
+    どのexplorerがどのfileと同じものなのか現状区別できないため、
+    fileの情報変更とexplorerの情報変更がお互い反映させることができない。
 
 
 このブランチと関係ないけど...
 
 - tabsのうちエディタに表示中のファイルのタブは見えるところに表示させる
 - tabsのdnd
-- reduxの導入
 - fileexplorerでdrop不可能領域はホバー時点でわかるようにする
 
 ## やったこと
@@ -407,4 +405,40 @@ const filesProxy = (function(initializeData: iFile[]) {
       </MainContainer>
     </>
 ```
+
+React Contextを使うことにする。
+
+https://react.dev/learn/passing-data-deeply-with-context
+
+シンプルな使い方だと一方通行に値を渡すことになる。
+
+ネストされたコンポーネントがcontextの値を変更したい場合：
+
+https://stackoverflow.com/questions/41030361/how-to-update-react-context-from-inside-a-child-component
+
+値と関数を渡す。
+
+#### iFile[]とiExplorerは互いを識別できない
+
+問題は、iFile[]とiExplorerは互いを識別できないことである。
+
+つまり、
+
+iFileのあるfile情報から、iExplorerにあるexplorerを特定できない
+
+iExplorerのexplorer情報からも、iFileにあるfileを特定できない。
+
+そのため、
+
+iExplorerを基にしているFileExplorerの変更情報はiFile(もしくはfilesProxy)へ反映できない。
+
+どのexplorerがどのfileと同じものなのか区別がつかないから。
+
+一方、iFileの変更は、
+
+`setExplorerData(generateTreeNodeData(filesProxy.getAllPath(), "root"))`でstate管理されているのでFileExplorerへは反映できる
+
+FileExplorerのdndによってpathが変更されるから、
+
+この問題の修正が必須である。
 
