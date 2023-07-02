@@ -4,7 +4,7 @@ import type { ResizeCallbackData } from "react-resizable";
 import FileExplorer from './Explorer';
 
 const PaneSection = (): JSX.Element => {
-  const [paneWidth, setPaneWidth] = useState<number>(300);
+  const [paneWidth, setPaneWidth] = useState<number>(200);
 
   const onPaneResize: (
     e: React.SyntheticEvent,

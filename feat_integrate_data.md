@@ -7,6 +7,13 @@ fileexplorerとmonaco-editorの両者の前提とするファイルデータを�
 
 ## やること
 
+- fileProxyの変更結果をfilesへ反映させる機能
+- fileExplorerのファイルをダブルクリックしたらエディタに表示する機能（ともなってtabも表示）
+    横断的すぎるからreduxみたいな機能が必要だなぁ
+    
+- fileExplorerのファイルを削除したらエディタ、タブ、filesから同データを削除する機能
+
+
 このブランチと関係ないけど...
 
 - tabsのうちエディタに表示中のファイルのタブは見えるところに表示させる
@@ -377,3 +384,27 @@ const filesProxy = (function(initializeData: iFile[]) {
     }
 })(initializeData);
 ```
+
+
+## FileExplorerのファイルをクリックしたらeditorに該当ファイルを表示させる機能
+
+ひとまずreduxのことを忘れる。
+
+どのファイルがクリックされたのかの情報を、以下の通りどうにかしてバケツリレーしなくてはならない
+
+```JavaScript
+    <>
+      <Header />
+      <MainContainer>
+        <NavigationSection />
+        <SplitPane>
+        // このPaneから...
+          <Pane />
+        // ...EditorSectionまで
+          <EditorSection onBundled={onBundled} />
+          <PreviewSection bundledCode={bundledCode} />
+        </SplitPane>
+      </MainContainer>
+    </>
+```
+

@@ -4,11 +4,116 @@
 import React, { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
 import type * as Monaco from 'monaco-editor';
+import prettier from 'prettier';
+import parser from 'prettier/parser-babel';
 
 import willMountMonacoProcess from './monacoWillMountProcess';
 import viewStateFiles from '../../data/viewStates';
 import { getModelByPath } from '../../utils';
 import type { iFile } from '../../data/files';
+
+
+
+// @ts-ignore
+self.MonacoEnvironment = {
+	getWorkerUrl: function (_moduleId: any, label: string) {
+		if (label === 'json') {
+			return './json.worker.bundle.js';
+		}
+		if (label === 'css' || label === 'scss' || label === 'less') {
+			return './css.worker.bundle.js';
+		}
+		if (label === 'html' || label === 'handlebars' || label === 'razor') {
+			return './html.worker.bundle.js';
+		}
+		if (label === 'typescript' || label === 'javascript') {
+			return './ts.worker.bundle.js';
+		}
+		return './editor.worker.bundle.js';
+	}
+};
+
+
+// NOTE: monaco-editor settings ref: 
+// https://github.com/expo/snack/blob/main/website/src/client/components/Editor/MonacoEditor.tsx
+
+// いまのとろこ独自テーマを設ける予定はない...
+// monaco.editor.defineTheme('light', light);
+// monaco.editor.defineTheme('dark', dark);
+
+/**
+ * Disable typescript's diagnostics for JavaScript files.
+ * This suppresses errors when using Flow syntax.
+ * It's also unnecessary since we use ESLint for error checking.
+ */
+monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+  noSemanticValidation: true,
+  noSyntaxValidation: true,
+});
+
+/**
+ * Use prettier to format code.
+ * This will replace the default formatter.
+ */
+const documentFormattingProvider: monaco.languages.DocumentFormattingEditProvider = {
+  async provideDocumentFormattingEdits(model) {
+    const text = await prettier.format(
+        model.getValue(), 
+        {
+            parser: 'babel',
+            plugins: [parser],
+            useTabs: false,
+            semi: true,
+            singleQuote: true,
+            tabWidth: 2
+        })
+        .replace(/\n$/, '');
+
+    return [
+      {
+        range: model.getFullModelRange(),
+        text,
+      },
+    ];
+  },
+};
+
+monaco.languages.registerDocumentFormattingEditProvider('javascript', documentFormattingProvider);
+monaco.languages.registerDocumentFormattingEditProvider('typescript', documentFormattingProvider);
+monaco.languages.registerDocumentFormattingEditProvider('markdown', documentFormattingProvider);
+
+/**
+ * Sync all the models to the worker eagerly.
+ * This enables intelliSense for all files without needing an `addExtraLib` call.
+ */
+monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
+monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
+
+/**
+ * Configure the typescript compiler to detect JSX and load type definitions
+ */
+const compilerOptions: monaco.languages.typescript.CompilerOptions = {
+  allowJs: true,
+  allowSyntheticDefaultImports: true,
+  alwaysStrict: true,
+  esModuleInterop: true,
+  forceConsistentCasingInFileNames: true,
+  isolatedModules: true,
+  jsx: monaco.languages.typescript.JsxEmit.ReactJSX,
+  module: monaco.languages.typescript.ModuleKind.ESNext,
+  moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+  noEmit: true,
+  resolveJsonModule: true,
+  strict: true,
+  target: monaco.languages.typescript.ScriptTarget.ESNext,
+//   paths: {
+//     '*': ['*', '*.native', '*.ios', '*.android'],
+//   },
+};
+
+monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
+monaco.languages.typescript.javascriptDefaults.setCompilerOptions(compilerOptions);
+
 
 
 
