@@ -383,6 +383,49 @@ const filesProxy = (function(initializeData: iFile[]) {
 })(initializeData);
 ```
 
+## iFileとiExplorerを連携させる機能
+
+いまのところ：
+
+大本: `files: iFile[]`
+
+コンポーネントは`filesProxy()`が情報源になっている。
+
+FileExplorer:
+
+`filexProxy()` --> `files`
+
+`FileExplorer/index.tsx` --> `state.explorerData` --> `filesProxy`
+
+Monaco:
+
+`MonacoContainer.tsx` --> `files={filesProxy.getFiles()}` --> `filesProxy`
+
+`MonacoEditor.tsx` --> `props.files`
+
+ということで、
+
+Monaco側、`<MonacoEditor files={filesProxy.getFiles()} >`となっているので、再レンダリングのタイミングでfilesProxyの最新情報を取得する
+
+Explorer側：`filesProxy`の最新情報はmount時にのみ取得されるのみで、後は独自にstate管理しているから変更がfilesProxyへ伝わっていない
+
+component --> state --> filesProxy --> 他のcomponent
+
+という変更の伝達が叶うように修正が必要。
+
+stateを通すのは再レンダリングさせるため。
+
+#### filesProxyとstateの連携
+
+`component --> state --> filesProxy`の部分
+
+```TypeScript
+const [explorerData, setExplorerData] = useState<iExplorer>();
+const cachedFiles = useMemo(filesProxy.getAllPaths(), [])
+```
+
+上記のようにイメージしてみても、usememoの依存関係が見当たらないなぁ。
+
 
 ## FileExplorerのファイルをクリックしたらeditorに該当ファイルを表示させる機能
 
@@ -418,7 +461,7 @@ https://stackoverflow.com/questions/41030361/how-to-update-react-context-from-in
 
 値と関数を渡す。
 
-#### iFile[]とiExplorerは互いを識別できない
+## iFile[]とiExplorerは互いを識別できない
 
 問題は、iFile[]とiExplorerは互いを識別できないことである。
 
@@ -441,4 +484,18 @@ iExplorerを基にしているFileExplorerの変更情報はiFile(もしくはfi
 FileExplorerのdndによってpathが変更されるから、
 
 この問題の修正が必須である。
+
+ひとまず：
+
+- FileExplorerで扱うiExplorerデータはpath情報を付加する
+- dnd などpathが変更しうる操作に対応してpathが適切に変更されるようにする
+- 要検証：`setExplorerData(updatedTree)`したらfilesをそれに合わせて更新する機能
+
+目下の目標：monacoのmodelとiExplorerとの整合性
+
+NOTE: monaco-editorはmodelをそのままにuriを変更することはできない
+
+https://github.com/Microsoft/monaco-editor/issues/926
+
+代わりになる方法は示してくれる模様。
 

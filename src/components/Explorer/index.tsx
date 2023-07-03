@@ -42,13 +42,14 @@ export default function FileExplorer() {
 
       let updatedTree: iExplorer | undefined;
       if(getNodeById(explorerData, droppedId)!.isFolder) {
+        console.log("[handleReorderNode] item dropped on folder column");
         // In case item dropped on folder column.
         const movingItem = getNodeById(explorerData, draggableId);        updatedTree = movingItem && addFolderNode(
           deleteNode(explorerData, draggableId), droppedId, movingItem
         );
       }
       else {
-        console.log("[handleReorderNode] dropped area is NOT folder.");
+        console.log("[handleReorderNode] item NOT dropped on folder column");
         // In case item dropped on a folder drop-list area
         const movingItem = getNodeById(explorerData, draggableId);
         updatedTree = movingItem && addNode(
@@ -57,6 +58,8 @@ export default function FileExplorer() {
       }
 
       updatedTree && setExplorerData(updatedTree);
+
+      console.log(updatedTree);
   };
 
   return (

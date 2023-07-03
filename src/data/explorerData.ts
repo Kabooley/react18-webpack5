@@ -3,6 +3,10 @@ export interface iExplorer {
     name: string;
     isFolder: boolean;
     items: iExplorer[];
+    // 
+    // NOTE: new added
+    // 
+    path?: string;
   }
   
   const explorer: iExplorer = {

@@ -85,6 +85,10 @@ const useTraverseTree = () => {
   ): iExplorer => {
     if (tree.items.find((item) => item.id === where)) {
       const updatedItems = tree.items.map(item => item);
+      // 
+      // NOTE: new added
+      // 
+      toBeAdded.path = tree.path + "/" + toBeAdded.path!.split('/').slice(-1);
       updatedItems.push(toBeAdded);
       return {...tree, items: updatedItems}
     }
@@ -101,20 +105,14 @@ const useTraverseTree = () => {
     where: string,
     toBeAdded: iExplorer
   ): iExplorer => {
-    // DEBUG:
-    console.log("[addFolderNode]");
-    console.log("tree: ");
-    console.log(tree);
-    console.log(`where: ${where}`);
 
     if (tree.id === where) {
       const updatedItems = tree.items.map(item => item);
+      // 
+      // NOTE: new added
+      // 
+      toBeAdded.path = tree.path + "/" + toBeAdded.path!.split('/').slice(-1);
       updatedItems.push(toBeAdded);
-      
-      // DEBUG:
-      console.log(`updatedItems:`);
-      console.log(updatedItems);
-
       return {...tree, items: updatedItems}
     }
 

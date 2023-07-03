@@ -20,7 +20,8 @@ export const generateTreeNodeData = (
         id: `${currentKey}`,
         name: root,
         isFolder: true,
-        items: []
+        items: [],
+        path: "/"
     };
 
 
@@ -44,7 +45,8 @@ export const generateTreeNodeData = (
                     id: `${currentKey}`,
                     name: name,
                     isFolder: true,
-                    items: []
+                    items: [],
+                    path: pathArr.slice(0, index + 1).join('/')
                 };
                 current.items.push(child);
             }
@@ -67,7 +69,8 @@ export const generateTreeNodeData = (
                 id: `${currentKey}`,
                 name: name,
                 isFolder: false,
-                items: []
+                items: [],
+                path: pathArr[0]
             };
             current.items.push(node);
             return;
@@ -82,7 +85,8 @@ export const generateTreeNodeData = (
                     id: `${currentKey}`,
                     name: name,
                     isFolder: false,
-                    items: []
+                    items: [],
+                    path: pathArr.slice(0, index + 1).join('/')
                 };
                 current.items.push(child);
             }
