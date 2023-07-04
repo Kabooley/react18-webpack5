@@ -51,6 +51,7 @@ const Tree = ({
 
     const onDelete = (
       e: React.MouseEvent<HTMLDivElement>,
+      
       isFolder: boolean
     ) => {
       e.stopPropagation();

@@ -499,3 +499,162 @@ https://github.com/Microsoft/monaco-editor/issues/926
 
 代わりになる方法は示してくれる模様。
 
+
+## 参考: snack
+
+#### dnd結果をどうやって反映させているのか
+
+https://github.com/expo/snack/blob/main/website/src/client/components/FileList/FileListEntryDropTarget.tsx
+
+```TypeScript
+// https://github.com/expo/snack/blob/main/website/src/client/components/FileList/FileList.tsx
+
+// entries: 多分うちでいうところのiExplorer的なものかしら
+private updateEntries(entries: FileSystemEntry[]) {
+    const prevEntries = this.state.entries;
+    this.setState({ entries });
+
+    // Sync changes
+    this.props.updateFiles((files) => {
+      const updates: { [path: string]: SnackFile | null } = {};
+
+      // Handle file removal (and rename)
+      for (const path in files) {
+        const entry = entries.find((entry) => entry.item.path === path);
+        if (!entry) {
+          updates[path] = null;
+        }
+      }
+
+      // Handle added/renamed files
+      entries.forEach((entry) => {
+        if (
+          entry.item.type === 'file' &&
+          !files[entry.item.path] &&
+          !isPackageJson(entry.item.path)
+        ) {
+          updates[entry.item.path] = {
+            type: entry.item.asset ? 'ASSET' : 'CODE',
+            contents: entry.item.asset ? entry.item.uri : entry.item.content,
+          };
+        }
+      });
+
+      return updates;
+    });
+
+    // Update focus
+    const prevFocusedEntry = findFocusedEntry(prevEntries);
+    const focusedEntry = findFocusedEntry(entries);
+    if (focusedEntry?.item.path !== prevFocusedEntry?.item.path) {
+      this.props.onSelectFile(focusedEntry?.item.path ?? '');
+    }
+  }
+
+```
+
+#### filesを直接state管理する方法をとってみる
+
+現状:
+```bash
+
+files --> filesProxy
+--> filesProxy.getAllPaths()
+--> state.explorerData = generateTreeNode(filesProxy.getAllPaths())
+--> rendering according to generated node
+```
+
+これだと、state管理しているのはiExplorerのデータで、
+
+filesから変換したiExplorerのデータを、dndを反映するため、またfilesへ反映させるという逆方向の変換を実現しなくてはならない。
+
+検討:
+
+```bash
+
+files --> new copied files
+--> state.new copied files
+--> generateTreeNode(state.new copied files paths)
+--> rendering according to generated Node
+```
+
+要はtree nodeは常にレンダリング時に生成されるようにすればよい
+
+これなら、たとえばdndの変更も直接filesを変更させることができる
+
+
+前提：
+
+- TODO: folderはiFileと相容れないので空のフォルダの扱いを決めること
+
+    generateTreeNodeは空のフォルダを認めるか？確認
+
+    認めるならばiFileでもフォルダの取り扱いを始める
+    認めないなら模索
+    
+- iExplorerにはpathという新しいpropertyを追加することとする。
+
+```TypeScript
+// FileExplorer/index.tsx
+const onAddFolder = (parentPath: string, folderName: string) => {
+    const newFolder: iExplorer = {
+        id: new Date().
+        name: folderName,
+        isFolder: true,
+        path: parentPath + '/' + folderName,
+        items: []
+    }
+
+    // NOTE: 新規folder作成はfilesへ追加できないのでexplorerDataだけ
+}
+// Tree.tsx
+
+/***
+ * clickされたfolderの直下にフォルダを作る行為なので
+ * filesからしたら、新規のfileデータの追加で、
+ * 重要な情報がpathがどうなるかである。
+ * 親フォルダのpathが必要になるはずなので親フォルダpathを渡す
+ * 
+ * */ 
+const onAddFolder = (
+    e: e: React.KeyboardEvent<HTMLInputElement>,
+    parentPath: string
+) => {
+    const v = e.currentTarget.value;
+    if (e.keyCode === 13 && v) {
+        props.onAddFolder(parentPath, v);
+        setShowInput({ ...showInput, visible: false });
+    }
+};
+
+// render
+<div onClick={(e: : React.MouseEvent<HTMLDivElement>) => onAddFolder(e, explorer.path)}>
+    // ...
+</div>
+```
+
+`use-traverse-tree.ts`:
+
+常にfilesを基にtree nodeを生成することとしたので、tree nodeを直接変更する必要がなくなった
+
+```TypeScript
+const insertNodeVer2 = 
+```
+
+#### [React Tips] management of object array in state
+
+https://stackoverflow.com/questions/26253351/correct-modification-of-state-arrays-in-react-js
+
+https://stackoverflow.com/questions/49477547/setstate-of-an-array-of-objects-in-react
+
+https://react.dev/learn/updating-arrays-in-state
+
+stateで配列を管理する場合：
+
+- state.arrayをstate.array[0] = "changed"のように直接変更するな
+
+- state.arrayには常に新しい配列を与えよ。
+
+```TypeScript
+
+```

@@ -4,15 +4,38 @@ import { isNodeIncludedUnderExplorer, getNodeById } from "./helper";
 import useTraverseTree from "../../hooks/use-traverse-tree";
 import type { iExplorer } from "../../data/explorerData";
 import { generateTreeNodeData } from "./generateTree";
-import { filesProxy } from "../../data/files";
+// import { filesProxy } from "../../data/files";
+
+import { files } from '../../data/files';
+import type { iFile } from '../../data/files';
 
 
+const getFilesPaths = (_files: iFile[]) => {
+  return _files.map(_f => _f.path);
+};
+
+/***
+ * TODO: 検証だけど。filesを直接state管理する
+ * 実装に当たってexplorerのhelperがいらなくなるかも...
+ * - handleReorder
+ * - handleInsetNode
+ * - handleDeleteNode
+ * - handle
+ * 
+ * */ 
 export default function FileExplorer() {
+  // NOTE: 配列を扱うので常に新しい配列を返すこと
+  const [baseFiles, setFiles] = useState<iFile[]>(files);
+  // NOTE: setExplorerDataの引数は必ずbaseFilesでなくてはならない。
   const [explorerData, setExplorerData] = useState(generateTreeNodeData([], "root"));
 
   useEffect(() => {
-    setExplorerData(generateTreeNodeData(filesProxy.getAllPaths(), "root"));
+    setExplorerData(generateTreeNodeData(getFilesPaths(baseFiles), "root"));
   }, []);
+
+  useEffect(() => {
+    setExplorerData(generateTreeNodeData(getFilesPaths(baseFiles), "root"));
+  }, [baseFiles]);
 
   const { insertNode, deleteNode, updateNode, addNode, addFolderNode } = useTraverseTree();
 
