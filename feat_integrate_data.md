@@ -633,12 +633,282 @@ const onAddFolder = (
 </div>
 ```
 
-`use-traverse-tree.ts`:
-
-常にfilesを基にtree nodeを生成することとしたので、tree nodeを直接変更する必要がなくなった
+NOTE: codesandboxでテスト
 
 ```TypeScript
-const insertNodeVer2 = 
+
+export interface iFile {
+  path: string;
+  language: string;
+  value: string;
+  // 
+  // new added
+  // 
+  isFolder: boolean
+};
+
+export interface iExplorer {
+  id: string;
+  name: string;
+  isFolder: boolean;
+  items: iExplorer[];
+  // 
+  // NOTE: new added
+  // 
+  path?: string;
+}
+
+export class File {
+  constructor(
+      private _path: string,
+      private _value: string,
+      private _language: string,
+      private _isFolder: boolean,
+  ){};
+
+  isPathValid(path: string): boolean {
+      // TODO: make sure path is valid
+      return true;
+  };
+
+  setPath(path: string) {
+      // TODO: make sure path is not include non exist folder
+      if(this.isPathValid(path)){
+          this._path = path;
+          // TODO: change this._language according to path files extension.
+      }
+  };
+
+  setValue(value: string) {
+      this._value = value;
+  };
+
+  getPath(): string {
+      return this._path;
+  };
+
+  getValue(): string {
+      return this._value;
+  };
+
+  isFolder(): boolean {
+      return this._isFolder;
+  };
+};
+
+
+/***
+ *
+ * 
+ * NOTE: 現状空のフォルダだけのFileを認めていない
+ * そのため空のフォルダを追加するonAddFolderが出来ない
+ * 
+ * public/css/default.css
+ * と
+ * public
+ * があった場合、
+ * 両者のpublicは別物として生成される。
+ * */ 
+export const generateTreeNodeData = (
+    entries: File[] = [], 
+    root: string = "root"
+): iExplorer => {
+
+
+    entries.sort(function(a: File, b: File) {
+        let aPath = a.getPath().toLowerCase(); // ignore upper and lowercase
+        let bPath = b.getPath().toLowerCase(); // ignore upper and lowercase
+        if (aPath < bPath)  return -1;
+        if (aPath > bPath) return 1;
+        return 0;
+    });
+
+    console.log("sorted:");
+    console.log(entries);
+
+    let currentKey = 1;
+    const rootNode = {
+        id: `${currentKey}`,
+        name: root,
+        isFolder: true,
+        items: [],
+        path: "/"
+    };
+
+
+    //create the folders
+    entries.forEach((entry: File) => {
+
+        const pathArr = entry.getPath().split('/');
+        const pathLen = pathArr.length;
+        let current: iExplorer = rootNode;  
+
+        for(let i = 0; i < pathLen; i++){
+            let name = pathArr[i];
+            let index = i;
+            
+            // If the child node doesn't exist, create it
+            let child = current.items.find(item => item.name === name);
+
+            // if(child === undefined && index < ( pathLen - 1) && entry.isFolder()){
+            if(child === undefined && index < ( pathLen - 1)){
+                currentKey = currentKey += 1;
+                child = {
+                    id: `${currentKey}`,
+                    name: name,
+                    isFolder: true,
+                    items: [],
+                    path: pathArr.slice(0, index + 1).join('/')
+                };
+                current.items.push(child);
+            }
+            current = child!;
+        }
+    });
+
+
+    //create the files
+    entries.forEach((entry: File) => {
+
+        // if(entry.isFolder()) return;
+    
+        const pathArr = entry.getPath().split('/');
+        const pathLen = pathArr.length;
+        let current: iExplorer = rootNode; 
+    
+        if(pathLen === 1){
+            let name = pathArr[0];
+            currentKey = currentKey += 1;
+            let node = {
+                id: `${currentKey}`,
+                name: name,
+                isFolder: false,
+                items: [],
+                path: pathArr[0]
+            };
+            current.items.push(node);
+            return;
+        }  
+        
+        pathArr.forEach( (name, index) => {
+            let child = current.items.find(item => item.name === name);
+
+            if(child === undefined && index === ( pathLen - 1)){
+                currentKey = currentKey += 1;
+                child = {
+                    id: `${currentKey}`,
+                    name: name,
+                    isFolder: false,
+                    items: [],
+                    path: pathArr.slice(0, index + 1).join('/')
+                };
+                current.items.push(child);
+            }
+            else if( child === undefined ){
+                return;
+            }
+            else
+            {
+                current = child;
+            }
+        });
+    });
+    return rootNode;
+};
+
+const files: iFile[] = [
+  {
+    path: 'public',
+    language: '',
+    value: '',
+    isFolder: true
+  },
+  {
+    path: 'public/index.html',
+    language: 'html',
+    value: `<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<meta charset="utf-8" />\r\n<title>Monaco Editor Sample</title>\r\n</head>\r\n<body>\r\n<div id="root"></div>\r\n</body>\r\n</html>`,
+    isFolder: false
+  },
+  {
+    path: 'public/js',
+    language: '',
+    value: '',
+    isFolder: true
+  },
+  {
+      path: 'public/js/default.js',
+      language: 'javascript',
+      value: `var val = "This is public/js/default.js";`,
+      isFolder: false
+  },
+  {
+      path: 'public/js/jctajr.min.js',
+      language: 'javascript',
+      value: `var val = "This is public/js/jctajr.min.js";`, 
+      isFolder: false
+  },
+  {
+    path: 'public/css',
+    language: '',
+    value: '',
+    isFolder: true
+  },
+  {
+      path: 'public/css/default.css',
+      language: 'css',
+      value: `html {\r\n// This defines what 1rem is\r\nfont-size: 62.5%; //1 rem = 10px; 10px/16px = 62.5%\r\n}`,
+      isFolder: false
+  },
+  {
+    path: 'src',
+    language: '',
+    value: '',
+    isFolder: true
+  },
+  {
+      path: 'src/vanilla.ts',
+      language: 'typescript',
+      value: `const jungleBeats: string = "Holla at me, boo";`,
+      isFolder: false
+  },
+  {
+    path: 'src/react',
+    language: '',
+    value: '',
+    isFolder: true
+  },
+  {
+      path: 'src/react/some.jsx',
+      language: 'javascript',
+      value: ``,
+      isFolder: false
+  },
+  {
+      path: 'src/index.tsx',
+      language: 'typescript',
+      value: `import { createRoot } from 'react-dom/client';\r\nimport React from 'react';\r\nimport 'bulma/css/bulma.css';\r\n\r\nconst App = () => {\r\n    return (\r\n        <div className=\"container\">\r\n          <span>REACT</span>\r\n        </div>\r\n    );\r\n};\r\n\r\nconst root = createRoot(document.getElementById('root'));\r\nroot.render(<App />);`,
+      isFolder: false
+  },
+  {
+    path: 'src/temporary/',
+    language: '',
+    value: '',
+    isFolder: true
+  },
+  {
+    path: 'temporary/',
+    language: '',
+    value: '',
+    isFolder: true
+  },
+];
+
+(function() {
+  const FILES: File[] = files.map(f => new File(f.path, f.value, f.language, f.isFolder)); 
+  const tree = generateTreeNodeData(FILES, "root");
+  console.log(tree);
+})();
+
 ```
 
 #### [React Tips] management of object array in state
@@ -655,6 +925,3 @@ stateで配列を管理する場合：
 
 - state.arrayには常に新しい配列を与えよ。
 
-```TypeScript
-
-```

@@ -232,3 +232,42 @@ export const filesProxy = (function(files: iFile[]) {
 //         this._value = v;
 //     };
 // };
+
+
+export class File {
+    constructor(
+        private _path: string,
+        private _value: string,
+        private _language: string,
+        private _isFolder: boolean,
+    ){};
+
+    isPathValid(path: string): boolean {
+        // TODO: make sure path is valid
+        return true;
+    };
+
+    setPath(path: string) {
+        // TODO: make sure path is not include non exist folder
+        if(this.isPathValid(path)){
+            this._path = path;
+            // TODO: change this._language according to path files extension.
+        }
+    };
+
+    setValue(value: string) {
+        this._value = value;
+    };
+
+    getPath(): string {
+        return this._path;
+    };
+
+    getValue(): string {
+        return this._value;
+    };
+
+    isFolder(): boolean {
+        return this._isFolder;
+    };
+};
