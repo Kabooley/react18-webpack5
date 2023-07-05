@@ -938,17 +938,82 @@ filesへ新規アイテムを追加するにあたって。
 
 
 ```TypeScript
+//
 const handleInsertNode = (requiredPath: string, isFolder: boolean): void => {
     // NOTE: 常に新しい配列をsetstateすること
-    // 
+    //
     // make sure requiredPath is already exist.
     if(getFilesPath(baseFiles).find(p => p === requiredPath)) {
         throw new Error("[handleInsertNode] The required path is already exist");
     }
     const _files = baseFiles.map(f => f);
-    setFiles([..._files, new File(requiredPath, "", /* get extension and specify language */, isFolder)]);
+    setFiles([
+      ..._files,
+      new File(requiredPath, "", getFileLanguage(requiredPath), isFolder)
+    ]);
+};
+
+type Language = 'javascript' | 'typescript' | 'json' | 'css' | 'html' | 'markdown';
+
+// Move this method to utils/
+// https://stackoverflow.com/a/190878
+const getFileLanguage = (path: string): Language | undefined => {
+  if(path.includes('.')) {
+    switch (path.split('.').pop()) {
+          case 'js':
+            return 'javascript';
+          case 'ts':
+          case 'tsx':
+            return 'typescript';
+          case 'json':
+            return 'json';
+          case 'css':
+            return 'css';
+          case 'html':
+            return 'html';
+          case 'md':
+            return 'markdown';
+          default:
+            return undefined;
+        }
+    }
+  return undefined;
 };
 ```
+
+どうせ setFiles を呼び出したら再レンダリングされるので、explorerData は state 管理する必要がない
+
+```TypeScript
+// Before
+export default function FileExplorer() {
+  // NOTE: 配列を扱うので常に新しい配列を返すこと
+  const [baseFiles, setFiles] = useState<iFile[]>(files);
+  // NOTE: setExplorerDataの引数は必ずbaseFilesでなくてはならない。
+  const [explorerData, setExplorerData] = useState(generateTreeNodeData([], "root"));
+
+  useEffect(() => {
+    setExplorerData(generateTreeNodeData(getFilesPaths(baseFiles), "root"));
+  }, []);
+
+  useEffect(() => {
+    setExplorerData(generateTreeNodeData(getFilesPaths(baseFiles), "root"));
+  }, [baseFiles]);
+
+  // ...
+}
+
+// After
+export default function FileExplorer() {
+  // NOTE: 配列を扱うので常に新しい配列を返すこと
+  const [baseFiles, setFiles] = useState<iFile[]>(files);
+
+  // 毎レンダリングで必ずbaseFilesを元にexplorerDataは更新される
+  const explorerData = generateTreeNodeData(getFilesPaths(baseFiles), "root");
+
+  // ...
+}
+```
+
 
 #### onDrop
 
