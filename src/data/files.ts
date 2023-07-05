@@ -2,51 +2,141 @@ export interface iFile {
     path: string;
     language: string;
     value: string;
-};
+    // 
+    // new added
+    // 
+    isFolder: boolean
+  };
+  
 
 interface iFileWithId extends iFile {
     id: number;
 }
 
-export const files: iFile[] = [
+const files: iFile[] = [
     {
-        path: 'public/index.html',
-        language: 'html',
-        value: `<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<meta charset="utf-8" />\r\n<title>Monaco Editor Sample</title>\r\n</head>\r\n<body>\r\n<div id="root"></div>\r\n</body>\r\n</html>`
+      path: 'public',
+      language: '',
+      value: '',
+      isFolder: true
+    },
+    {
+      path: 'public/index.html',
+      language: 'html',
+      value: `<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<meta charset="utf-8" />\r\n<title>Monaco Editor Sample</title>\r\n</head>\r\n<body>\r\n<div id="root"></div>\r\n</body>\r\n</html>`,
+      isFolder: false
+    },
+    {
+      path: 'public/js',
+      language: '',
+      value: '',
+      isFolder: true
     },
     {
         path: 'public/js/default.js',
         language: 'javascript',
-        value: `var val = "This is public/js/default.js";`
+        value: `var val = "This is public/js/default.js";`,
+        isFolder: false
     },
     {
         path: 'public/js/jctajr.min.js',
         language: 'javascript',
-        value: `var val = "This is public/js/jctajr.min.js";`
+        value: `var val = "This is public/js/jctajr.min.js";`, 
+        isFolder: false
+    },
+    {
+      path: 'public/css',
+      language: '',
+      value: '',
+      isFolder: true
     },
     {
         path: 'public/css/default.css',
         language: 'css',
-        value: `html {\r\n// This defines what 1rem is\r\nfont-size: 62.5%; //1 rem = 10px; 10px/16px = 62.5%\r\n}`
+        value: `html {\r\n// This defines what 1rem is\r\nfont-size: 62.5%; //1 rem = 10px; 10px/16px = 62.5%\r\n}`,
+        isFolder: false
+    },
+    {
+      path: 'src',
+      language: '',
+      value: '',
+      isFolder: true
     },
     {
         path: 'src/vanilla.ts',
         language: 'typescript',
-        value: `const jungleBeats: string = "Holla at me, boo";`
+        value: `const jungleBeats: string = "Holla at me, boo";`,
+        isFolder: false
+    },
+    {
+      path: 'src/react',
+      language: '',
+      value: '',
+      isFolder: true
     },
     {
         path: 'src/react/some.jsx',
         language: 'javascript',
-        value: ``
+        value: ``,
+        isFolder: false
     },
     {
         path: 'src/index.tsx',
         language: 'typescript',
-        value: `import { createRoot } from 'react-dom/client';\r\nimport React from 'react';\r\nimport 'bulma/css/bulma.css';\r\n\r\nconst App = () => {\r\n    return (\r\n        <div className=\"container\">\r\n          <span>REACT</span>\r\n        </div>\r\n    );\r\n};\r\n\r\nconst root = createRoot(document.getElementById('root'));\r\nroot.render(<App />);`
+        value: `import { createRoot } from 'react-dom/client';\r\nimport React from 'react';\r\nimport 'bulma/css/bulma.css';\r\n\r\nconst App = () => {\r\n    return (\r\n        <div className=\"container\">\r\n          <span>REACT</span>\r\n        </div>\r\n    );\r\n};\r\n\r\nconst root = createRoot(document.getElementById('root'));\r\nroot.render(<App />);`,
+        isFolder: false
     },
-];
+    {
+      path: 'src/temporary/',
+      language: '',
+      value: '',
+      isFolder: true
+    },
+    {
+      path: 'temporary/',
+      language: '',
+      value: '',
+      isFolder: true
+    },
+  ];
 
+  export class File {
+    constructor(
+        private _path: string,
+        private _value: string,
+        private _language: string,
+        private _isFolder: boolean,
+    ){};
 
+    isPathValid(path: string): boolean {
+        // TODO: make sure path is valid
+        return true;
+    };
+
+    setPath(path: string) {
+        // TODO: make sure path is not include non exist folder
+        if(this.isPathValid(path)){
+            this._path = path;
+            // TODO: change this._language according to path files extension.
+        }
+    };
+
+    setValue(value: string) {
+        this._value = value;
+    };
+
+    getPath(): string {
+        return this._path;
+    };
+
+    getValue(): string {
+        return this._value;
+    };
+
+    isFolder(): boolean {
+        return this._isFolder;
+    };
+};
 
 /***
  * Property `id' is only for inside of this proxy.
@@ -234,40 +324,3 @@ export const filesProxy = (function(files: iFile[]) {
 // };
 
 
-export class File {
-    constructor(
-        private _path: string,
-        private _value: string,
-        private _language: string,
-        private _isFolder: boolean,
-    ){};
-
-    isPathValid(path: string): boolean {
-        // TODO: make sure path is valid
-        return true;
-    };
-
-    setPath(path: string) {
-        // TODO: make sure path is not include non exist folder
-        if(this.isPathValid(path)){
-            this._path = path;
-            // TODO: change this._language according to path files extension.
-        }
-    };
-
-    setValue(value: string) {
-        this._value = value;
-    };
-
-    getPath(): string {
-        return this._path;
-    };
-
-    getValue(): string {
-        return this._value;
-    };
-
-    isFolder(): boolean {
-        return this._isFolder;
-    };
-};

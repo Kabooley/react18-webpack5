@@ -25,17 +25,10 @@ const getFilesPaths = (_files: iFile[]) => {
  * */ 
 export default function FileExplorer() {
   // NOTE: 配列を扱うので常に新しい配列を返すこと
-  const [baseFiles, setFiles] = useState<iFile[]>(files);
-  // NOTE: setExplorerDataの引数は必ずbaseFilesでなくてはならない。
-  const [explorerData, setExplorerData] = useState(generateTreeNodeData([], "root"));
+  const [baseFiles, setBaseFiles] = useState<iFile[]>(files);
 
-  useEffect(() => {
-    setExplorerData(generateTreeNodeData(getFilesPaths(baseFiles), "root"));
-  }, []);
-
-  useEffect(() => {
-    setExplorerData(generateTreeNodeData(getFilesPaths(baseFiles), "root"));
-  }, [baseFiles]);
+  // 毎レンダリングで必ずbaseFilesを元にexplorerDataは更新される
+  const explorerData = generateTreeNodeData(getFilesPaths(baseFiles), "root");
 
   const { insertNode, deleteNode, updateNode, addNode, addFolderNode } = useTraverseTree();
 

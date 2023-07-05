@@ -1015,7 +1015,188 @@ export default function FileExplorer() {
 ```
 
 
-#### onDrop
+#### delete folder and file
+
+```TypeScript
+// Tree.tsx
+const onDelete = (
+    e: React.MouseEvent<HTMLDivElement>,
+    
+    isFolder: boolean
+) => {
+    e.stopPropagation();
+    // 引数`explorer.id`を`explorer.path`に変更する
+    handleDeleteNode(explorer.path, isFolder);
+};
+
+
+// Explorer/index.tsx
+  const handleDeleteNode = (path: string, isFolder: boolean) => {
+    // const updatedTree = deleteNode(explorerData, itemId);
+    // setExplorerData(updatedTree);
+
+    // NOTE: あらかじめ、引数pathのTreeNode上の子孫を削除しなくてはならない
+  };
+```
+
+ということで、tree上の子孫を得るならtreeから引っ張ってきた方が簡単なので
+
+```TypeScript
+// Explorer/helper.ts
+
+/**
+ * @param {iExplorer} _explorer - explorer as parent node.
+ * @return {Array<iExplorer>} - All descendant nodes of `_explorer`.
+ * 
+ * */ 
+const getAllDescendants = (_explorer: iExplorer): iExplorer[] => {
+  const descendants: iExplorer[] = [];
+
+  function collectDescendantsRecursive(exp: iExplorer) {
+      exp.items.forEach(item => {
+          descendants.push(item);
+          if(item.items.length) {
+              collectDescendantsRecursive(item);
+          }
+      });
+  };
+
+  collectDescendantsRecursive(_explorer);
+
+  return descendants;
+};
+```
+
+改めて...
+
+```TypeScript
+// Tree.tsx
+const onDelete = (
+    e: React.MouseEvent<HTMLDivElement>,
+    
+    isFolder: boolean
+) => {
+    e.stopPropagation();
+    // 引数`explorer.id`を`explorer.path`に変更した
+    handleDeleteNode(explorer);
+};
+
+
+// Explorer/index.tsx
+
+    // TODO: isFolder: trueのFileも削除できているか確認
+  const handleDeleteNode = (_explorer: iExplorer) => {
+    const descendantPaths: string[] = getAllDescendants(_explorer).map(d => d.path);
+    const updatedFiles: File[] = baseFiles.filter(f => {
+        if(f.isFolder) {
+            return descendants.find(d => d.includes(f.path) !== undefined)
+            ? false : true;
+        }
+        return descendantPaths.find(d => d === f.path)
+        ? false : true;
+    });
+    setFiles(updatedFiles);
+  };
+```
+
+
+TEST: codesandbox
+
+```TypeScript
+import { File, files } from './files';
+import { generateTreeNodeData } from './generateTreeNode';
+
+export interface iExplorer {
+  id: string;
+  name: string;
+  isFolder: boolean;
+  items: iExplorer[];
+  // 
+  // NOTE: new added
+  // 
+  path?: string;
+}
+
+
+
+const _getNodeById = (items: iExplorer[], id: string): iExplorer | undefined => { 
+
+  let e = items.find(item => item.id === id);
+
+  if(!e) {
+      items.find(item => {
+        let el = _getNodeById(item.items, id);
+        if(el) e = el;
+      });
+  }
+
+  return e;
+};
+
+
+/****
+ * `id`を元にそのidを持つexplorerをitemsから再帰的に捜索し見つけたら返す。
+ * NOTE: _getNodeById()はexplorer.items以下のみしか検索できないので、
+ * この関数はexplorer.idの検査を設けた。
+ *  */ 
+export const getNodeById = (explorer: iExplorer, id: string): iExplorer | undefined => {
+  return explorer.id === id ? explorer : _getNodeById(explorer.items, id);
+};
+
+
+
+const getAllDescendants = (_explorer: iExplorer): iExplorer[] => {
+  const descendants: iExplorer[] = [];
+
+  function temp(exp: iExplorer) {
+      exp.items.forEach(item => {
+          descendants.push(item);
+          if(item.items.length) {
+              temp(item);
+          }
+      });
+  };
+
+  temp(_explorer);
+
+  return descendants;
+};
+
+
+const baseFiles: File[] = files.map(f => new File(f.path, f.value, f.language, f.isFolder));
+
+  // TODO: isFolder: trueのFileも削除できているか確認
+const handleDeleteNode = (_explorer: iExplorer) => {
+  const descendantPaths: string[] = getAllDescendants(_explorer).map(d => d.path) as string[];
+  
+  console.log("[handleDeleteNode] descendantPaths:");
+  console.log(descendantPaths);
+
+  const updatedFiles: File[] = baseFiles.filter(f => {
+    // TODO: コメントアウト部分要修正
+      // if(f.isFolder()) {
+      //     return descendantPaths.find(d => d.includes(f.getPath()) !== undefined)
+      //     ? true : false;
+      // }
+      return descendantPaths.find(d => d === f.getPath())
+      ? false : true;
+  });
+  // setFiles(updatedFiles);
+  console.log("updatedFiles:");
+  console.log(updatedFiles);
+};
+
+(function() {
+  const explorer = generateTreeNodeData(baseFiles, "root");
+  console.log("explorer: ");
+  console.log(explorer);
+  const parent = getNodeById(explorer, "2");
+  console.log("parent: ");
+  console.log(parent);
+  parent && handleDeleteNode(parent);
+})();
+
+```
 
 
 
