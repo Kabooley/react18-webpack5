@@ -29,7 +29,8 @@ const Tree = ({
     });
     const [dragging, setDragging] = useState<boolean>(false);
 
-    const handleNewFolder = (
+    // TODO: 名前が紛らわしいかも
+    const handleNewItem = (
       e: React.MouseEvent<HTMLDivElement>,
       isFolder: boolean
     ) => {
@@ -41,7 +42,7 @@ const Tree = ({
       });
     };
 
-    const onAddFolder = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const onAddItem = (e: React.KeyboardEvent<HTMLInputElement>) => {
       const v = e.currentTarget.value;
       if (e.keyCode === 13 && v) {
         handleInsertNode(explorer.id, v, showInput.isFolder);
@@ -135,14 +136,14 @@ const Tree = ({
                 <div className="folder--function">
                   <div
                     onClick={(e: React.MouseEvent<HTMLDivElement>) =>
-                      handleNewFolder(e, true)
+                      handleNewItem(e, true)
                     }
                   >
                     <img src={addFolder} alt="add folder" />
                   </div>
                   <div
                     onClick={(e: React.MouseEvent<HTMLDivElement>) =>
-                      handleNewFolder(e, false)
+                      handleNewItem(e, false)
                     }
                   >
                   <img src={addFile} alt="add file" />
@@ -162,7 +163,7 @@ const Tree = ({
                 <input
                   type="text"
                   className="inputContainer__input"
-                  onKeyDown={onAddFolder}
+                  onKeyDown={onAddItem}
                   onBlur={() => setShowInput({ ...showInput, visible: false })}
                   autoFocus
                 />

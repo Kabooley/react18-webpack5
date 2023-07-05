@@ -585,57 +585,22 @@ files --> new copied files
 
 前提：
 
-- TODO: folderはiFileと相容れないので空のフォルダの扱いを決めること
+- iExplorer.pathの追加
+- iFile.isFolderの追加
+- filesは必ずフォルダとファイルを区別すること
 
-    generateTreeNodeは空のフォルダを認めるか？確認
 
-    認めるならばiFileでもフォルダの取り扱いを始める
-    認めないなら模索
-    
-- iExplorerにはpathという新しいpropertyを追加することとする。
+##### generateTreeNodeData()をアップデート
 
-```TypeScript
-// FileExplorer/index.tsx
-const onAddFolder = (parentPath: string, folderName: string) => {
-    const newFolder: iExplorer = {
-        id: new Date().
-        name: folderName,
-        isFolder: true,
-        path: parentPath + '/' + folderName,
-        items: []
-    }
+`files: File[]`を基にtree nodeを生成する。
 
-    // NOTE: 新規folder作成はfilesへ追加できないのでexplorerDataだけ
-}
-// Tree.tsx
+新機能：空フォルダを受け付けるようになった。
 
-/***
- * clickされたfolderの直下にフォルダを作る行為なので
- * filesからしたら、新規のfileデータの追加で、
- * 重要な情報がpathがどうなるかである。
- * 親フォルダのpathが必要になるはずなので親フォルダpathを渡す
- * 
- * */ 
-const onAddFolder = (
-    e: e: React.KeyboardEvent<HTMLInputElement>,
-    parentPath: string
-) => {
-    const v = e.currentTarget.value;
-    if (e.keyCode === 13 && v) {
-        props.onAddFolder(parentPath, v);
-        setShowInput({ ...showInput, visible: false });
-    }
-};
-
-// render
-<div onClick={(e: : React.MouseEvent<HTMLDivElement>) => onAddFolder(e, explorer.path)}>
-    // ...
-</div>
-```
-
-NOTE: codesandboxでテスト
+- TODO: iExplorer.pathはオプショナルから必須にすること
+- TODO: iFile.isFolderは必須にすること
 
 ```TypeScript
+// condesandbox::vanilla typescript::index.tsへそのまま貼り付けて確認可能
 
 export interface iFile {
   path: string;
@@ -653,9 +618,9 @@ export interface iExplorer {
   isFolder: boolean;
   items: iExplorer[];
   // 
-  // NOTE: new added
+  // NOTE: new added: オプショナルなのは
   // 
-  path?: string;
+  path: string;
 }
 
 export class File {
@@ -697,18 +662,6 @@ export class File {
 };
 
 
-/***
- *
- * 
- * NOTE: 現状空のフォルダだけのFileを認めていない
- * そのため空のフォルダを追加するonAddFolderが出来ない
- * 
- * public/css/default.css
- * と
- * public
- * があった場合、
- * 両者のpublicは別物として生成される。
- * */ 
 export const generateTreeNodeData = (
     entries: File[] = [], 
     root: string = "root"
@@ -723,9 +676,6 @@ export const generateTreeNodeData = (
         return 0;
     });
 
-    console.log("sorted:");
-    console.log(entries);
-
     let currentKey = 1;
     const rootNode = {
         id: `${currentKey}`,
@@ -738,6 +688,8 @@ export const generateTreeNodeData = (
 
     //create the folders
     entries.forEach((entry: File) => {
+        
+        if(entry.isFolder()) return;
 
         const pathArr = entry.getPath().split('/');
         const pathLen = pathArr.length;
@@ -770,7 +722,7 @@ export const generateTreeNodeData = (
     //create the files
     entries.forEach((entry: File) => {
 
-        // if(entry.isFolder()) return;
+        if(entry.isFolder()) return;
     
         const pathArr = entry.getPath().split('/');
         const pathLen = pathArr.length;
@@ -813,8 +765,60 @@ export const generateTreeNodeData = (
             }
         });
     });
+
+    /**
+     * Generate empty folders.
+     * 
+     * NOTE: Run below loop after finishing generate non-empty folders and files.
+     *  
+     * */ 
+    entries.forEach((entry: File) => {
+
+        if(!entry.isFolder()) return;
+    
+        const pathArr = entry.getPath().split('/');
+        const pathLen = pathArr.length;
+        let current: iExplorer = rootNode; 
+
+        console.log('entry:');
+        console.log(entry);
+    
+        pathArr.forEach( (name, index) => {
+            
+          console.log(`loop: ${index}`);
+          console.log(`name: ${name}`);
+          console.log(`pathArr: ${pathArr}`);
+          console.log(`current`);
+          console.log(current);
+
+            let child: iExplorer | undefined = current.items.find(item => item.name === name);
+
+            if(child === undefined && index === ( pathLen - 1)){
+                currentKey = currentKey += 1;
+                child = {
+                    id: `${currentKey}`,
+                    name: pathArr[index - 1],
+                    isFolder: true,             // As this is folder.
+                    items: [],
+                    path: pathArr.slice(0, index + 1).join('/')
+                };
+                current.items.push(child);
+            }
+            else if( child === undefined ){
+                return;
+            }
+            else
+            {
+                current = child;
+            }
+        });
+    });
+
     return rootNode;
 };
+
+
+
 
 const files: iFile[] = [
   {
@@ -910,6 +914,45 @@ const files: iFile[] = [
 })();
 
 ```
+
+#### AddFolder AddFile
+
+Tree.tsx::handleNewItem()::setShowInput as true::onAddItem::handleInsertNode
+
+`handleInsertNode(explorer.id, isFolder)`
+
+explorer.id: 追加先となるexplorerのid
+
+isFolder: 追加するアイテムはフォルダかファイルかの識別子
+
+explorer.idは`explorerData`のなかでしか通用しないidなのでfilesでは通用しない。
+
+そのためpathで識別するほかない。
+
+`handleInsertNode(parentNodePath: string = explorer.path, isFolder: boolean = parameterFromOnAddItem)`
+
+filesへ新規アイテムを追加するにあたって。
+
+- 新規アイテムは既に存在していないか?
+- 存在していないpathを経由していないか?(存在しないフォルダが挟まっているとか)
+
+
+```TypeScript
+const handleInsertNode = (requiredPath: string, isFolder: boolean): void => {
+    // NOTE: 常に新しい配列をsetstateすること
+    // 
+    // make sure requiredPath is already exist.
+    if(getFilesPath(baseFiles).find(p => p === requiredPath)) {
+        throw new Error("[handleInsertNode] The required path is already exist");
+    }
+    const _files = baseFiles.map(f => f);
+    setFiles([..._files, new File(requiredPath, "", /* get extension and specify language */, isFolder)]);
+};
+```
+
+#### onDrop
+
+
 
 #### [React Tips] management of object array in state
 
