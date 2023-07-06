@@ -1175,9 +1175,25 @@ const handleDeleteNode = (_explorer: iExplorer) => {
   const updatedFiles: File[] = baseFiles.filter(f => {
     // TODO: コメントアウト部分要修正
       // if(f.isFolder()) {
+      //     
       //     return descendantPaths.find(d => d.includes(f.getPath()) !== undefined)
       //     ? true : false;
       // }
+      // 例：`public/js`を削除する場合...
+      // 対象外
+      // `public/`, `public/css`
+      // 対象
+      // `public/js`, `public/js/default/`, `
+      // 
+      // なので、d.includes(f.getPath())だと、
+      // `public`も`public/css`もtruthyになる。
+      // 
+      // となったら、
+      // まず_explorer.pathと一致するか比較する必要があるか
+      // NOTE: 
+      if(f.isFolder()) {
+
+      }
       return descendantPaths.find(d => d === f.getPath())
       ? false : true;
   });
@@ -1198,8 +1214,100 @@ const handleDeleteNode = (_explorer: iExplorer) => {
 
 ```
 
+空フォルダを削除する方法の模索:
 
+```TypeScript
+const handleDeleteNode = (_explorer: iExplorer) => {
+  const descendantPaths: string[] = getAllDescendants(_explorer).map(d => d.path) as string[];
 
+  const updatedFiles: File[] = baseFiles.filter(f => {
+    // TODO: 要修正
+      if(f.isFolder()) {
+        const operand = f.path.split('/');          // 例：`public/css`,`pubcli/default`
+        const _operand = _explorer.path.split('/'); // 例：`public/js`
+        let completeMatch: boolean = false;
+        _operand.forEach((_o, index) => {
+          completeMatch = (_o === operand[index]) || completeMatch;
+        });
+        return completeMatch ? true : false;
+      }
+      return descendantPaths.find(d => d === f.getPath())
+      ? false : true;
+  });
+```
+
+#### reorder files
+
+DND結果の反映ですわ
+
+- フォルダが移動したら
+  連なるファイル、フォルダ全てのpathの変更
+
+- ファイルが移動したら
+  該当ファイルのpathだけ変更
+
+- Tree.tsxから引っ張ってこれるのは
+  droppedIdとdraggableId
+
+- onDrop: droppedIdとdraggableIdを取得できる
+
+```TypeScript
+  const handleReorderNode = (droppedId: string, draggableId: string): void => {
+
+      if(droppedId === draggableId) { return; }
+
+      // Check if the dropped area is under dragging item
+      if(isNodeIncludedUnderExplorer(explorerData, droppedId, draggableId)){
+        return;
+      }
+
+      // -- ここまではこのままでおｋ --
+      const movingItem = getNodeById(explorerData, draggableId);
+      const droppedArea = getNodeById(explorerData, droppedId)
+      if(droppedArea!.isFolder) {
+        // item dropped on Folder column
+        // get all descendant paths of movingItem. 
+        const descendantPaths: string[] = getAllDescendants(_explorer).map(d => d.path) as string[];
+        // 
+        // 例：たとえば、`public/js`を、`src`へドロップしたとする
+        // すると、`src/public/js`となる。
+        // それは`public/js`以下のすべてのアイテムが同様である
+        // つまり、
+        // path変更は`dropした場所のパス` + `対象パス`とすればよい
+        // 
+        // 配列の上書きをするために...
+        // 
+        const reorderFiles = baseFiles.map(f => descendatnPaths.find(d => d === f.getPath()) );
+        const restFiles = baseFiles.filter(f => descendatnPaths.find(d => d !== f.getPath()) );
+        const updatedReorderItems = reorderFiles.map(r => {
+          return {
+            path: droppedArea.path + r.path,
+            language: r.language,
+            value: r.value,
+            isFolder: r.isFolder
+          };
+        });
+
+        setBaseFiles([...restFiles, ...updatedReorderItems]);
+      }
+      else {
+        // Item dropped on NOT folder column
+        const restFiles = baseFiles.filter(f => f.getPath() !== movingItem.path);
+        const movingFile = baseFiles.find(f => f.getPath() === movingItem.path);
+        setBaseFiles([
+          ...restFiles, 
+          {
+            path: droppedArea.path + movingFile.path,
+            language: movingFile.language,
+            value: movingItem.value,
+            isFolder: movingItem.isFolder
+          }
+        ]);
+      }
+  };
+
+  const convertPartOfPath = (targetPath: string, )
+```
 #### [React Tips] management of object array in state
 
 https://stackoverflow.com/questions/26253351/correct-modification-of-state-arrays-in-react-js
