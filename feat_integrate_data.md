@@ -1015,133 +1015,17 @@ export default function FileExplorer() {
 ```
 
 
-#### delete folder and file
+#### Deletion and Reorder Functions
 
-```TypeScript
-// Tree.tsx
-const onDelete = (
-    e: React.MouseEvent<HTMLDivElement>,
-    
-    isFolder: boolean
-) => {
-    e.stopPropagation();
-    // 引数`explorer.id`を`explorer.path`に変更する
-    handleDeleteNode(explorer.path, isFolder);
-};
-
-
-// Explorer/index.tsx
-  const handleDeleteNode = (path: string, isFolder: boolean) => {
-    // const updatedTree = deleteNode(explorerData, itemId);
-    // setExplorerData(updatedTree);
-
-    // NOTE: あらかじめ、引数pathのTreeNode上の子孫を削除しなくてはならない
-  };
-```
-
-ということで、tree上の子孫を得るならtreeから引っ張ってきた方が簡単なので
-
-```TypeScript
-// Explorer/helper.ts
-
-/**
- * @param {iExplorer} _explorer - explorer as parent node.
- * @return {Array<iExplorer>} - All descendant nodes of `_explorer`.
- * 
- * */ 
-const getAllDescendants = (_explorer: iExplorer): iExplorer[] => {
-  const descendants: iExplorer[] = [];
-
-  function collectDescendantsRecursive(exp: iExplorer) {
-      exp.items.forEach(item => {
-          descendants.push(item);
-          if(item.items.length) {
-              collectDescendantsRecursive(item);
-          }
-      });
-  };
-
-  collectDescendantsRecursive(_explorer);
-
-  return descendants;
-};
-```
-
-改めて...
-
-```TypeScript
-// Tree.tsx
-const onDelete = (
-    e: React.MouseEvent<HTMLDivElement>,
-    
-    isFolder: boolean
-) => {
-    e.stopPropagation();
-    // 引数`explorer.id`を`explorer.path`に変更した
-    handleDeleteNode(explorer);
-};
-
-
-// Explorer/index.tsx
-
-    // TODO: isFolder: trueのFileも削除できているか確認
-  const handleDeleteNode = (_explorer: iExplorer) => {
-    const descendantPaths: string[] = getAllDescendants(_explorer).map(d => d.path);
-    const updatedFiles: File[] = baseFiles.filter(f => {
-        if(f.isFolder) {
-            return descendants.find(d => d.includes(f.path) !== undefined)
-            ? false : true;
-        }
-        return descendantPaths.find(d => d === f.path)
-        ? false : true;
-    });
-    setFiles(updatedFiles);
-  };
-```
-
+TODO: テストが済んだらExplorer/index.tsxへ反映すること。
 
 TEST: codesandbox
 
 ```TypeScript
 import { File, files } from './files';
 import { generateTreeNodeData } from './generateTreeNode';
-
-export interface iExplorer {
-  id: string;
-  name: string;
-  isFolder: boolean;
-  items: iExplorer[];
-  // 
-  // NOTE: new added
-  // 
-  path?: string;
-}
-
-
-
-const _getNodeById = (items: iExplorer[], id: string): iExplorer | undefined => { 
-
-  let e = items.find(item => item.id === id);
-
-  if(!e) {
-      items.find(item => {
-        let el = _getNodeById(item.items, id);
-        if(el) e = el;
-      });
-  }
-
-  return e;
-};
-
-
-/****
- * `id`を元にそのidを持つexplorerをitemsから再帰的に捜索し見つけたら返す。
- * NOTE: _getNodeById()はexplorer.items以下のみしか検索できないので、
- * この関数はexplorer.idの検査を設けた。
- *  */ 
-export const getNodeById = (explorer: iExplorer, id: string): iExplorer | undefined => {
-  return explorer.id === id ? explorer : _getNodeById(explorer.items, id);
-};
+import { iExplorer } from './explorerData';
+import { isNodeIncludedUnderExplorer, getNodeById } from "./helper";
 
 
 
@@ -1164,149 +1048,207 @@ const getAllDescendants = (_explorer: iExplorer): iExplorer[] => {
 
 
 const baseFiles: File[] = files.map(f => new File(f.path, f.value, f.language, f.isFolder));
+const explorerData = generateTreeNodeData(baseFiles, "root");
 
-  // TODO: isFolder: trueのFileも削除できているか確認
+
+
 const handleDeleteNode = (_explorer: iExplorer) => {
+  const isDeletionTargetFolder = _explorer.isFolder;
   const descendantPaths: string[] = getAllDescendants(_explorer).map(d => d.path) as string[];
-  
-  console.log("[handleDeleteNode] descendantPaths:");
+
+  console.log('[handleDeleteNode] descendants:');
   console.log(descendantPaths);
 
-  const updatedFiles: File[] = baseFiles.filter(f => {
-    // TODO: コメントアウト部分要修正
-      // if(f.isFolder()) {
-      //     
-      //     return descendantPaths.find(d => d.includes(f.getPath()) !== undefined)
-      //     ? true : false;
-      // }
-      // 例：`public/js`を削除する場合...
-      // 対象外
-      // `public/`, `public/css`
-      // 対象
-      // `public/js`, `public/js/default/`, `
-      // 
-      // なので、d.includes(f.getPath())だと、
-      // `public`も`public/css`もtruthyになる。
-      // 
-      // となったら、
-      // まず_explorer.pathと一致するか比較する必要があるか
-      // NOTE: 
-      if(f.isFolder()) {
+  const deletionTargetPathArr = _explorer.path.split('/'); // 例：`public/css`
 
+  console.log('[handleDeleteNode] deletionTartgetPathArr');
+  console.log(deletionTargetPathArr);
+
+  const updatedFiles: File[] = baseFiles.filter(f => {
+      // In case deletion target is folder and f is also folder.
+      if(f.isFolder() && isDeletionTargetFolder) {
+        const comparandPathArr = f.getPath().split('/');
+        if(deletionTargetPathArr.length > comparandPathArr.length) return true;
+        
+        
+        let completeMatch: boolean = true;
+        deletionTargetPathArr.forEach((p, index) => {
+          completeMatch = (p === comparandPathArr[index]) && completeMatch;
+        });
+
+        console.log(comparandPathArr);
+        console.log(completeMatch);
+
+        return completeMatch ? false : true;
       }
+      // In case deletion target is a file, not any folder.
+      else if(!descendantPaths.length){
+        return f.getPath() !== _explorer.path; 
+      }
+      // In case deletion target is folder but f is not folder.
       return descendantPaths.find(d => d === f.getPath())
-      ? false : true;
+        ? false : true;
   });
-  // setFiles(updatedFiles);
-  console.log("updatedFiles:");
-  console.log(updatedFiles);
+
+  return updatedFiles;
 };
 
-(function() {
-  const explorer = generateTreeNodeData(baseFiles, "root");
-  console.log("explorer: ");
-  console.log(explorer);
-  const parent = getNodeById(explorer, "2");
-  console.log("parent: ");
-  console.log(parent);
-  parent && handleDeleteNode(parent);
-})();
 
+const handleReorderNode = (droppedId: string, draggableId: string): void => {
+
+    if(droppedId === draggableId) { return; }
+
+    // Check if the dropped area is under dragging item
+    if(isNodeIncludedUnderExplorer(explorerData, droppedId, draggableId)){
+      return;
+    }
+
+    const movingItem: iExplorer = getNodeById(explorerData, draggableId);
+    const droppedArea: iExplorer = getNodeById(explorerData, droppedId);
+    const movingFile: File | undefined = baseFiles.find(b => b.getPath() === movingItem.path);
+    const appendPath = droppedArea.isFolder ? droppedArea.path : /* getParentNodeById(droppedArea.id).path */;
+
+    if(movingFile === undefined) throw new Error("Something went wrong but File cannot be found by draggableId.");
+
+    console.log("[handleReorderNode] movingItem:");
+    console.log(movingItem);
+    console.log("[handleReorderNode] dropped area:");
+    console.log(droppedArea);
+
+    // TODO: dropped areaがfolderの場合と、draggableがフォルダの場合の4通りを考慮しなくてはならない。現状droppedareaがどうかしか考えていない
+    if(movingItem.isFolder) {
+      console.log("[handleReorderNode] draggable item is folder");
+
+      const descendantPaths = getAllDescendants(movingItem).map(d => d.path) as string[];
+      const isFolderEmpty = descendantPaths.length ? false : true;
+      if(!isFolderEmpty) {
+        const reorderFiles = baseFiles.filter(f => descendantPaths.find(d => d === f.getPath()) );
+        reorderFiles.push(movingFile);
+        const restFiles = baseFiles.filter(f => descendantPaths.find(d => d !== f.getPath()) );
+
+        return [...restFiles, ...reorderFiles.map(r => {
+          path: appendPath + r.getPath(),
+          language: r.getLanguage(),
+          value: r.getValue(),
+          isFolder: r.isFolder()
+        })]
+      }
+    }
+    else {
+      console.log("[handleReorderNode] draggable item is NOT folder");
+
+    }
+    
+    
+    // if(droppedArea!.isFolder) {
+    //   // item dropped on Folder column
+    //   // get all descendant paths of movingItem. 
+    //   const descendantPaths: string[] = getAllDescendants(movingItem).map(d => d.path) as string[];
+    //   // 
+    //   // 例：たとえば、`public/js`を、`src`へドロップしたとする
+    //   // すると、`src/public/js`となる。
+    //   // それは`public/js`以下のすべてのアイテムが同様である
+    //   // つまり、
+    //   // path変更は`dropした場所のパス` + `対象パス`とすればよい
+
+    //   const reorderFiles = baseFiles.filter(f => descendantPaths.find(d => d === f.getPath()) );
+    //   // const restFiles = baseFiles.filter(f => descendantPaths.find(d => d !== f.getPath()) );
+    //   reorderFiles.push(movingItem);
+    //   const restFiles = baseFiles.filter(f => {
+
+    //     if(!descendantPaths.length) return movingItem.path !== f.getPath();
+    //     return descendantPaths.find(d => d === f.getPath()) !== undefined;
+    //   });
+    //   const updatedReorderItems = reorderFiles.map(r => {
+    //     return {
+    //       path: droppedArea.path + r.getPath(),
+    //       language: r.getLanguage(),
+    //       value: r.getValue(),
+    //       isFolder: r.isFolder()
+    //     };
+    //   });
+
+
+    //   // setBaseFiles([...restFiles, ...updatedReorderItems]);
+
+    //   console.log("[handleReorderNode] dropped on folder column");
+    //   console.log("[handleReorderNode] descendantPaths:");
+    //   console.log(descendantPaths);
+    //   console.log("[handleReorderNode] reorderFiles:");
+    //   reorderFiles.forEach(r => console.log(r.getPath()));
+    //   console.log("[handleReorderNode] restFiles:");
+    //   restFiles.forEach(r => console.log(r.getPath()));
+    //   console.log("[handleReorderNode] updatedFiles:");
+    //   console.log([...restFiles, ...updatedReorderItems]);
+    // }
+    // else {
+    //   // Item dropped on NOT folder column
+    //   const restFiles = baseFiles.filter(f => f.getPath() !== movingItem.path);
+    //   const movingFile = baseFiles.find(f => f.getPath() === movingItem.path);
+    //   // setBaseFiles([
+    //   //   ...restFiles, 
+    //   //   {
+    //   //     path: droppedArea.path + movingFile.path,
+    //   //     language: movingFile.language,
+    //   //     value: movingItem.value,
+    //   //     isFolder: movingItem.isFolder
+    //   //   }
+    //   // ]);
+    //   if(movingFile !== undefined) {
+    //     console.log("[handleReorderNode] dropped on NOT folder column");
+    //     console.log("[handleReorderNode] restFiles:");
+    //     restFiles.forEach(r => console.log(r.getPath()));
+    //     console.log("[handleReorderNode] updatedFiles:");
+    //     console.log([
+    //       ...restFiles, {
+    //             path: droppedArea.path + movingFile.getPath(),
+    //             language: movingFile.getLanguage(),
+    //             value: movingItem.getValue(),
+    //             isFolder: movingItem.isFolder()
+    //           }
+    //     ]);
+    //   }
+    // }
+};
+
+  (function() {
+    // console.log(explorerData);
+    // const parent = getNodeById(explorerData, "12");
+    // console.log("parent:");
+    // console.log(parent);
+    // const updatedFiles: File[] = parent && handleDeleteNode(parent);
+    // console.log("baseFiles:");
+    // console.log(baseFiles);
+    // baseFiles.forEach(b => console.log(b.getPath()));
+    // console.log("[hanldeDeleteNode] updatedFiles: ");
+    // console.log(updatedFiles);
+    // updatedFiles.forEach(u => console.log(u.getPath()));
+
+    // TEST: handleReorderNode(): drop "14" on "4"
+    // console.log(explorerData);
+    // handleReorderNode("4", "14");
+  })();
 ```
 
-空フォルダを削除する方法の模索:
-
-```TypeScript
-const handleDeleteNode = (_explorer: iExplorer) => {
-  const descendantPaths: string[] = getAllDescendants(_explorer).map(d => d.path) as string[];
-
-  const updatedFiles: File[] = baseFiles.filter(f => {
-    // TODO: 要修正
-      if(f.isFolder()) {
-        const operand = f.path.split('/');          // 例：`public/css`,`pubcli/default`
-        const _operand = _explorer.path.split('/'); // 例：`public/js`
-        let completeMatch: boolean = false;
-        _operand.forEach((_o, index) => {
-          completeMatch = (_o === operand[index]) || completeMatch;
-        });
-        return completeMatch ? true : false;
-      }
-      return descendantPaths.find(d => d === f.getPath())
-      ? false : true;
-  });
-```
-
-#### reorder files
-
-DND結果の反映ですわ
-
-- フォルダが移動したら
-  連なるファイル、フォルダ全てのpathの変更
-
-- ファイルが移動したら
-  該当ファイルのpathだけ変更
-
-- Tree.tsxから引っ張ってこれるのは
-  droppedIdとdraggableId
-
-- onDrop: droppedIdとdraggableIdを取得できる
-
-```TypeScript
-  const handleReorderNode = (droppedId: string, draggableId: string): void => {
-
-      if(droppedId === draggableId) { return; }
-
-      // Check if the dropped area is under dragging item
-      if(isNodeIncludedUnderExplorer(explorerData, droppedId, draggableId)){
-        return;
-      }
-
-      // -- ここまではこのままでおｋ --
-      const movingItem = getNodeById(explorerData, draggableId);
-      const droppedArea = getNodeById(explorerData, droppedId)
-      if(droppedArea!.isFolder) {
-        // item dropped on Folder column
-        // get all descendant paths of movingItem. 
-        const descendantPaths: string[] = getAllDescendants(_explorer).map(d => d.path) as string[];
-        // 
-        // 例：たとえば、`public/js`を、`src`へドロップしたとする
-        // すると、`src/public/js`となる。
-        // それは`public/js`以下のすべてのアイテムが同様である
-        // つまり、
-        // path変更は`dropした場所のパス` + `対象パス`とすればよい
-        // 
-        // 配列の上書きをするために...
-        // 
-        const reorderFiles = baseFiles.map(f => descendatnPaths.find(d => d === f.getPath()) );
-        const restFiles = baseFiles.filter(f => descendatnPaths.find(d => d !== f.getPath()) );
-        const updatedReorderItems = reorderFiles.map(r => {
-          return {
-            path: droppedArea.path + r.path,
-            language: r.language,
-            value: r.value,
-            isFolder: r.isFolder
-          };
-        });
-
-        setBaseFiles([...restFiles, ...updatedReorderItems]);
-      }
-      else {
-        // Item dropped on NOT folder column
-        const restFiles = baseFiles.filter(f => f.getPath() !== movingItem.path);
-        const movingFile = baseFiles.find(f => f.getPath() === movingItem.path);
-        setBaseFiles([
-          ...restFiles, 
-          {
-            path: droppedArea.path + movingFile.path,
-            language: movingFile.language,
-            value: movingItem.value,
-            isFolder: movingItem.isFolder
-          }
-        ]);
-      }
-  };
-
-  const convertPartOfPath = (targetPath: string, )
+```bash
+# 両者ともにfolderである
+case dropped.isFolder && draggable.isFolder:
+    descendants: [...]
+    draggableFile.path = "droppedFile.path + draggaleFile.path"
+    apply it to all descendants
+# dropped areaはフォルダではなくdraggableはフォルダである
+case !dropped.isFolder && draggable.isFolder:
+    descendants: [...]
+    draggableFile.path = "droppedFile's_parent.path + draggaleFile.path"
+    apply it to all descendants
+# dropped areaがフォルダでdraggableはフォルダじゃない
+case dropped.isFolder && !draggable.isFolder:
+    descendants: []
+    draggableFile.path = "droppedFile.path + draggaleFile.path"
+# 両者ともにフォルダでない
+case !dropped.isFolder && !draggable.isFolder:
+    descendants: []
+    draggableFile.path = "droppedFile's_parent.path + draggaleFile.path"
 ```
 #### [React Tips] management of object array in state
 
