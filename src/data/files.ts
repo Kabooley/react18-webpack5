@@ -136,6 +136,11 @@ const files: iFile[] = [
     isFolder(): boolean {
         return this._isFolder;
     };
+
+    // temporary
+    getLanguage(): string {
+      return this._language;
+    };
 };
 
 /***
@@ -143,77 +148,77 @@ const files: iFile[] = [
  * Reason adding `id` property is mainly for _updateFile method.
  * 
  * */ 
-export const filesProxy = (function(files: iFile[]) {
-  // 参照を持たせないため
-  let _files: iFileWithId[] = files.map((d, index) => {
-      return {...d, id: index};
-  });
+// export const filesProxy = (function(files: iFile[]) {
+//   // 参照を持たせないため
+//   let _files: iFileWithId[] = files.map((d, index) => {
+//       return {...d, id: index};
+//   });
 
-  const _addFile = (newFile: iFile) => {
-      if(!_files.find(_f => _f.path === newFile.path)){
-          _files.push({
-              ...newFile, id: new Date().getTime()
-          });
-      }
-  };
+//   const _addFile = (newFile: iFile) => {
+//       if(!_files.find(_f => _f.path === newFile.path)){
+//           _files.push({
+//               ...newFile, id: new Date().getTime()
+//           });
+//       }
+//   };
 
-  const _getFile = (path: string) => {
-      const f = _files.find(_f => _f.path === path);
-      return {
-          path: f?.path,
-          language: f?.language,
-          value: f?.value,
-          id: f?.id
-      };
-  };
+//   const _getFile = (path: string) => {
+//       const f = _files.find(_f => _f.path === path);
+//       return {
+//           path: f?.path,
+//           language: f?.language,
+//           value: f?.value,
+//           id: f?.id
+//       };
+//   };
 
-  const _getFiles = () => {
-    return _files.map(f => {
-      return {
-        path: f?.path,
-        language: f?.language,
-        value: f?.value,
-        id: f?.id
-      }
-    });
-  };
+//   const _getFiles = () => {
+//     return _files.map(f => {
+//       return {
+//         path: f?.path,
+//         language: f?.language,
+//         value: f?.value,
+//         id: f?.id
+//       }
+//     });
+//   };
 
-  const _getNumberOfFiles = () => {
-    return _files.length;
-  };
+//   const _getNumberOfFiles = () => {
+//     return _files.length;
+//   };
 
-  const _getAllPaths = () => {
-    return _files.map(f => f.path);
-  };
+//   const _getAllPaths = () => {
+//     return _files.map(f => f.path);
+//   };
 
-  const _removeFile = (path: string) => {
-      if(_files.find(_f => _f.path === path)) {
-          _files = _files.filter(f => f.path !== path);
-      }
-  };
+//   const _removeFile = (path: string) => {
+//       if(_files.find(_f => _f.path === path)) {
+//           _files = _files.filter(f => f.path !== path);
+//       }
+//   };
 
-  const _updateFile = (
-      id: number,
-      {path, language, value}
-      :{path?: string, language?: string, value?: string}) => {
-          let found = _files.find(_f => _f.id === id);
-          if(found) {
-              found.path = path !== undefined ? path : found.path;
-              found.language = language !== undefined ? language : found.language;
-              found.value = value !== undefined ? value : found.value;
-          }
-  };
+//   const _updateFile = (
+//       id: number,
+//       {path, language, value}
+//       :{path?: string, language?: string, value?: string}) => {
+//           let found = _files.find(_f => _f.id === id);
+//           if(found) {
+//               found.path = path !== undefined ? path : found.path;
+//               found.language = language !== undefined ? language : found.language;
+//               found.value = value !== undefined ? value : found.value;
+//           }
+//   };
 
-  return {
-      addFile: _addFile,
-      getFile: _getFile,
-      getFiles: _getFiles,
-      removeFile: _removeFile,
-      updateFile: _updateFile,
-      getNumberOfFiles: _getNumberOfFiles,
-      getAllPaths: _getAllPaths
-  };
-})(files);
+//   return {
+//       addFile: _addFile,
+//       getFile: _getFile,
+//       getFiles: _getFiles,
+//       removeFile: _removeFile,
+//       updateFile: _updateFile,
+//       getNumberOfFiles: _getNumberOfFiles,
+//       getAllPaths: _getAllPaths
+//   };
+// })(files);
 
 // TEST: filesProxy
 // (function() {

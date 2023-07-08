@@ -1207,6 +1207,125 @@ case !dropped.isFolder && !draggable.isFolder:
     descendants: []
     draggableFile.path = "droppedFile's_parent.path + draggaleFile.path"
 ```
+
+pathの適切な変更のために:
+
+draggableItemがフォルダで、空フォルダでない場合は
+
+pathの変更を適用させるのが面倒。
+
+`src/public`
+`src/public/css/default.css`
+`src/public/js/script.js`
+`src/public/index.html`
+
+というファイルがあって、draggableItemが`src/public`の場合
+
+他のアイテムは
+
+`dropped-area-path` + `/public`
+`dropped-area-path` + `/public/css/default.css`
+`dropped-area-path` + `/public/js/script.js`
+`dropped-area-path` + `/public/index.html`
+
+となるはずである。
+
+```TypeScript
+const movingFile;
+const appendFile;
+
+if(!isFolderEmpty) {
+      const removedPath = movingFile.getPath();
+      const movingItemPathRoot = removedPath.split('/').pop();
+      const reorderFiles = baseFiles.filter(f => descendantPaths.find(d => d === f.getPath()) );
+      // reorderFiles.push(movingFile);
+      const restFiles = baseFiles.filter(f => descendantPaths.find(d => d !== f.getPath()) );
+
+      const updatedFiles: File[] = [
+        ...restFiles, 
+        ...reorderFiles.map(r => {
+          const movingPath = r.getPath().splice(removedPath.length - 1, r.getPath().length);
+          // TODO: 要修正。pathの変更方法。
+          r.setPath(appendPath + movingPath);
+          return r;
+        })
+      ];
+      console.log(updatedFiles);
+}
+```
+
+##### test codesandbox
+
+temporary
+
+```TypeScript
+const dummy = [
+  'public',
+  'public/default/index.html',
+  'public/default',
+  'public/js/index.js',
+  'public/js',
+  'public/css',
+  'public/css/index.css',
+  'public/default/extra',
+  'public/default/extra/index.html',
+  'public/default/extra/index.css',
+  'public/default/extra/index.js',
+  'src',
+  'src/default',
+  'src/default/index.html',
+  'src/js',
+  'src/js/index.js',
+  'src/css',
+  'src/css/index.css'
+];
+
+const descendantPaths = [
+  'public',
+  'public/default/index.html',
+  'public/default',
+  'public/js/index.js',
+  'public/js',
+  'public/css',
+  'public/css/index.css',
+  'public/default/extra',
+  'public/default/extra/index.html',
+  'public/default/extra/index.css',
+  'public/default/extra/index.js',
+];
+const appendPath = "root/";
+const removedPathArr: string[] = dummy[0].split('/');
+const movingItemPathRoot = removedPathArr.pop();
+const reorderFiles = dummy.filter(f => descendantPaths.find(d => d === f));
+// reorderFiles.push(movingFile);
+const restFiles = dummy.filter(f => descendantPaths.find(d => d !== f));
+
+console.log('movingPathRoot:');
+console.log(movingItemPathRoot);
+console.log('removedPathArr:');
+console.log(removedPathArr);
+console.log('removedPath.length: ');
+console.log(removedPathArr.length);
+
+const updatedFiles: string[] = [
+  ...restFiles, 
+  ...reorderFiles.map((r, index )=> {
+    console.log(`converting path. loop: ${index}`);
+    console.log(r);
+    const movingPath = r.split('/').slice(removedPathArr.length - 1, r.length).join('/');
+    // TODO: 要修正。pathの変更方法。
+    // r.setPath(appendPath + movingPath);
+
+    console.log("movingPath:");
+    console.log(movingPath);
+    
+    return appendPath + movingPath;
+  })
+];
+
+console.log(updatedFiles);
+```
+
 #### [React Tips] management of object array in state
 
 https://stackoverflow.com/questions/26253351/correct-modification-of-state-arrays-in-react-js
