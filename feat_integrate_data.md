@@ -1281,24 +1281,21 @@ const dummy = [
 ];
 
 const descendantPaths = [
-  'public',
   'public/default/index.html',
   'public/default',
-  'public/js/index.js',
-  'public/js',
-  'public/css',
-  'public/css/index.css',
   'public/default/extra',
   'public/default/extra/index.html',
   'public/default/extra/index.css',
   'public/default/extra/index.js',
 ];
+
 const appendPath = "root/";
-const removedPathArr: string[] = dummy[0].split('/');
+const removedPathArr: string[] = dummy[2].split('/');
 const movingItemPathRoot = removedPathArr.pop();
 const reorderFiles = dummy.filter(f => descendantPaths.find(d => d === f));
 // reorderFiles.push(movingFile);
-const restFiles = dummy.filter(f => descendantPaths.find(d => d !== f));
+const restFiles = dummy.filter(f => descendantPaths.find(d => d === f) === undefined ? true : false);
+
 
 console.log('movingPathRoot:');
 console.log(movingItemPathRoot);
@@ -1306,13 +1303,18 @@ console.log('removedPathArr:');
 console.log(removedPathArr);
 console.log('removedPath.length: ');
 console.log(removedPathArr.length);
+console.log('reorderFiles:');
+console.log(reorderFiles);
+console.log('restFiles:');
+console.log(restFiles);
+
 
 const updatedFiles: string[] = [
   ...restFiles, 
   ...reorderFiles.map((r, index )=> {
     console.log(`converting path. loop: ${index}`);
     console.log(r);
-    const movingPath = r.split('/').slice(removedPathArr.length - 1, r.length).join('/');
+    const movingPath = r.split('/').slice(removedPathArr.length + 1, r.length).join('/');
     // TODO: 要修正。pathの変更方法。
     // r.setPath(appendPath + movingPath);
 
