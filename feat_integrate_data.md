@@ -1025,23 +1025,23 @@ TEST: codesandbox
 import { File, files } from './files';
 import { generateTreeNodeData } from './generateTreeNode';
 import { iExplorer } from './explorerData';
-import { isNodeIncludedUnderExplorer, getNodeById } from "./helper";
+import { isNodeIncludedUnderExplorer, getNodeById, getParentNodeByChildId } from "./helper";
 
 
 
 const getAllDescendants = (_explorer: iExplorer): iExplorer[] => {
   const descendants: iExplorer[] = [];
 
-  function temp(exp: iExplorer) {
+  function getAllDescendantsRecursively(exp: iExplorer) {
       exp.items.forEach(item => {
           descendants.push(item);
           if(item.items.length) {
-              temp(item);
+              getAllDescendantsRecursively(item);
           }
       });
   };
 
-  temp(_explorer);
+  getAllDescendantsRecursively(_explorer);
 
   return descendants;
 };
@@ -1093,122 +1093,78 @@ const handleDeleteNode = (_explorer: iExplorer) => {
   return updatedFiles;
 };
 
-
+// TODO: 動作チェック
+// TODO: pathの変更が適切でない
+// TODO: files: File[]のすべてのパスは末尾に`/`をつけないこと
 const handleReorderNode = (droppedId: string, draggableId: string): void => {
+  
+  if(droppedId === draggableId) { return; }
 
-    if(droppedId === draggableId) { return; }
+  // Check if the dropped area is under dragging item
+  if(isNodeIncludedUnderExplorer(explorerData, droppedId, draggableId)){
+    return;
+  }
 
-    // Check if the dropped area is under dragging item
-    if(isNodeIncludedUnderExplorer(explorerData, droppedId, draggableId)){
-      return;
-    }
+  const movingItem: iExplorer = getNodeById(explorerData, draggableId);
+  const droppedArea: iExplorer = getNodeById(explorerData, droppedId);
+  const movingFile: File | undefined = baseFiles.find(b => b.getPath() === movingItem.path);
+  // NOTE: droppedAreaがfolderである場合とない場合の2通りに対処する。
+  const appendPath = (droppedArea.isFolder ? droppedArea.path : getParentNodeByChildId(explorerData, droppedArea.id).path) + '/';
 
-    const movingItem: iExplorer = getNodeById(explorerData, draggableId);
-    const droppedArea: iExplorer = getNodeById(explorerData, droppedId);
-    const movingFile: File | undefined = baseFiles.find(b => b.getPath() === movingItem.path);
-    const appendPath = droppedArea.isFolder ? droppedArea.path : /* getParentNodeById(droppedArea.id).path */;
+  if(movingFile === undefined) throw new Error("Something went wrong but File cannot be found by draggableId.");
 
-    if(movingFile === undefined) throw new Error("Something went wrong but File cannot be found by draggableId.");
+  console.log("[handleReorderNode] movingItem:");
+  console.log(movingItem);
+  console.log("[handleReorderNode] dropped area:");
+  console.log(droppedArea);
 
-    console.log("[handleReorderNode] movingItem:");
-    console.log(movingItem);
-    console.log("[handleReorderNode] dropped area:");
-    console.log(droppedArea);
+  // movingItemがフォルダである、空フォルダである、ファイルであるの３通りに対処する。
+  // 
+  // なんか空フォルダの場合とファイルの場合は区別しなくていいなぁ
+  if(movingItem.isFolder) {
+    // movingItemがフォルダである場合、そのフォルダ以下のすべてのアイテムのパスを変更する
 
-    // TODO: dropped areaがfolderの場合と、draggableがフォルダの場合の4通りを考慮しなくてはならない。現状droppedareaがどうかしか考えていない
-    if(movingItem.isFolder) {
+    const descendantPaths = getAllDescendants(movingItem).map(d => d.path) as string[];
+    const isFolderEmpty = descendantPaths.length ? false : true;
+
+    if(!isFolderEmpty) {
       console.log("[handleReorderNode] draggable item is folder");
+      // movingItemが空フォルダでない場合：
+      const reorderFiles = baseFiles.filter(f => descendantPaths.find(d => d === f.getPath()) );
+      reorderFiles.push(movingFile);
+      const restFiles = baseFiles.filter(f => descendantPaths.find(d => d !== f.getPath()) );
 
-      const descendantPaths = getAllDescendants(movingItem).map(d => d.path) as string[];
-      const isFolderEmpty = descendantPaths.length ? false : true;
-      if(!isFolderEmpty) {
-        const reorderFiles = baseFiles.filter(f => descendantPaths.find(d => d === f.getPath()) );
-        reorderFiles.push(movingFile);
-        const restFiles = baseFiles.filter(f => descendantPaths.find(d => d !== f.getPath()) );
-
-        return [...restFiles, ...reorderFiles.map(r => {
-          path: appendPath + r.getPath(),
-          language: r.getLanguage(),
-          value: r.getValue(),
-          isFolder: r.isFolder()
-        })]
-      }
+      const updatedFiles: File[] = [
+        ...restFiles, 
+        ...reorderFiles.map(r => {
+          r.setPath(appendPath + r.getPath().split('/').pop());
+          return r;
+        })
+      ];
+      console.log(updatedFiles);
     }
     else {
-      console.log("[handleReorderNode] draggable item is NOT folder");
-
+      // movingItemが空フォルダの場合：
+      console.log("[handleReorderNode] draggable item is empty folder");
+      const updatedFiles: File[] = baseFiles.map(f => {
+        if(f.getPath() === movingFile.getPath()){
+          f.setPath(appendPath + movingFile.getPath().split('/').pop());
+        }
+        return f;
+      });
+      console.log(updatedFiles);
     }
-    
-    
-    // if(droppedArea!.isFolder) {
-    //   // item dropped on Folder column
-    //   // get all descendant paths of movingItem. 
-    //   const descendantPaths: string[] = getAllDescendants(movingItem).map(d => d.path) as string[];
-    //   // 
-    //   // 例：たとえば、`public/js`を、`src`へドロップしたとする
-    //   // すると、`src/public/js`となる。
-    //   // それは`public/js`以下のすべてのアイテムが同様である
-    //   // つまり、
-    //   // path変更は`dropした場所のパス` + `対象パス`とすればよい
-
-    //   const reorderFiles = baseFiles.filter(f => descendantPaths.find(d => d === f.getPath()) );
-    //   // const restFiles = baseFiles.filter(f => descendantPaths.find(d => d !== f.getPath()) );
-    //   reorderFiles.push(movingItem);
-    //   const restFiles = baseFiles.filter(f => {
-
-    //     if(!descendantPaths.length) return movingItem.path !== f.getPath();
-    //     return descendantPaths.find(d => d === f.getPath()) !== undefined;
-    //   });
-    //   const updatedReorderItems = reorderFiles.map(r => {
-    //     return {
-    //       path: droppedArea.path + r.getPath(),
-    //       language: r.getLanguage(),
-    //       value: r.getValue(),
-    //       isFolder: r.isFolder()
-    //     };
-    //   });
-
-
-    //   // setBaseFiles([...restFiles, ...updatedReorderItems]);
-
-    //   console.log("[handleReorderNode] dropped on folder column");
-    //   console.log("[handleReorderNode] descendantPaths:");
-    //   console.log(descendantPaths);
-    //   console.log("[handleReorderNode] reorderFiles:");
-    //   reorderFiles.forEach(r => console.log(r.getPath()));
-    //   console.log("[handleReorderNode] restFiles:");
-    //   restFiles.forEach(r => console.log(r.getPath()));
-    //   console.log("[handleReorderNode] updatedFiles:");
-    //   console.log([...restFiles, ...updatedReorderItems]);
-    // }
-    // else {
-    //   // Item dropped on NOT folder column
-    //   const restFiles = baseFiles.filter(f => f.getPath() !== movingItem.path);
-    //   const movingFile = baseFiles.find(f => f.getPath() === movingItem.path);
-    //   // setBaseFiles([
-    //   //   ...restFiles, 
-    //   //   {
-    //   //     path: droppedArea.path + movingFile.path,
-    //   //     language: movingFile.language,
-    //   //     value: movingItem.value,
-    //   //     isFolder: movingItem.isFolder
-    //   //   }
-    //   // ]);
-    //   if(movingFile !== undefined) {
-    //     console.log("[handleReorderNode] dropped on NOT folder column");
-    //     console.log("[handleReorderNode] restFiles:");
-    //     restFiles.forEach(r => console.log(r.getPath()));
-    //     console.log("[handleReorderNode] updatedFiles:");
-    //     console.log([
-    //       ...restFiles, {
-    //             path: droppedArea.path + movingFile.getPath(),
-    //             language: movingFile.getLanguage(),
-    //             value: movingItem.getValue(),
-    //             isFolder: movingItem.isFolder()
-    //           }
-    //     ]);
-    //   }
-    // }
+  }
+  else {
+    console.log("[handleReorderNode] draggable item is NOT folder");
+    const updatedFiles: File[] = baseFiles.map(f => {
+      if(f.getPath() === movingFile.getPath()){
+        f.setPath(appendPath + movingFile.getPath().split('/').pop());
+      }
+      return f;
+    });
+    console.log(updatedFiles);
+  }
 };
 
   (function() {
@@ -1225,9 +1181,10 @@ const handleReorderNode = (droppedId: string, draggableId: string): void => {
     // updatedFiles.forEach(u => console.log(u.getPath()));
 
     // TEST: handleReorderNode(): drop "14" on "4"
-    // console.log(explorerData);
-    // handleReorderNode("4", "14");
+    console.log(explorerData);
+    handleReorderNode("5", "2");
   })();
+
 ```
 
 ```bash
