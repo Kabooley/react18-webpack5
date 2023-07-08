@@ -13,8 +13,10 @@ import closeButton from '../../assets/close-button.svg';
 
 interface iProps {
   explorer: iExplorer;
-  handleInsertNode: (folderId: string, item: string, isFolder: boolean) => void;
-  handleDeleteNode: (itemId: string, isFolder: boolean) => void;
+  // handleInsertNode: (folderId: string, item: string, isFolder: boolean) => void;
+  handleInsertNode: (requiredPath: string, isFolder: boolean) => void;
+  // handleDeleteNode: (itemId: string, isFolder: boolean) => void;
+  handleDeleteNode: (explorer: iExplorer) => void;
   handleReorderNode: (droppedId: string, draggableId: string) => void;
 };
 
@@ -43,9 +45,9 @@ const Tree = ({
     };
 
     const onAddItem = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      const v = e.currentTarget.value;
-      if (e.keyCode === 13 && v) {
-        handleInsertNode(explorer.id, v, showInput.isFolder);
+      const requiredPath = e.currentTarget.value;
+      if (e.keyCode === 13 && requiredPath) {
+        handleInsertNode(requiredPath, showInput.isFolder);
         setShowInput({ ...showInput, visible: false });
       }
     };
@@ -56,7 +58,8 @@ const Tree = ({
       isFolder: boolean
     ) => {
       e.stopPropagation();
-      handleDeleteNode(explorer.id, isFolder);
+      handleDeleteNode(explorer);
+      // handleDeleteNode(explorer.id, isFolder);
     };
 
     // DND

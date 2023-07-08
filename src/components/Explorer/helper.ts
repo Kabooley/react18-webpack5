@@ -107,6 +107,26 @@ export const isNodeIncludedUnderExplorer = (explorer: iExplorer, nodeId: string,
   return false;
 };
 
+/***
+ * Collect all descendant explorers of `_explorer`.
+ * Return array of them.
+ * */ 
+export const getAllDescendants = (_explorer: iExplorer): iExplorer[] => {
+  const descendants: iExplorer[] = [];
+
+  function getAllDescendantsRecursively(exp: iExplorer) {
+      exp.items.forEach(item => {
+          descendants.push(item);
+          if(item.items.length) {
+              getAllDescendantsRecursively(item);
+          }
+      });
+  };
+
+  getAllDescendantsRecursively(_explorer);
+
+  return descendants;
+};
 
 // DEPLICATED:
 // 

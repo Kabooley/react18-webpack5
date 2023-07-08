@@ -1017,13 +1017,13 @@ export default function FileExplorer() {
 
 #### Deletion and Reorder Functions
 
-TODO: テストが済んだらExplorer/index.tsxへ反映すること。
+NOTE: handleDeleteNode, handleReorderNodeテスト完了。アプリケーションへ反映済。
 
 TEST: codesandbox
 
 ```TypeScript
 import { File, files } from './files';
-import { generateTreeNodeData } from './generateTreeNode';
+import { generateTreeNodeData } from './generateTreeNodeData';
 import { iExplorer } from './explorerData';
 import { isNodeIncludedUnderExplorer, getNodeById, getParentNodeByChildId } from "./helper";
 
@@ -1093,9 +1093,6 @@ const handleDeleteNode = (_explorer: iExplorer) => {
   return updatedFiles;
 };
 
-// TODO: 動作チェック
-// TODO: pathの変更が適切でない
-// TODO: files: File[]のすべてのパスは末尾に`/`をつけないこと
 const handleReorderNode = (droppedId: string, draggableId: string): void => {
   
   if(droppedId === draggableId) { return; }
@@ -1119,29 +1116,35 @@ const handleReorderNode = (droppedId: string, draggableId: string): void => {
   console.log(droppedArea);
 
   // movingItemがフォルダである、空フォルダである、ファイルであるの３通りに対処する。
-  // 
+  //
   // なんか空フォルダの場合とファイルの場合は区別しなくていいなぁ
   if(movingItem.isFolder) {
     // movingItemがフォルダである場合、そのフォルダ以下のすべてのアイテムのパスを変更する
 
-    const descendantPaths = getAllDescendants(movingItem).map(d => d.path) as string[];
+
+    let descendantPaths = getAllDescendants(movingItem).map(d => d.path) as string[];
     const isFolderEmpty = descendantPaths.length ? false : true;
 
     if(!isFolderEmpty) {
       console.log("[handleReorderNode] draggable item is folder");
       // movingItemが空フォルダでない場合：
-      const reorderFiles = baseFiles.filter(f => descendantPaths.find(d => d === f.getPath()) );
-      reorderFiles.push(movingFile);
-      const restFiles = baseFiles.filter(f => descendantPaths.find(d => d !== f.getPath()) );
+
+      // By pushing item, no longer `descendantPaths` is not descendant paths.
+      // But keep the name in this scope.
+      descendantPaths.push(movingFile.getPath());
+      const movingFilePathArr = movingFile.getPath().split('/');
+      const reorderingFiles = baseFiles.filter(f => descendantPaths.find(d => d === f.getPath()) );
+      const restFiles = baseFiles.filter(f => descendantPaths.find(d => d === f.getPath()) === undefined ? true : false);
 
       const updatedFiles: File[] = [
         ...restFiles, 
-        ...reorderFiles.map(r => {
-          r.setPath(appendPath + r.getPath().split('/').pop());
+        ...reorderingFiles.map(r => {
+          r.setPath(appendPath + r.getPath().split('/').slice(movingFilePathArr.length - 1, r.getPath().length).join('/'));
           return r;
         })
       ];
-      console.log(updatedFiles);
+      console.log("updatedFiles: ");
+      updatedFiles.forEach(u => console.log(u.getPath()));
     }
     else {
       // movingItemが空フォルダの場合：
@@ -1152,7 +1155,9 @@ const handleReorderNode = (droppedId: string, draggableId: string): void => {
         }
         return f;
       });
-      console.log(updatedFiles);
+      
+      console.log("updatedFiles: ");
+      updatedFiles.forEach(u => console.log(u.getPath()));
     }
   }
   else {
@@ -1163,12 +1168,14 @@ const handleReorderNode = (droppedId: string, draggableId: string): void => {
       }
       return f;
     });
-    console.log(updatedFiles);
+    
+      console.log("updatedFiles: ");
+      updatedFiles.forEach(u => console.log(u.getPath()));
   }
 };
 
   (function() {
-    // console.log(explorerData);
+    console.log(explorerData);
     // const parent = getNodeById(explorerData, "12");
     // console.log("parent:");
     // console.log(parent);
@@ -1181,10 +1188,10 @@ const handleReorderNode = (droppedId: string, draggableId: string): void => {
     // updatedFiles.forEach(u => console.log(u.getPath()));
 
     // TEST: handleReorderNode(): drop "14" on "4"
-    console.log(explorerData);
-    handleReorderNode("5", "2");
+    baseFiles.forEach(b => console.log(b.getPath()));
+    handleReorderNode("8", "11");
   })();
-
+  
 ```
 
 ```bash
@@ -1230,103 +1237,6 @@ pathの変更を適用させるのが面倒。
 
 となるはずである。
 
-```TypeScript
-const movingFile;
-const appendFile;
-
-if(!isFolderEmpty) {
-      const removedPath = movingFile.getPath();
-      const movingItemPathRoot = removedPath.split('/').pop();
-      const reorderFiles = baseFiles.filter(f => descendantPaths.find(d => d === f.getPath()) );
-      // reorderFiles.push(movingFile);
-      const restFiles = baseFiles.filter(f => descendantPaths.find(d => d !== f.getPath()) );
-
-      const updatedFiles: File[] = [
-        ...restFiles, 
-        ...reorderFiles.map(r => {
-          const movingPath = r.getPath().splice(removedPath.length - 1, r.getPath().length);
-          // TODO: 要修正。pathの変更方法。
-          r.setPath(appendPath + movingPath);
-          return r;
-        })
-      ];
-      console.log(updatedFiles);
-}
-```
-
-##### test codesandbox
-
-temporary
-
-```TypeScript
-const dummy = [
-  'public',
-  'public/default/index.html',
-  'public/default',
-  'public/js/index.js',
-  'public/js',
-  'public/css',
-  'public/css/index.css',
-  'public/default/extra',
-  'public/default/extra/index.html',
-  'public/default/extra/index.css',
-  'public/default/extra/index.js',
-  'src',
-  'src/default',
-  'src/default/index.html',
-  'src/js',
-  'src/js/index.js',
-  'src/css',
-  'src/css/index.css'
-];
-
-const descendantPaths = [
-  'public/default/index.html',
-  'public/default',
-  'public/default/extra',
-  'public/default/extra/index.html',
-  'public/default/extra/index.css',
-  'public/default/extra/index.js',
-];
-
-const appendPath = "root/";
-const removedPathArr: string[] = dummy[2].split('/');
-const movingItemPathRoot = removedPathArr.pop();
-const reorderFiles = dummy.filter(f => descendantPaths.find(d => d === f));
-// reorderFiles.push(movingFile);
-const restFiles = dummy.filter(f => descendantPaths.find(d => d === f) === undefined ? true : false);
-
-
-console.log('movingPathRoot:');
-console.log(movingItemPathRoot);
-console.log('removedPathArr:');
-console.log(removedPathArr);
-console.log('removedPath.length: ');
-console.log(removedPathArr.length);
-console.log('reorderFiles:');
-console.log(reorderFiles);
-console.log('restFiles:');
-console.log(restFiles);
-
-
-const updatedFiles: string[] = [
-  ...restFiles, 
-  ...reorderFiles.map((r, index )=> {
-    console.log(`converting path. loop: ${index}`);
-    console.log(r);
-    const movingPath = r.split('/').slice(removedPathArr.length + 1, r.length).join('/');
-    // TODO: 要修正。pathの変更方法。
-    // r.setPath(appendPath + movingPath);
-
-    console.log("movingPath:");
-    console.log(movingPath);
-    
-    return appendPath + movingPath;
-  })
-];
-
-console.log(updatedFiles);
-```
 
 #### [React Tips] management of object array in state
 

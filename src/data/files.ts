@@ -13,7 +13,7 @@ interface iFileWithId extends iFile {
     id: number;
 }
 
-const files: iFile[] = [
+export const files: iFile[] = [
     {
       path: 'public',
       language: '',
