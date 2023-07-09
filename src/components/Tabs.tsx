@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { filesProxy } from '../data/files';
+// import { filesProxy } from '../data/files';
+import { files } from '../data/files';
 
 // NOTE: 無理やり型を合わせている。
 // 本来`child: Node`でclassNameというpropertyを持たないが、iJSXNode.classNameをoptionalにすることによって
@@ -20,7 +21,7 @@ interface iProps {
 const Tabs = ({ path, onChangeFile }: iProps) => {
     const _refTabArea = useRef<HTMLDivElement>(null);
     const _refTabs = useRef(
-        filesProxy.getFiles().map(() => React.createRef<HTMLSpanElement>())
+        files.map(() => React.createRef<HTMLSpanElement>())
     );
 
     const changeTab = (selectedTabNode: HTMLSpanElement, desiredFilePath: string) => {
@@ -41,7 +42,7 @@ const Tabs = ({ path, onChangeFile }: iProps) => {
     return (
         <div className="tabs-area" ref={_refTabArea}>
             {
-                filesProxy.getFiles().map((file, index) => {
+                files.map((file, index) => {
                     return (
                         <span 
                             className={file.path === path ? "tab active": "tab"}

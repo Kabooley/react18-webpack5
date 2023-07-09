@@ -5,7 +5,7 @@ import React from "react";
 import * as monaco from 'monaco-editor';
 import MonacoEditor from './Monaco/MonacoEditor';
 import Tabs from './Tabs';
-import { filesProxy } from "../data/files";
+import { files } from "../data/files";
 import type { iMessageBundleWorker } from "../worker/types";
 
 
@@ -36,7 +36,8 @@ const defaultFilePath = 'src/index.tsx';
 class MonacoContainer extends React.Component<iProps> {
     state = {
         value: "",
-        currentFilePath: filesProxy.getFile(defaultFilePath).path
+        // currentFilePath: filesProxy.getFile(defaultFilePath).path
+        currentFilePath: files.find(f => f.path === defaultFilePath) === undefined ? "" : files.find(f => f.path === defaultFilePath)!.path
     };
     bundleWorker: Worker | undefined;
 
@@ -122,7 +123,7 @@ class MonacoContainer extends React.Component<iProps> {
             <div className="monaco-container">
                 <Tabs path={this.state.currentFilePath!} onChangeFile={this.onChangeFile}/>
                 <MonacoEditor 
-                    files={filesProxy.getFiles()}
+                    files={files}
                     // 'react-typescript' as default path
                     path={this.state.currentFilePath!}   
                     onWillMount={this.onWillMount}

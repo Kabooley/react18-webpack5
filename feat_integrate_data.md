@@ -7,11 +7,7 @@ fileexplorerとmonaco-editorの両者の前提とするファイルデータを�
 
 ## やること
 
-- iExplorerとiFileの連携
-
-    どのexplorerがどのfileと同じものなのか現状区別できないため、
-    fileの情報変更とexplorerの情報変更がお互い反映させることができない。
-
+- explorerでdeleteとかしたらeditorとtabsにも反映できるようにすること
 
 このブランチと関係ないけど...
 
@@ -449,17 +445,6 @@ const cachedFiles = useMemo(filesProxy.getAllPaths(), [])
     </>
 ```
 
-React Contextを使うことにする。
-
-https://react.dev/learn/passing-data-deeply-with-context
-
-シンプルな使い方だと一方通行に値を渡すことになる。
-
-ネストされたコンポーネントがcontextの値を変更したい場合：
-
-https://stackoverflow.com/questions/41030361/how-to-update-react-context-from-inside-a-child-component
-
-値と関数を渡す。
 
 ## iFile[]とiExplorerは互いを識別できない
 
@@ -1237,6 +1222,35 @@ pathの変更を適用させるのが面倒。
 
 となるはずである。
 
+## Editor, Tabs, Explorerの統合
+
+filesのデータを基に成立するようになった。
+
+今、
+
+- Explorer/index.tsx: `state.baseFile: File[]`
+- Editor/index.tsx: `files`
+- Tabs.tsx: `files`
+
+で、現状fileへの変更はexplorer内部にしか反映されていない。
+
+（Explorer/index.tsx::handleDeleteNode, handleReorderNode, handleInsertNodeはstate.baseFileを変更するだけ）
+
+これをもっと上位へもっていき、filesの変更に伴って全体が再レンダリングされるように変更を。
+
+```bash
+Layout
+    Pane
+        PaneSection
+            FileExplorer
+    EditorSection
+        MonacoContainer
+            Tabs
+            MonacoEditor
+```
+
+このため、Layoutからfilesのデータをバケツリレーしていくことになる。
+
 
 #### [React Tips] management of object array in state
 
@@ -1252,3 +1266,29 @@ stateで配列を管理する場合：
 
 - state.arrayには常に新しい配列を与えよ。
 
+#### [React] Managing State
+
+https://react.dev/learn/managing-state
+
+Thingking about UI declaretively:
+
+- コンポーネントの見た目が異なる状態を区別すること
+- 何がそれらの状態を変更させるのか定義すること
+- `useState`を使って状態を表現すること
+- 非必須なstateを取り除くこと
+- stateにイベントハンドラを接続すること
+
+
+
+
+#### [React] Passing Data Deeply with Context
+
+https://react.dev/learn/passing-data-deeply-with-context
+
+シンプルな使い方だと一方通行に値を渡すことになる。
+
+ネストされたコンポーネントがcontextの値を変更したい場合：
+
+https://stackoverflow.com/questions/41030361/how-to-update-react-context-from-inside-a-child-component
+
+値と関数を渡す。
