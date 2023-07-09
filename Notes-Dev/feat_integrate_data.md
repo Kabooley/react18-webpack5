@@ -21,9 +21,6 @@ fileexplorerとmonaco-editorの両者の前提とするファイルデータを�
 - filesデータをマウント時にfilesProxy()が読取、データを管理しやすい形で扱うことにする。
 
 
-## TODOs
-
-- TODO: fileexplorer: dndしてdragIdとdropIdが同じ場合、dragしていたアイテムがexplorerから消える
 
 ## 情報収集
 
