@@ -6,16 +6,22 @@ import MainContainer from "./MainContainer";
 import NavigationSection from "./NavigationSection";
 import SplitPane from "./SplitPane";
 import Pane from "./PaneSection";
+import { FilesProvider } from "../context/FilesContext";
 
+/***
+ * FilesProvider provides `files` and its action `dispatch`.
+ * 
+ * 
+ * */ 
 const Layout = (): JSX.Element => {
 
-  // NOTE: temporary, manage bundledcode til app adopted react-redux.
+  // NOTE: temporary, manage bundledcode here.
+  // TODO: move this logic to reducer and context.
   const [bundledCode, setBundledCode] = useState<string>("");
 
   const onBundled = (code: string) => {
     setBundledCode(code);
   };
-  
   
   return (
     <>
@@ -23,10 +29,11 @@ const Layout = (): JSX.Element => {
       <MainContainer>
         <NavigationSection />
         <SplitPane>
-          <Pane />
-          {/* NOTE: props: onBundled and bundledCode are temporarily til react-redux. */}
-          <EditorSection onBundled={onBundled} />
-          <PreviewSection bundledCode={bundledCode} />
+          <FilesProvider>
+            <Pane />
+            <EditorSection onBundled={onBundled} />
+            <PreviewSection bundledCode={bundledCode} />
+          </FilesProvider>
         </SplitPane>
       </MainContainer>
     </>

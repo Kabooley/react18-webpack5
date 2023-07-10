@@ -6,12 +6,11 @@ import * as monaco from 'monaco-editor';
 import type * as Monaco from 'monaco-editor';
 import prettier from 'prettier';
 import parser from 'prettier/parser-babel';
-
-import willMountMonacoProcess from './monacoWillMountProcess';
 import viewStateFiles from '../../data/viewStates';
 import { getModelByPath } from '../../utils';
-import type { iFile } from '../../data/files';
-
+import type { iFile } from '../../data/types';
+// 使いたくない
+import willMountMonacoProcess from './monacoWillMountProcess';
 
 
 // @ts-ignore

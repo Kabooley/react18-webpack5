@@ -1,41 +1,50 @@
 import React, { useState } from "react";
 import Tree from "./Tree";
-import { isNodeIncludedUnderExplorer, getNodeById, getAllDescendants, getParentNodeByChildId } from "./helper";
-import type { iExplorer } from "../../data/explorerData";
-import { files, File } from '../../data/files';
-import type { iFile } from '../../data/files';
+import { isNodeIncludedUnderExplorer, getNodeById, getAllDescendants, getParentNodeByChildId } from "./utils";
+import type { iFile, iExplorer } from '../../data/types';
+// import { files, File } from '../../data/files';
 import { generateTreeNodeData } from "./generateTree";
 import { getFileLanguage } from '../../utils';
 
+import { useFiles, useFilesDispatch } from "../../context/FilesContext";
+import { Types } from "../../context/FilesContext";
+
 
 export default function FileExplorer() {
-  const [baseFiles, setBaseFiles] = useState<File[]>(files.map((f: iFile) => new File(f.path, f.value, f.language, f.isFolder)));
+  // const [baseFiles, setBaseFiles] = useState<File[]>(files.map((f: iFile) => new File(f.path, f.value, f.language, f.isFolder)));
 
-  // 毎レンダリングで必ずbaseFilesを元にexplorerDataは更新される
-  // const explorerData = generateTreeNodeData(getFilesPaths(baseFiles), "root");
-  const explorerData = generateTreeNodeData(baseFiles, "root");
+  const files = useFiles();
+  const filesDispatch = useFilesDispatch();
+  const explorerData = generateTreeNodeData(files, "root");
 
   /***
    * 
    * */ 
   const handleInsertNode = (requiredPath: string, isFolder: boolean): void => {
-    // Make sure requiredPath is already exist.
-    if(baseFiles.map(f => f.getPath()).find(p => p === requiredPath)) {
-        throw new Error("[handleInsertNode] The required path is already exist");
-    }
-    const language = isFolder ? "" : getFileLanguage(requiredPath);
-    setBaseFiles([
-      ...baseFiles,
-      new File(
-        requiredPath, "", 
-        language ? "" : (language === undefined ? "" : language), 
-        isFolder
-      )
-    ]);
+    // // Make sure requiredPath is already exist.
+    // if(baseFiles.map(f => f.getPath()).find(p => p === requiredPath)) {
+    //     throw new Error("[handleInsertNode] The required path is already exist");
+    // }
+    // const language = isFolder ? "" : getFileLanguage(requiredPath);
+    // setBaseFiles([
+    //   ...baseFiles,
+    //   new File(
+    //     requiredPath, "", 
+    //     language ? "" : (language === undefined ? "" : language), 
+    //     isFolder
+    //   )
+    // ]);
+    filesDispatch({
+      type: Types.Add,
+      payload: {
+        requiredPath: requiredPath,
+        isFolder: isFolder
+      }
+    });
 };
 
   /***
-   * 
+   * TODO: dispatch({type: Types.DeleteMultiple})するために、削除対象となるpathの配列を返すようにすること
    * */ 
   const handleDeleteNode = (_explorer: iExplorer) => {
     const isDeletionTargetFolder = _explorer.isFolder;
@@ -51,7 +60,7 @@ export default function FileExplorer() {
     console.log('[handleDeleteNode] deletionTartgetPathArr');
     console.log(deletionTargetPathArr);
   
-    const updatedFiles: File[] = baseFiles.filter(f => {
+    const updatedFiles: File[] = files.filter(f => {
         // In case deletion target is folder and f is also folder.
         if(f.isFolder() && isDeletionTargetFolder) {
           const comparandPathArr = f.getPath().split('/');

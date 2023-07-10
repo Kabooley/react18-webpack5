@@ -2,7 +2,7 @@
  * 
  * ************************************************/ 
 import React, { useState } from "react";
-import type { iExplorer } from "../../data/explorerData";
+import type { iExplorer } from "../../data/types";
 import DragNDrop from './DragNDrop';
 
 // Icons

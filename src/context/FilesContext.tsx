@@ -1,16 +1,3 @@
-import "./styles.css";
-import React, { createContext, useContext, useReducer, Dispatch } from 'react';
-import { files, File } from './files';
-
-export default function App() {
-  return (
-    <div className="App">
-      <h1>Hello CodeSandbox</h1>
-      <h2>Start editing to see some magic happen!</h2>
-    </div>
-  );
-};
-
 /*** 
  * FilesContext
  * 
@@ -20,13 +7,19 @@ export default function App() {
  * https://dev.to/elisealcala/react-context-with-usereducer-and-typescript-4obm
  * 
  * */ 
+import React, { createContext, useContext, useReducer, Dispatch } from 'react';
+import { files, File } from '../data/files';
+import type { iExplorer } from '../data/types';
+import { getFileLanguage } from "../utils";
 
 // --- Types ---
 
 export enum Types {
   Reorder = 'REORDER_FILE',     // 名称が適切でないかも。結局のところ特定のファイルのパスを変更するだけだから。
   Delete = 'DELETE_FILE',
+  DeleteMultiple = 'DELETE_MULTIPLE_FILES',
   Add = 'ADD_FILE',
+  ChangeFile = 'CHANGE_FILE'
 };
 
 type ActionMap<M extends { [index: string]: any }> = {
@@ -47,11 +40,16 @@ type iFilesActionPayload = {
     isFolder: boolean;
   },
   [Types.Delete]: {
-    deletionExplorer: iExplorer 
+    requiredPath: string; 
+  },
+  [Types.DeleteMultiple]: {
+    requiredPaths: string[]; 
   },
   [Types.Reorder]: {
-    path: string;
+    droppedId: string;
+    draggableId: string;
     isFolder: boolean;
+    entireTree: iExplorer;
   }
 };
 
@@ -65,11 +63,12 @@ const FilesDispatchContext = createContext<Dispatch<iFilesActions>>(() => null);
 
 function filesReducer(files: File[], action: iFilesActions) {
   switch (action.type) {
+    // Add single file.
     case 'ADD_FILE': {
       const { requiredPath, isFolder } = action.payload;
           // Make sure requiredPath is already exist.
-        if(files.map(f => f.getPath()).find(p => p === requiredPath)) {
-          throw new Error("[ADD_FILE] The required path is already exist");
+      if(files.map(f => f.getPath()).find(p => p === requiredPath)) {
+        throw new Error("[ADD_FILE] The required path is already exist");
       }
       const language = isFolder ? "" : getFileLanguage(requiredPath);
       return [
@@ -81,55 +80,18 @@ function filesReducer(files: File[], action: iFilesActions) {
         )
       ];
     }
-    // Explorerからactionを受け取らないという前提のもと
-    // Explorerデータを取得する
+    // Delete single File
     case 'DELETE_FILE': {
-      const { deletionExplorer } = action.payload;
-      const isDeletionTargetFolder = deletionExplorer.isFolder;
-      const descendantPaths: string[] = getAllDescendants(deletionExplorer).map(d => d.path) as string[];
-    
-      // DEBUG:
-      console.log('[DELETE_FILE] descendants:');
-      console.log(descendantPaths);
-    
-      const deletionTargetPathArr = deletionExplorer.path.split('/');
-    
-      // DEBUG:
-      console.log('[DELETE_FILE] deletionTartgetPathArr');
-      console.log(deletionTargetPathArr);
-    
+      const { requiredPath } = action.payload;
+      const updatedFiles: File[] = files.filter(f => f.getPath() !== requiredPath);
+      return [...updatedFiles];
+    }
+    // Delete more than one file.
+    case 'DELETE_MULTIPLE_FILES' : {
+      const { requiredPaths } = action.payload;
       const updatedFiles: File[] = files.filter(f => {
-          // In case deletion target is folder and f is also folder.
-          if(f.isFolder() && isDeletionTargetFolder) {
-            const comparandPathArr = f.getPath().split('/');
-            if(deletionTargetPathArr.length > comparandPathArr.length) return true;
-            
-            
-            let completeMatch: boolean = true;
-            deletionTargetPathArr.forEach((p, index) => {
-              completeMatch = (p === comparandPathArr[index]) && completeMatch;
-            });
-    
-            // DEBUG:
-            console.log(comparandPathArr);
-            console.log(completeMatch);
-    
-            return completeMatch ? false : true;
-          }
-          // In case deletion target is a file, not any folder.
-          else if(!descendantPaths.length){
-            return f.getPath() !== deletionExplorer.path; 
-          }
-          // In case deletion target is folder but f is not folder.
-          return descendantPaths.find(d => d === f.getPath())
-            ? false : true;
+        return requiredPaths.find(r => r === f.getPath()) === undefined ? true : false;
       });
-    
-      
-      // DEBUG:
-      console.log("[DELETE_FILE] updatedFiles: ");
-      updatedFiles.forEach(u => console.log(u.getPath()));
-
       return [...updatedFiles];
     }
     // Explorerからactionを受け取らないという前提のもと
@@ -147,7 +109,7 @@ function filesReducer(files: File[], action: iFilesActions) {
 
 const initialFiles: File[] = files.map(f => new File(f.path, f.value, f.language, f.isFolder));
 
-// 
+
 // https://stackoverflow.com/a/57253387/22007575
 export const FilesProvider = ({ children }: { children: React.ReactNode }) => {
   const [files, dispatch] = useReducer(

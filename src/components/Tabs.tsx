@@ -1,5 +1,4 @@
 import React, { useRef } from 'react';
-// import { filesProxy } from '../data/files';
 import { files } from '../data/files';
 
 // NOTE: 無理やり型を合わせている。
