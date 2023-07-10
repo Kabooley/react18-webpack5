@@ -134,3 +134,10 @@ function tasksReducer(taks, action) {
 - Reducerは純粋でなければなりません。 
 - 各アクションは、単一のユーザー インタラクションを表します。 
 - 変化するスタイルでリデューサーを作成したい場合は、Immer を使用してください。
+
+
+## React.useRedcuer + TypeScript
+
+ややこしい。
+
+- ``
