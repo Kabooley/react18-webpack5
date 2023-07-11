@@ -9,17 +9,16 @@
  * */ 
 import React, { createContext, useContext, useReducer, Dispatch } from 'react';
 import { files, File } from '../data/files';
-import type { iExplorer } from '../data/types';
 import { getFileLanguage } from "../utils";
 
 // --- Types ---
 
 export enum Types {
-  Reorder = 'REORDER_FILE',     // 名称が適切でないかも。結局のところ特定のファイルのパスを変更するだけだから。
   Delete = 'DELETE_FILE',
   DeleteMultiple = 'DELETE_MULTIPLE_FILES',
   Add = 'ADD_FILE',
-  ChangeFile = 'CHANGE_FILE'
+  Change = 'CHANGE_FILE',
+  ChangeMultiple = 'CHANGE_MULTIPLE_FILES',
 };
 
 type ActionMap<M extends { [index: string]: any }> = {
@@ -33,7 +32,6 @@ type ActionMap<M extends { [index: string]: any }> = {
       }
 };
 
-// NOTE: 内容はひと先ずである！
 type iFilesActionPayload = {
   [Types.Add]: {
     requiredPath: string;
@@ -45,12 +43,20 @@ type iFilesActionPayload = {
   [Types.DeleteMultiple]: {
     requiredPaths: string[]; 
   },
-  [Types.Reorder]: {
-    droppedId: string;
-    draggableId: string;
-    isFolder: boolean;
-    entireTree: iExplorer;
-  }
+  [Types.Change]: {
+    targetFilePath: string;
+    changeProp: {
+      newPath?: string;
+      newValue?: string;
+    }
+  },
+  [Types.ChangeMultiple]: {
+    targetFilePath: string;
+    changeProp: {
+      newPath?: string;
+      newValue?: string;
+    }
+  }[],
 };
 
 type iFilesActions = ActionMap<iFilesActionPayload>[keyof ActionMap<iFilesActionPayload>];
@@ -94,11 +100,32 @@ function filesReducer(files: File[], action: iFilesActions) {
       });
       return [...updatedFiles];
     }
-    // Explorerからactionを受け取らないという前提のもと
-    // Explorerデータを取得する
-    case 'REORDER_FILE': {
-      // TODO: Define what to do
-      return [...files];
+    // Change file property.
+    case 'CHANGE_FILE': {
+      const { targetFilePath, changeProp } = action.payload;
+      const updatedFiles = files.map(f => {
+        if(f.getPath() === targetFilePath) {
+          (changeProp.newPath !== undefined) && f.setPath(changeProp.newPath);
+          (changeProp.newValue !== undefined) && f.setValue(changeProp.newValue);
+          return f;
+        }
+        else return f;
+      })
+      return [...updatedFiles];
+    }
+    // Change multiple files property.
+    case 'CHANGE_MULTIPLE_FILES': {
+      const requests = action.payload;
+      const updatedFiles = files.map(f => {
+        const request = requests.find(r => f.getPath() === r.targetFilePath);
+        if(request !== undefined) {
+          (request.changeProp.newPath !== undefined) && f.setPath(request.changeProp.newPath);
+          (request.changeProp.newValue !== undefined) && f.setValue(request.changeProp.newValue);
+          return f;
+        }
+        else return f;
+      })
+      return [...updatedFiles];
     }
     default: {
       throw Error('Unknown action: ' + action.type);

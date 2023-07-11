@@ -2,24 +2,56 @@
 
 fileexplorerとmonaco-editorの両者の前提とするファイルデータを統合する。
 
-- FileExplorerのファイルを(ダブル)クリックでmonaco-editorで表示する
-- monaco-editorの前提ファイルをexplorerDataへ変換する処理
+`files: File[]`を基に、FileExplorer, monaco-editorのmodel、tabsが生成され、
+
+FileExplorer, monaco-editor, tabsの変更はfilesへ反映され、
+
+全体が変更された`files`を基に再レンダリングされるようにする 
 
 ## やること
 
-- explorerでdeleteとかしたらeditorとtabsにも反映できるようにすること
+- 次の通り`files: File[]`を基にレンダリングされるように各コンポーネントの状態管理を`files`に基づかせる。
+
+```bash
+src/data/files.ts::files
+  --> src/context/FilesContext.tsx::files:File[]
+  # files.map(f => new File(f))
+    --> src/components/Explorer/index.tsx::explorerData:iExplorer
+    # const files: File[] = useFiles()
+    # const explorerData: iExplorer = generateTreeNodeData(files);
+    # Render FileExplorer Tree
+
+    --> src/components/MonacoContainer.tsx
+    # const files: File[] = useFiles()
+      --> src/components/Editor/MonacoEditor.tsx
+      # props.files
+      # generate models according to props.files
+      # Render model
+
+    --> src/components/Tabs
+    # const files: File[] = useFiles()
+
+``` 
+
+- FileExplorerへReducer+Contextを導入したので完全に機能しているのかのテスト
+- Tabs.tsxが`files`を直接インポートしているのでこれをcontext経由にさせる
+- MonacoContainer.tsxが`files`を直接インポートしているのでこれをcontext経由にさせる
+- tabsでの変更のfilesへの反映
+- monaco-editorでの変更のfilesへの反映
 
 このブランチと関係ないけど...
 
 - tabsのうちエディタに表示中のファイルのタブは見えるところに表示させる
 - tabsのdnd
 - fileexplorerでdrop不可能領域はホバー時点でわかるようにする
+- fileExplorerで開いているフォルダは開いているのが見た目でわかるようにする
+- fileExplorerでアイテムを削除するときに確認をとる。（モーダル表示？）
 
 ## やったこと
 
-- filesデータはｵﾌﾞｼﾞｪｸﾄ型ではなく配列にした
-- filesデータをマウント時にfilesProxy()が読取、データを管理しやすい形で扱うことにする。
-
+- filesを基にFileExplorer, monaco-editor, tabsが生成されるようにした
+  Reducer + Context
+- FileExplorerでの変更がfilesへ反映されるようにできたはず
 
 
 ## 情報収集
