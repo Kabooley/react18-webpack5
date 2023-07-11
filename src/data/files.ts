@@ -74,13 +74,13 @@ export const files: iFile[] = [
       isFolder: false
   },
   {
-    path: 'src/temporary/',
+    path: 'src/temporary',
     language: '',
     value: '',
     isFolder: true
   },
   {
-    path: 'temporary/',
+    path: 'temporary',
     language: '',
     value: '',
     isFolder: true

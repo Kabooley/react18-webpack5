@@ -68,6 +68,11 @@ const FilesContext = createContext<File[]>([]);
 const FilesDispatchContext = createContext<Dispatch<iFilesActions>>(() => null);
 
 function filesReducer(files: File[], action: iFilesActions) {
+        
+  // DEBUG:
+  console.log(action.type);
+  console.log(files.map(f => f.getPath()));
+
   switch (action.type) {
     // Add single file.
     case 'ADD_FILE': {
@@ -90,6 +95,9 @@ function filesReducer(files: File[], action: iFilesActions) {
     case 'DELETE_FILE': {
       const { requiredPath } = action.payload;
       const updatedFiles: File[] = files.filter(f => f.getPath() !== requiredPath);
+      // DEBUG:
+      console.log(updatedFiles);
+
       return [...updatedFiles];
     }
     // Delete more than one file.
@@ -98,6 +106,10 @@ function filesReducer(files: File[], action: iFilesActions) {
       const updatedFiles: File[] = files.filter(f => {
         return requiredPaths.find(r => r === f.getPath()) === undefined ? true : false;
       });
+
+            // DEBUG:
+      console.log(updatedFiles);
+      
       return [...updatedFiles];
     }
     // Change file property.
@@ -110,7 +122,11 @@ function filesReducer(files: File[], action: iFilesActions) {
           return f;
         }
         else return f;
-      })
+      });
+
+            // DEBUG:
+      console.log(updatedFiles);
+      
       return [...updatedFiles];
     }
     // Change multiple files property.
@@ -124,7 +140,11 @@ function filesReducer(files: File[], action: iFilesActions) {
           return f;
         }
         else return f;
-      })
+      });
+
+            // DEBUG:
+      console.log(updatedFiles);
+      
       return [...updatedFiles];
     }
     default: {

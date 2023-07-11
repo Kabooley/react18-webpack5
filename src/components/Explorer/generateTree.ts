@@ -23,7 +23,7 @@ export const generateTreeNodeData = (
         name: root,
         isFolder: true,
         items: [],
-        path: "/"
+        path: ""
     };
 
 
@@ -121,6 +121,15 @@ export const generateTreeNodeData = (
         const pathLen = pathArr.length;
         let current: iExplorer = rootNode; 
     
+        // DEBUG:
+        console.log("[generateTreeNode] generating empty folder");
+        console.log("entry");
+        console.log(entry);
+        console.log("pathArr:");
+        console.log(pathArr);
+        console.log("current:");
+        console.log(current);
+
         pathArr.forEach( (name, index) => {
 
             let child: iExplorer | undefined = current.items.find(item => item.name === name);
@@ -129,12 +138,14 @@ export const generateTreeNodeData = (
                 currentKey = currentKey += 1;
                 child = {
                     id: `${currentKey}`,
-                    name: pathArr[index - 1],
+                    name: !index ? pathArr[0] : pathArr[index - 1],
                     isFolder: true,             // As this is folder.
                     items: [],
                     path: pathArr.slice(0, index + 1).join('/')
                 };
                 current.items.push(child);
+                console.log("child:");
+                console.log(child);
             }
             else if( child === undefined ){
                 return;
@@ -145,6 +156,10 @@ export const generateTreeNodeData = (
             }
         });
     });
+
+    // DEBUG:
+    console.log("[generateTreeNode] generated:");
+    console.log(rootNode);
 
     return rootNode;
 };

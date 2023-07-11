@@ -1321,3 +1321,36 @@ https://react.dev/learn/passing-data-deeply-with-context
 https://stackoverflow.com/questions/41030361/how-to-update-react-context-from-inside-a-child-component
 
 値と関数を渡す。
+
+
+## TEST FilesContext.tsx
+
+と関連処理。
+
+#### ADD_FILE
+
+問題なし。ただし、generateTreeNode要修正。
+
+問題：
+
+filesのうち、isFolder.trueかつtree上だと空フォルダになる要素のfileは
+
+そのpathの末尾にスラッシュがあることを前提としてgenerateTreeNodeで処理されていた。
+
+path末尾に`/`は禁止とするので
+
+これを修正する。
+
+
+#### CHANGE_FILE, CHANGE_MULTIPLE_FILE
+
+問題：
+
+`root`へDNDすると、dndしたfileのpathの先頭に`/`がつくのでtree全体がおかしくなる
+
+
+#### DELETE_FILE, DELETE_MULTIPLE_FILE
+
+問題：
+
+`root/src/react`フォルダを削除したら、関係ない`root/temporary`まで削除された。

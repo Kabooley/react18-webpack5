@@ -44,8 +44,8 @@ const Tree = ({
       });
     };
 
-    const onAddItem = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      const requiredPath = e.currentTarget.value;
+    const onAddItem = (e: React.KeyboardEvent<HTMLInputElement>, addTo: string) => {
+      const requiredPath = addTo.length ? addTo + '/' + e.currentTarget.value : e.currentTarget.value;
       if (e.keyCode === 13 && requiredPath) {
         handleInsertNode(requiredPath, showInput.isFolder);
         setShowInput({ ...showInput, visible: false });
@@ -166,7 +166,7 @@ const Tree = ({
                 <input
                   type="text"
                   className="inputContainer__input"
-                  onKeyDown={onAddItem}
+                  onKeyDown={(e) => onAddItem(e, explorer.path)}
                   onBlur={() => setShowInput({ ...showInput, visible: false })}
                   autoFocus
                 />
