@@ -82,7 +82,7 @@ function filesReducer(files: File[], action: iFilesActions) {
         throw new Error("[ADD_FILE] The required path is already exist");
       }
       const language = isFolder ? "" : getFileLanguage(requiredPath);
-      return [
+      const updatedFiles = [
         ...files,
         new File(
           requiredPath, "", 
@@ -90,6 +90,18 @@ function filesReducer(files: File[], action: iFilesActions) {
           isFolder
         )
       ];
+
+      console.log("[ADD_FILE] updated files:");
+      console.log(updatedFiles);
+      return updatedFiles;
+      // return [
+      //   ...files,
+      //   new File(
+      //     requiredPath, "", 
+      //     language ? "" : (language === undefined ? "" : language), 
+      //     isFolder
+      //   )
+      // ];
     }
     // Delete single File
     case 'DELETE_FILE': {

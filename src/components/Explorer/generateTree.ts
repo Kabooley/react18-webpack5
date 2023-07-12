@@ -138,7 +138,7 @@ export const generateTreeNodeData = (
                 currentKey = currentKey += 1;
                 child = {
                     id: `${currentKey}`,
-                    name: !index ? pathArr[0] : pathArr[index - 1],
+                    name: !index ? pathArr[0] : pathArr[index],
                     isFolder: true,             // As this is folder.
                     items: [],
                     path: pathArr.slice(0, index + 1).join('/')

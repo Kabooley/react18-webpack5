@@ -1329,17 +1329,62 @@ https://stackoverflow.com/questions/41030361/how-to-update-react-context-from-in
 
 #### ADD_FILE
 
-問題なし。ただし、generateTreeNode要修正。
+問題なし。
 
-問題：
+ただし2件について要修正：
 
-filesのうち、isFolder.trueかつtree上だと空フォルダになる要素のfileは
+- generateTreeNode.tsxで新規アイテム追加するとexplorer.nameがおかしくなる件。
+- ユーザが悪意のある文字を含ませる可能性があるため入力内容が有効かチェックする機能が必要。
 
-そのpathの末尾にスラッシュがあることを前提としてgenerateTreeNodeで処理されていた。
+修正１：
 
-path末尾に`/`は禁止とするので
+```diff
+// generateTreeNode.tsx
+entries.forEach((entry: File) => {
 
-これを修正する。
+    if(!entry.isFolder()) return;
+
+    const pathArr = entry.getPath().split('/');
+    const pathLen = pathArr.length;
+    let current: iExplorer = rootNode; 
+
+    pathArr.forEach( (name, index) => {
+
+        let child: iExplorer | undefined = current.items.find(item => item.name === name);
+
+        if(child === undefined && index === ( pathLen - 1)){
+            currentKey = currentKey += 1;
+            child = {
+                id: `${currentKey}`,
+-               name: !index ? pathArr[0] : pathArr[index - 1],
++               name: !index ? pathArr[0] : pathArr[index],
+                isFolder: true,             // As this is folder.
+                items: [],
+                path: pathArr.slice(0, index + 1).join('/')
+            };
+            current.items.push(child);
+        }
+        else if( child === undefined ){
+            return;
+        }
+        else
+        {
+            current = child;
+        }
+    });
+```
+
+修正２：
+
+- 半角英数字のみ使用可能
+- _, -, .の記号のみ使用可能
+
+snackはどうやっているのか調べる
+
+```TypeScript
+// src/utils/isInputPathValid.ts
+
+```
 
 
 #### CHANGE_FILE, CHANGE_MULTIPLE_FILE
