@@ -1399,3 +1399,5 @@ snackはどうやっているのか調べる
 問題：
 
 `root/src/react`フォルダを削除したら、関係ない`root/temporary`まで削除された。
+
+file name validation `/^([A-Za-z0-9\-\_\.]+)\.([a-zA-Z0-9]{1,9})$/gm`
