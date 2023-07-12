@@ -1,5 +1,6 @@
 import type { iFile } from './types';
-
+// import { isFilenameValid } from '../utils/isFilenameValid';
+import { getFileLanguage } from '../utils';
 
 export const files: iFile[] = [
   {
@@ -103,9 +104,11 @@ export class File {
 
   setPath(path: string) {
       // TODO: make sure path is not include non exist folder
+      // if(isFilenameValid(path)){
       if(this._isPathValid(path)){
           this._path = path;
-          // TODO: change this._language according to path files extension.
+          const language = getFileLanguage(path);
+          this._language = language !== undefined ? language : "";
       }
   };
 

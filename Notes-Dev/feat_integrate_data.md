@@ -38,6 +38,10 @@ src/data/files.ts::files
 - MonacoContainer.tsxが`files`を直接インポートしているのでこれをcontext経由にさせる
 - tabsでの変更のfilesへの反映
 - monaco-editorでの変更のfilesへの反映
+- Explorerで開いているフォルダは開いていることがわかる見た目にする
+- Explorerで変更が起こったら「整列」させる機能（新規フォルダ追加とか）
+- File.setPath()などするとき、既存のpathと被っていないか検査する
+- File.setPath()などするとき、path文字列が無効な文字列でないか検査する
 
 このブランチと関係ないけど...
 
@@ -202,370 +206,7 @@ name: "bootstrap.min.css"
 
 3. ファイルノードを作る
 
-```TypeScript
-//create the files
-entries.forEach(pathStr => {
 
-    const pathArr = pathStr.split('/');
-    const pathLen = pathArr.length;
-    let current = rootNode; 
-
-    // path配列の要素が一つだけなら問答無用でファイルノードとする
-    if(pathLen === 1){
-
-        let name = pathArr[0];
-        currentKey = currentKey += 1;
-        let node = new TreeNode( `${currentKey}`, name, false,  current );
-        current.children.push(node);
-        return;
-    }  
-
-    
-    // Loop through the path to add files
-    pathArr.forEach( (name, index) => {
-
-        // If the child node doesn't exist, create it
-        let child = current.children.find(el => el.name === name);
-
-        // childが未定義（TreeNode未生成）かつpath配列の一番最後なら
-        // fileノードを生成する
-        if(child === undefined && index === ( pathLen - 1)){
-
-            currentKey = currentKey += 1;
-            child = new TreeNode( `${currentKey}`, name, false,  current );
-            current.children.push(child);
-        }
-        else if( child === undefined ){
-            return;
-        }
-        else
-        {
-            // make child the current tree node
-            current = child;
-        }
-    });
-});
-```
-
-という感じでそのまま流用できそうである。
-
-## filesデータとeditor, explorerの連携
-
-考えうる関連処理：
-
-- explorerでファイルを移動など変更を行った場合に、filesデータをそれに合わせて更新
-- 
-
-```TypeScript
-export const files: iFiles = {
-    'javascript': {
-        path: '/main.js',
-        language: 'javascript',
-        value: `var salute = "salute!!";`
-    },
-    'typescript': {
-        path: '/main.ts',
-        language: 'typescript',
-        value: `const jungleBeats: string = "Holla at me, boo";`
-    },
-    // ...
-}
-```
-
-上記のようなオブジェクトから`path`の情報だけを抜き取る
-
-同時にfilesのデータを見直す。
-
-```TypeScript
-interface iFile {
-    path: string;
-    language: string;
-    value: string;
-};
-
-const files: iFiles[] = [
-    {
-        path: 'src/index.js',
-        language: 'javascript',
-        value: `var salute = "salute!!";`
-    },
-    {
-        path: 'src/index.ts',
-        language: 'typescript',
-        value: `const jungleBeats: string = "Holla at me, boo";`
-    },
-];
-```
-```TypeScript
-const collectPathFromFiles = (entries: iFiles[]) => {
-    return entries.map(file => file.path);
-};
-
-// 
-```
-
-#### filesデータの更新
-
-TODO: filesのデータ型を`iFiles`のオブジェクトから`File[]`へ変更したいが、それにあたって障害はあるか？確認、修正。
-
-fileデータはクラスにするべきか？
-
-マウント時に`files`から`File[]`を生成する。
-
-filesを直接使わないのは、File各々にメソッドを持たせたかったから...
-
-とはいえclassインスタンスを生成するタイミングがわからん。
-
-参考サイトを確認してみよう。
-
-```TypeScript
-class File {
-    constructor(
-        private _path: string,
-        private _language: string,
-        private _value: string
-    ){};
-
-    get path() {
-        return this._path;
-    };
-
-    get language() {
-        return this._language;
-    };
-
-    get value() {
-        return this._value;
-    };
-
-    // // 必須ではないけどあったら便利かも
-    // get name() {
-    //     // 正規表現を使ってpathの「ファイル名.拡張子」部分を返す
-    // };
-
-    set updatePath(p: string) {
-        this._path = p;
-    };
-
-    set changeLanguage(l: string) {
-        this._language = l;
-    };
-
-    set updateValue(v: string) {
-        this._value = v;
-    };
-};
-
-```
-おさらい：monacoでのfilesの使われ方：
-
-```TypeScript
-// MonacoEditor.tsx
-// 
-// modelの生成には必要だけど、stateとかで管理する必要はない
-const { files, ...} = props;
-Object.keys(files).forEach(path => {
-    _initializeFiles(files[path]);
-    // file情報を基にmodelを生成する
-});
-
-// Tabs.tsx
-return (
-    // ...
-    {            
-        Object.keys(files).map((key, index) => {
-            const file: iFile = files[key];
-                return (
-                    <span 
-                        className={file.path === path ? "tab active": "tab"}
-                        ref={_refTabs.current[index]}
-                        onClick={() => changeTab(_refTabs.current[index].current!, file.path)}
-                        key={index}
-                    >
-                        {file.path}
-                    </span>
-                );
-            })
-        }
-    )}
-)
-```
-と考えるとfilesは別にclassじゃなくてもいいなぁ
-
-```TypeScript
-const filesProxy = (function(initializeData: iFile[]) {
-    // 参照を持たせないため
-    const _files: iFile[] = initializeData.map(d => d);
-
-    const addFile = (newFile: iFile) => {
-
-    };
-
-
-    return {
-        addFile, 
-    }
-})(initializeData);
-```
-
-## iFileとiExplorerを連携させる機能
-
-いまのところ：
-
-大本: `files: iFile[]`
-
-コンポーネントは`filesProxy()`が情報源になっている。
-
-FileExplorer:
-
-`filexProxy()` --> `files`
-
-`FileExplorer/index.tsx` --> `state.explorerData` --> `filesProxy`
-
-Monaco:
-
-`MonacoContainer.tsx` --> `files={filesProxy.getFiles()}` --> `filesProxy`
-
-`MonacoEditor.tsx` --> `props.files`
-
-ということで、
-
-Monaco側、`<MonacoEditor files={filesProxy.getFiles()} >`となっているので、再レンダリングのタイミングでfilesProxyの最新情報を取得する
-
-Explorer側：`filesProxy`の最新情報はmount時にのみ取得されるのみで、後は独自にstate管理しているから変更がfilesProxyへ伝わっていない
-
-component --> state --> filesProxy --> 他のcomponent
-
-という変更の伝達が叶うように修正が必要。
-
-stateを通すのは再レンダリングさせるため。
-
-#### filesProxyとstateの連携
-
-`component --> state --> filesProxy`の部分
-
-```TypeScript
-const [explorerData, setExplorerData] = useState<iExplorer>();
-const cachedFiles = useMemo(filesProxy.getAllPaths(), [])
-```
-
-上記のようにイメージしてみても、usememoの依存関係が見当たらないなぁ。
-
-
-## FileExplorerのファイルをクリックしたらeditorに該当ファイルを表示させる機能
-
-ひとまずreduxのことを忘れる。
-
-どのファイルがクリックされたのかの情報を、以下の通りどうにかしてバケツリレーしなくてはならない
-
-```JavaScript
-    <>
-      <Header />
-      <MainContainer>
-        <NavigationSection />
-        <SplitPane>
-        // このPaneから...
-          <Pane />
-        // ...EditorSectionまで
-          <EditorSection onBundled={onBundled} />
-          <PreviewSection bundledCode={bundledCode} />
-        </SplitPane>
-      </MainContainer>
-    </>
-```
-
-
-## iFile[]とiExplorerは互いを識別できない
-
-問題は、iFile[]とiExplorerは互いを識別できないことである。
-
-つまり、
-
-iFileのあるfile情報から、iExplorerにあるexplorerを特定できない
-
-iExplorerのexplorer情報からも、iFileにあるfileを特定できない。
-
-そのため、
-
-iExplorerを基にしているFileExplorerの変更情報はiFile(もしくはfilesProxy)へ反映できない。
-
-どのexplorerがどのfileと同じものなのか区別がつかないから。
-
-一方、iFileの変更は、
-
-`setExplorerData(generateTreeNodeData(filesProxy.getAllPath(), "root"))`でstate管理されているのでFileExplorerへは反映できる
-
-FileExplorerのdndによってpathが変更されるから、
-
-この問題の修正が必須である。
-
-ひとまず：
-
-- FileExplorerで扱うiExplorerデータはpath情報を付加する
-- dnd などpathが変更しうる操作に対応してpathが適切に変更されるようにする
-- 要検証：`setExplorerData(updatedTree)`したらfilesをそれに合わせて更新する機能
-
-目下の目標：monacoのmodelとiExplorerとの整合性
-
-NOTE: monaco-editorはmodelをそのままにuriを変更することはできない
-
-https://github.com/Microsoft/monaco-editor/issues/926
-
-代わりになる方法は示してくれる模様。
-
-
-## 参考: snack
-
-#### dnd結果をどうやって反映させているのか
-
-https://github.com/expo/snack/blob/main/website/src/client/components/FileList/FileListEntryDropTarget.tsx
-
-```TypeScript
-// https://github.com/expo/snack/blob/main/website/src/client/components/FileList/FileList.tsx
-
-// entries: 多分うちでいうところのiExplorer的なものかしら
-private updateEntries(entries: FileSystemEntry[]) {
-    const prevEntries = this.state.entries;
-    this.setState({ entries });
-
-    // Sync changes
-    this.props.updateFiles((files) => {
-      const updates: { [path: string]: SnackFile | null } = {};
-
-      // Handle file removal (and rename)
-      for (const path in files) {
-        const entry = entries.find((entry) => entry.item.path === path);
-        if (!entry) {
-          updates[path] = null;
-        }
-      }
-
-      // Handle added/renamed files
-      entries.forEach((entry) => {
-        if (
-          entry.item.type === 'file' &&
-          !files[entry.item.path] &&
-          !isPackageJson(entry.item.path)
-        ) {
-          updates[entry.item.path] = {
-            type: entry.item.asset ? 'ASSET' : 'CODE',
-            contents: entry.item.asset ? entry.item.uri : entry.item.content,
-          };
-        }
-      });
-
-      return updates;
-    });
-
-    // Update focus
-    const prevFocusedEntry = findFocusedEntry(prevEntries);
-    const focusedEntry = findFocusedEntry(entries);
-    if (focusedEntry?.item.path !== prevFocusedEntry?.item.path) {
-      this.props.onSelectFile(focusedEntry?.item.path ?? '');
-    }
-  }
-
-```
 
 #### filesを直接state管理する方法をとってみる
 
@@ -1322,10 +963,17 @@ https://stackoverflow.com/questions/41030361/how-to-update-react-context-from-in
 
 値と関数を渡す。
 
+## File state management
 
-## TEST FilesContext.tsx
+Reducer + Contextの`FilesContext.tsx`の生成を行った。
 
-と関連処理。
+これにてfilesを好きなコンポーネントから読み取り可能となり、
+
+深いネストされたコンポーネントから変更のdispatchを送信できるようになった。
+
+#### TEST FilesContext.tsx
+
+ほとんどgenerateTreeNode.tsxの修正であった。
 
 #### ADD_FILE
 
@@ -1376,28 +1024,26 @@ entries.forEach((entry: File) => {
 
 修正２：
 
-- 半角英数字のみ使用可能
-- _, -, .の記号のみ使用可能
+[フォームへ入力している段階でファイル/フォルダ名が有効か無効を判断させる](#フォームへ入力している段階でファイル/フォルダ名が有効か無効を判断させる)
 
-snackはどうやっているのか調べる
-
-```TypeScript
-// src/utils/isInputPathValid.ts
-
-```
 
 
 #### CHANGE_FILE, CHANGE_MULTIPLE_FILE
 
-問題：
-
-`root`へDNDすると、dndしたfileのpathの先頭に`/`がつくのでtree全体がおかしくなる
+fileのpath変更問題なし。
 
 
 #### DELETE_FILE, DELETE_MULTIPLE_FILE
 
-問題：
+問題なし。
 
-`root/src/react`フォルダを削除したら、関係ない`root/temporary`まで削除された。
+## Explorer: アイテム追加フォームへ入力している段階でファイル/フォルダ名が有効か無効を判断させる
 
-file name validation `/^([A-Za-z0-9\-\_\.]+)\.([a-zA-Z0-9]{1,9})$/gm`
+無効なら無効であることを表示する。
+
+- 半角英数字 + `_`, `-`, `.`の記号の使用のみ認める
+- `js/scritp.js`と入力されたら、そのフォルダの下に`js`フォルダと、その`js`フォルダの下に`script.js`を生成することを可能とさせる
+
+```TypeScript
+
+```
