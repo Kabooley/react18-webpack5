@@ -64,7 +64,8 @@ type iFilesActions = ActionMap<iFilesActionPayload>[keyof ActionMap<iFilesAction
 
 // --- Definitions ---
 
-const FilesContext = createContext<File[]>([]);
+// To use context in class component, this is needed to be exported.
+export const FilesContext = createContext<File[]>([]);
 const FilesDispatchContext = createContext<Dispatch<iFilesActions>>(() => null);
 
 function filesReducer(files: File[], action: iFilesActions) {

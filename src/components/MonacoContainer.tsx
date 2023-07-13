@@ -5,8 +5,9 @@ import React from "react";
 import * as monaco from 'monaco-editor';
 import MonacoEditor from './Monaco/MonacoEditor';
 import Tabs from './Tabs';
-import { files } from "../data/files";
 import type { iMessageBundleWorker } from "../worker/types";
+import type { File } from '../data/files';
+import { FilesContext } from "../context/FilesContext";
 
 
 interface iProps {
@@ -32,12 +33,18 @@ const defaultFilePath = 'src/index.tsx';
  * NOTE: Component must be class component to treat with workers.
  * 
  * 
+ * NOTE: to use context in class component, followed the article.
+ * https://stackoverflow.com/questions/61498035/react-usecontext-inside-class
+ * 
+ * https://legacy.reactjs.org/docs/context.html#classcontexttype
  * */ 
 class MonacoContainer extends React.Component<iProps> {
+    static contextType = FilesContext;
+    context!: React.ContextType<typeof FilesContext>;
     state = {
         value: "",
         // currentFilePath: filesProxy.getFile(defaultFilePath).path
-        currentFilePath: files.find(f => f.path === defaultFilePath) === undefined ? "" : files.find(f => f.path === defaultFilePath)!.path
+        currentFilePath: this.context.find(f => f.getPath() === defaultFilePath) === undefined ? "" : this.context.find(f => f.getPath() === defaultFilePath)!.getPath()
     };
     bundleWorker: Worker | undefined;
 
@@ -119,6 +126,7 @@ class MonacoContainer extends React.Component<iProps> {
     };
 
     render() {
+        const files: File[] = this.context;
         return (
             <div className="monaco-container">
                 <Tabs path={this.state.currentFilePath!} onChangeFile={this.onChangeFile}/>

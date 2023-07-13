@@ -305,3 +305,64 @@ props --> context経由で
 stateを変更する手段 --> context経由でdispachから
 
 TODO: 続きを学習すること
+
+## Context in class components
+
+https://react.dev/reference/react/Component#context
+
+https://legacy.reactjs.org/docs/context.html#classcontexttype
+
+https://stackoverflow.com/questions/61498035/react-usecontext-inside-class
+
+> NOTE: この方法は単一のcontextのみに対してサブスクライブできます。
+
+`static contextType`に対してcontextを代入すると、
+
+`this.context`の呼び出しでcontextの提供する値にアクセスできる。
+
+```JavaScript
+class Button extends Component {
+  static contextType = ThemeContext;
+
+  render() {
+    const theme = this.context;
+    const className = 'button-' + theme;
+    return (
+      <button className={className}>
+        {this.props.children}
+      </button>
+    );
+  }
+}
+```
+TypeScript例：
+
+参考：https://stackoverflow.com/questions/53575461/react-typescript-context-in-react-component-class
+
+```TypeScript
+class MonacoContainer extends React.Component<iProps> {
+    static contextType = FilesContext;
+    context!: React.ContextType<typeof FilesContext>;
+    state = {
+        value: "",
+        currentFilePath: this.context.find(f => f.getPath() === defaultFilePath) === undefined ? "" : this.context.find(f => f.getPath() === defaultFilePath)!.getPath()
+    };
+    bundleWorker: Worker | undefined;
+
+    // ...
+
+    render() {
+        const files: File[] = this.context;
+        return (
+            <div className="monaco-container">
+                <MonacoEditor 
+                    files={files}
+                    // ...
+                />
+                <button onClick={this._onSubmit}>submit</button>
+            </div>
+        );
+    }
+};
+
+```

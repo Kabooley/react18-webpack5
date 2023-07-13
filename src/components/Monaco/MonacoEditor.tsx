@@ -9,6 +9,7 @@ import parser from 'prettier/parser-babel';
 import viewStateFiles from '../../data/viewStates';
 import { getModelByPath } from '../../utils';
 import type { iFile } from '../../data/types';
+import type { File } from '../../data/files';
 // 使いたくない
 import willMountMonacoProcess from './monacoWillMountProcess';
 
@@ -124,7 +125,8 @@ monaco.languages.typescript.javascriptDefaults.setCompilerOptions(compilerOption
  * */ 
 interface iProps 
     extends Monaco.editor.IStandaloneEditorConstructionOptions {
-    files: iFile[];
+    // files: iFile[];
+    files: File[];
     path: string;
     onValueChange: (v: string) => void;
     onWillMount: () => void;
@@ -199,7 +201,7 @@ const MonacoEditor = (props: iProps): JSX.Element => {
 
         // Get key which matches its path property
         // const key = Object.keys(files).find(k => files[k].path === path);
-        const selectedFile = files.find(file => file.path === path);
+        const selectedFile = files.find(file => file.getPath() === path);
 
         selectedFile && _initializeFiles(selectedFile);
         _modelChange(path);
@@ -216,9 +218,11 @@ const MonacoEditor = (props: iProps): JSX.Element => {
      * 生成されたmodelはmonaco-editor固有のstateに保存される
      * （取り出しはmonaco.editor.getModels()で生成済を取り出すことができる）
      * */
-    // const _initializeFiles = (path: string, file: iFile) => {
-    const _initializeFiles = (file: iFile) => {
-        const { path, language, value } = file;
+    const _initializeFiles = (file: File) => {
+        const path = file.getPath();
+        const language = file.getLanguage();
+        const value = file.getValue();
+
         let model = getModelByPath(path);
         
         if(model) {
