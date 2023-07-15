@@ -1046,6 +1046,75 @@ fileのpath変更問題なし。
 
 ## Explorer: アイテム追加フォームへ入力している段階でファイル/フォルダ名が有効か無効を判断させる
 
-validator: isFilenameValid.ts
-inputへファイルまたはフォルダ名を入力している間中、validかどうか検査してvalidになるまでエラーメッセージを表示させる。
-invalidのままエンターキーを押しても無効にさせる。
+VSCodeの仕様に寄せる。
+
+- rootフォルダは通常のTreeとは異なるコンポーネントにする
+- file, folder共通のカラムコンポーネントを作る
+- 入力中はファイル名・フォルダ名が無効の時だけユーザ向けにエラー表示させる
+- 無効な入力の時はエンタキーを押しても反応させない。
+- 見た目はVSCodeと同じにする
+- 開いているフォルダ・閉じているフォルダの見た目もVSCodeと同じにする
+
+#### Create component common to file and folder
+
+```TypeScript
+interface iTreeColumnProps{
+  explorer: iExplorer;
+}
+const TreeColumn = ({
+  explorer,
+}: iTreeColumnProps) => {
+
+  const fileType = explorer.isFolder ? "folder" : "file";
+  return (
+    <div className={fileType}>
+      <TreeFunctions />
+    </div>
+  )
+};
+
+interface iTreeFunctionsProps {
+  explorer: iExplorer;
+  handleNewItem: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onDelete: () => void;
+};
+
+const TreeFunctions = ({
+  explorer, handleNewItem, onDelete
+}: iTreeFunctionsProps) => {
+
+  if(explorer.isFolder) {
+    return (
+      <div className="folder--function">
+        <div
+          onClick={(e: React.MouseEvent<HTMLDivElement>) =>
+            handleNewItem(e, true)
+          }
+        >
+          <img src={addFolder} alt="add folder" />
+        </div>
+        <div
+          onClick={(e: React.MouseEvent<HTMLDivElement>) =>
+            handleNewItem(e, false)
+          }
+        >
+        <img src={addFile} alt="add file" />
+        </div>
+        <div onClick={onDelete}>
+          <img src={closeButton} alt="delete folder" />
+        </div>
+      </div>
+    );
+  }
+  else {
+    return (
+      <div 
+        onClick={onDelete} 
+        className="file--function"
+      >
+        <img src={closeButton} alt="delete file" />
+      </div>
+    );
+  }
+};
+```

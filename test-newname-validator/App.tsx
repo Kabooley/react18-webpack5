@@ -36,7 +36,21 @@ const explorerData: iExplorer = {
           name: "index.js",
           isFolder: false,
           items: []
-        }
+        },
+        {
+          id: "8",
+          name: "react",
+          isFolder: true,
+          items: [
+            {
+              id: "9",
+              name: "index.jsx",
+              isFolder: false,
+              items: []
+            },
+          ]
+        },
+        
       ]
     },
     {
@@ -53,7 +67,7 @@ const explorerData: iExplorer = {
 export default function App() {
   return (
     <div className="App">
-      <Tree explorer={explorerData} />
+      <Tree explorer={explorerData} nestDepth={0} />
     </div>
   );
 }

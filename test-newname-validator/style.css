@@ -39,6 +39,10 @@
   font-size: 1.4rem;
 }
 
+.treeColumn {
+  /* padding-left: 3rem; */
+}
+
 .folder {
   display: flex;
   flex-flow: row nowrap;
@@ -97,6 +101,7 @@ TODO: そのうえで.inputContainer--validSignの配置場所を指定する
 .inputContainer {
   display: block;
   position: relative;
+  padding-left: calc(1rem - 2px);
 }
 
 .inputContainer > span {
@@ -149,12 +154,12 @@ TODO: そのうえで.inputContainer--validSignの配置場所を指定する
 
 .inputContainer--validSign.__invalid {
     background-color: red;
-    opacity: 0.8;
+    opacity: 0.1;
 }
 
 .inputContainer--validSign.__valid {
     background-color: cyan;
-    opacity: 0.8;
+    opacity: 0.1;
 }
 
 

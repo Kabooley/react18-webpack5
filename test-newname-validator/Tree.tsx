@@ -20,9 +20,14 @@ export const isFolderNameValid = (name: string): boolean => {
     return foldernmaeRegexp.test(name);
 };
   
+// temporary
+const fodler_opening_icon = "📂";
+const fodler_closing_icon = "📁";
+const file_icon = "📄";
 
-export default function Tree({explorer}:{
-  explorer: iExplorer
+export default function Tree({explorer, nestDepth}:{
+  explorer: iExplorer,
+  nestDepth: number     // nestDepth - For pyramid styling
 }) {
   const [expand, setExpand] = useState<boolean>(false);
   const [showInput, setShowInput] = useState({
@@ -72,33 +77,42 @@ export default function Tree({explorer}:{
   };
 
   if(explorer.isFolder) {
+    // treeContainer is temporary for this test.
   return (
     <div className="treeContainer">
-    <div className="folder" >
-      <span>📁 {explorer.name}</span>
-      <div className="folder--function">
-        <div
-          onClick={(e: React.MouseEvent<HTMLDivElement>) =>
-            handleNewItem(e, explorer.isFolder)
-          }
-        >
-          <span>afl</span>
-        </div>
-        <div
-          onClick={(e: React.MouseEvent<HTMLDivElement>) =>
-            handleNewItem(e, explorer.isFolder)
-          }
-        >
-        <span>afi</span>
-        </div>
-        <div onClick={(e) => onDelete()}>
-          <span>del</span>
+    <div className="treeColumn" style={{ paddingLeft: `${nestDepth * 1.6}rem`}}>
+      <div className="folder" >
+        <span>📁 {explorer.name + nestDepth}</span>
+        <div className="folder--function">
+          <div
+            onClick={(e: React.MouseEvent<HTMLDivElement>) =>
+              handleNewItem(e, explorer.isFolder)
+            }
+          >
+            <span>afl</span>
+          </div>
+          <div
+            onClick={(e: React.MouseEvent<HTMLDivElement>) =>
+              handleNewItem(e, explorer.isFolder)
+            }
+          >
+          <span>afi</span>
+          </div>
+          <div onClick={(e) => onDelete()}>
+            <span>del</span>
+          </div>
         </div>
       </div>
     </div>
+    {/* このstyle付きdivは、inputcontainerとitemsまで含む */}
+    {/* フォルダの開閉をになうため。 */}
     <div 
-      style={{ display: "block", paddingLeft: 25 }}
+      style={{ 
+        display: "block", 
+        // paddingLeft: 25 
+      }}
     >
+    <div className="treeColumn" style={{ paddingLeft: `${nestDepth * 1.6}rem`}}>
       <div className="inputContainer">
         <div className="inputContainer--column">
         <span>{"📁"}</span>
@@ -111,24 +125,27 @@ export default function Tree({explorer}:{
         />
         </div>
         <div className={"inputContainer--validSign" + " " + (isNameValid ? "__valid" : "__invalid")}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
-        </div>
-      
-      {explorer.items.map((exp: iExplorer) => {
-        return (
-          <Tree
-            key={exp.id}
-            explorer={exp}
-          />
-        );
-      })}
+      </div>
+    </div>
+    {explorer.items.map((exp: iExplorer) => {
+      const nd = nestDepth + 1;
+      return (
+        <Tree
+          key={exp.id}
+          explorer={exp}
+          nestDepth={nd}
+        />
+      );
+    })}
     </div>
     </div>
     );
     } else {
     return (
+      <div className="treeColumn" style={{ paddingLeft: `${nestDepth * 1.6}rem`}}>
       <div className="file">
         <span className="file--name">
-          📄 {explorer.name}{" "}
+          {file_icon} {explorer.name + nestDepth}{" "}
         </span>
         <div 
           onClick={(e) => onDelete()} 
@@ -137,6 +154,8 @@ export default function Tree({explorer}:{
         <span>del</span>
         </div>
       </div>
+      </div>
     );
   }
 }
+
