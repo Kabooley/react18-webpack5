@@ -8,11 +8,14 @@
  * Extension is not allowed with number.
  * 
  * */ 
+
 const filenameRegexp = /^([A-Za-z0-9\-\_\.]+)\.([a-zA-Z0-9]{1,9})$/;
 
 export const isFilenameValid = (path: string): boolean => {
     return filenameRegexp.test(path);
 };
+
+
 
 // const filenames = [
 //     "sdfsadfa/dsafsdfs.fdsjkad/sadsa.js",

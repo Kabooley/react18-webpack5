@@ -33,11 +33,13 @@ src/data/files.ts::files
 
 ``` 
 
-- FileExplorerへReducer+Contextを導入したので完全に機能しているのかのテスト
-- Tabs.tsxが`files`を直接インポートしているのでこれをcontext経由にさせる
-- MonacoContainer.tsxが`files`を直接インポートしているのでこれをcontext経由にさせる
+- 済）FileExplorerへReducer+Contextを導入したので完全に機能しているのかのテスト
+- 済）Tabs.tsxが`files`を直接インポートしているのでこれをcontext経由にさせる
+- 済）MonacoContainer.tsxが`files`を直接インポートしているのでこれをcontext経由にさせる
+- [Explorer: アイテム追加フォームへ入力している段階でファイル/フォルダ名が有効か無効を判断させる](#Explorer:-アイテム追加フォームへ入力している段階でファイル/フォルダ名が有効か無効を判断させる)
+- fileのsave機能
 - tabsでの変更のfilesへの反映
-- monaco-editorでの変更のfilesへの反映
+- monaco-editorでの変更のfilesへの反映(file編集内容 --> File --> fileへ反映)
 - Explorerで開いているフォルダは開いていることがわかる見た目にする
 - Explorerで変更が起こったら「整列」させる機能（新規フォルダ追加とか）
 - File.setPath()などするとき、既存のpathと被っていないか検査する
@@ -45,11 +47,16 @@ src/data/files.ts::files
 
 このブランチと関係ないけど...
 
+- Explorerはリサイズすると再レンダリングされているのでリサイズでは再レンダリングしないようにしたい（低優先
 - tabsのうちエディタに表示中のファイルのタブは見えるところに表示させる
 - tabsのdnd
+- tabsは初期表示させたいファイル以外は表示しないようにする
+- tabsに閉じるボタンをつけて閉じる機能をつける
 - fileexplorerでdrop不可能領域はホバー時点でわかるようにする
 - fileExplorerで開いているフォルダは開いているのが見た目でわかるようにする
 - fileExplorerでアイテムを削除するときに確認をとる。（モーダル表示？）
+- previewのview決定
+- アンダーバーの追加(参考：snack)
 
 ## やったこと
 
@@ -1039,11 +1046,6 @@ fileのpath変更問題なし。
 
 ## Explorer: アイテム追加フォームへ入力している段階でファイル/フォルダ名が有効か無効を判断させる
 
-無効なら無効であることを表示する。
-
-- 半角英数字 + `_`, `-`, `.`の記号の使用のみ認める
-- `js/scritp.js`と入力されたら、そのフォルダの下に`js`フォルダと、その`js`フォルダの下に`script.js`を生成することを可能とさせる
-
-```TypeScript
-
-```
+validator: isFilenameValid.ts
+inputへファイルまたはフォルダ名を入力している間中、validかどうか検査してvalidになるまでエラーメッセージを表示させる。
+invalidのままエンターキーを押しても無効にさせる。

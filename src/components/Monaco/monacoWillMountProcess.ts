@@ -69,22 +69,22 @@ const willMountMonacoProcess = () => {
     // set theme. va-dark as default.
     monaco.editor.setTheme(defaultTheme);
 
-    // monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-    //     noSemanticValidation: true,
-    //     noSyntaxValidation: true,
-    // });
+    // // monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+    // //     noSemanticValidation: true,
+    // //     noSyntaxValidation: true,
+    // // });
 
-    monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
-    monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
+    // monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
+    // monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
 
 
-    // set compiler options
-    monaco.languages.typescript.typescriptDefaults.setCompilerOptions(
-        defaultCompilerOptions
-    );
-    monaco.languages.typescript.javascriptDefaults.setCompilerOptions(
-        defaultCompilerOptions
-    );
+    // // set compiler options
+    // monaco.languages.typescript.typescriptDefaults.setCompilerOptions(
+    //     defaultCompilerOptions
+    // );
+    // monaco.languages.typescript.javascriptDefaults.setCompilerOptions(
+    //     defaultCompilerOptions
+    // );
     // set formatter
     setFormatter();
 };

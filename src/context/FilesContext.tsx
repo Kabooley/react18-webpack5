@@ -3,7 +3,7 @@
  * 
  * Managing File state and provide its context.
  * 
- * 大いに参考になったサイト：
+ * 型付けにおいて大いに参考になったサイト：
  * https://dev.to/elisealcala/react-context-with-usereducer-and-typescript-4obm
  * 
  * */ 

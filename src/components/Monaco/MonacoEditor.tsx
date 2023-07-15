@@ -8,11 +8,7 @@ import prettier from 'prettier';
 import parser from 'prettier/parser-babel';
 import viewStateFiles from '../../data/viewStates';
 import { getModelByPath } from '../../utils';
-import type { iFile } from '../../data/types';
 import type { File } from '../../data/files';
-// 使いたくない
-import willMountMonacoProcess from './monacoWillMountProcess';
-
 
 // @ts-ignore
 self.MonacoEnvironment = {
@@ -133,9 +129,8 @@ interface iProps
     onDidMount: () => void;
 };
 
-
-// Preprocess before mount monaco editor.
-willMountMonacoProcess();
+const defaultTheme = 'vs-dark';
+monaco.editor.setTheme(defaultTheme);
 
 
 /**

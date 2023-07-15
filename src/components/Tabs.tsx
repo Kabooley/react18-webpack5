@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { files } from '../data/files';
+import { useFiles } from '../context/FilesContext';
+import { getFilenameFromPath } from '../utils';
 
 // NOTE: 無理やり型を合わせている。
 // 本来`child: Node`でclassNameというpropertyを持たないが、iJSXNode.classNameをoptionalにすることによって
@@ -18,6 +19,7 @@ interface iProps {
  * 
  * */ 
 const Tabs = ({ path, onChangeFile }: iProps) => {
+    const files = useFiles();
     const _refTabArea = useRef<HTMLDivElement>(null);
     const _refTabs = useRef(
         files.map(() => React.createRef<HTMLSpanElement>())
@@ -37,24 +39,19 @@ const Tabs = ({ path, onChangeFile }: iProps) => {
         onChangeFile(desiredFilePath);
     };
 
-
     return (
         <div className="tabs-area" ref={_refTabArea}>
             {
                 files.map((file, index) => {
+                    const _path = file.getPath();
                     return (
                         <span 
-                            className={file.path === path ? "tab active": "tab"}
+                            className={_path === path ? "tab active": "tab"}
                             ref={_refTabs.current[index]}
-                            onClick={() => changeTab(_refTabs.current[index].current!, file.path)}
+                            onClick={() => changeTab(_refTabs.current[index].current!, _path)}
                             key={index}
                         >
-                            {/*
-                                TODO: "/main.js"なので一番初めの'/'を取り除きたい 
-                                参考：
-                                https://stackoverflow.com/questions/10396074/remove-specific-characters-from-a-string-in-javascript
-                                */}
-                            {file.path}
+                            {getFilenameFromPath(_path)}
                         </span>
                     );
                 })

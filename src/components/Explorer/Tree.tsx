@@ -4,6 +4,7 @@
 import React, { useState } from "react";
 import type { iExplorer } from "../../data/types";
 import DragNDrop from './DragNDrop';
+import { isFilenameValid, isFolderNameValid } from "../../utils";
 
 // Icons
 // import editPencil from '../../assets/pencil-edit.svg';
@@ -20,6 +21,9 @@ interface iProps {
   handleReorderNode: (droppedId: string, draggableId: string) => void;
 };
 
+const defaultNewFileName = "Untitled.file.js";
+const defaultNewDirectoryName = "Untitled";
+
 const Tree = ({ 
   explorer, 
   handleInsertNode, handleDeleteNode, handleReorderNode
@@ -29,6 +33,10 @@ const Tree = ({
       visible: false,
       isFolder: false
     });
+    // NOTE: state管理じゃなくてもいい気がするなぁ let変数でもいいような
+    // 
+    // Use this state while being input form for new item.
+    const [isNameValid, setIsNameValid] = useState<boolean>(false);
     const [dragging, setDragging] = useState<boolean>(false);
 
     // TODO: 名前が紛らわしいかも
@@ -46,20 +54,56 @@ const Tree = ({
 
     const onAddItem = (e: React.KeyboardEvent<HTMLInputElement>, addTo: string) => {
       const requiredPath = addTo.length ? addTo + '/' + e.currentTarget.value : e.currentTarget.value;
-      if (e.keyCode === 13 && requiredPath) {
-        handleInsertNode(requiredPath, showInput.isFolder);
-        setShowInput({ ...showInput, visible: false });
+      if (e.keyCode === 13 && requiredPath && isNameValid) {
+          handleInsertNode(requiredPath, showInput.isFolder);
+          setShowInput({ ...showInput, visible: false });
+          setIsNameValid(false);
+      }
+    };
+
+    // Check if input value is valid for file/folder name.
+    // 
+    // ref
+    // https://stackoverflow.com/questions/40676343/typescript-input-onchange-event-target-value
+    // 
+    // Accept: `A-Z`, `a-z`, `0-9`, `.`, `-`, `_`, `/`
+    // `/`はまだ実装先になるかも
+    // 
+    // Invalid:
+    // typ
+    // typing_.
+    // typing_.-
+    // typing_.-wor
+    // typing_.-worker
+    // typing_.-worker.
+    // (Any other characters without Accepted characters...)
+    // 
+    // Valid:
+    // typing_.-worker.js
+    // 
+    // 
+    const handleNewItemNameInput = (
+      e: React.ChangeEvent<HTMLInputElement>,
+      isFolder: boolean
+      ) => {  
+      // DEBUG:
+      console.log(`[handleNewItemNameInput] ${e.currentTarget.value}`);
+      if(isFolder && isFolderNameValid(e.currentTarget.value)) {
+        setIsNameValid(true);
+      }
+      else if(isFilenameValid(e.currentTarget.value)) {
+        setIsNameValid(true);
+      }
+      else {
+        setIsNameValid(false);
       }
     };
 
     const onDelete = (
-      e: React.MouseEvent<HTMLDivElement>,
-      
-      isFolder: boolean
+      e: React.MouseEvent<HTMLDivElement>
     ) => {
       e.stopPropagation();
       handleDeleteNode(explorer);
-      // handleDeleteNode(explorer.id, isFolder);
     };
 
     // DND
@@ -113,10 +157,7 @@ const Tree = ({
       // DEBUG:
       console.log("[Folder] on drop: ");
       const draggedItemId = e.dataTransfer.getData("draggingId") as string;
-      console.log(`draggingId: ${draggedItemId}`);
-      console.log(`droppedId: ${droppedId}`);
       e.dataTransfer.clearData("draggingId");
-
       handleReorderNode(droppedId, draggedItemId);
       setDragging(false);
     };
@@ -151,7 +192,7 @@ const Tree = ({
                   >
                   <img src={addFile} alt="add file" />
                   </div>
-                  <div onClick={(e) => onDelete(e, true)}>
+                  <div onClick={onDelete}>
                     <img src={closeButton} alt="delete folder" />
                   </div>
                 </div>
@@ -165,11 +206,30 @@ const Tree = ({
                 <span>{showInput.isFolder ? "📁" : "📄"}</span>
                 <input
                   type="text"
-                  className="inputContainer__input"
+                  className="inputContainer--input"
                   onKeyDown={(e) => onAddItem(e, explorer.path)}
                   onBlur={() => setShowInput({ ...showInput, visible: false })}
+                  onChange={(e) => handleNewItemNameInput(e, explorer.isFolder)}
                   autoFocus
+                  placeholder={explorer.isFolder ? defaultNewDirectoryName : defaultNewFileName}
                 />
+                <div className={"inputContainer--validSign" + isNameValid ? "__valid" : "__invalid"}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
+                </div>
+            )}
+            {explorer.name === "temporary" && (
+              <div className="inputContainer">
+                <span>{showInput.isFolder ? "📁" : "📄"}</span>
+                <input
+                  type="text"
+                  className="inputContainer--input"
+                  // onKeyDown={(e) => onAddItem(e, explorer.path)}
+                  // onBlur={() => setShowInput({ ...showInput, visible: false })}
+                  onChange={(e) => handleNewItemNameInput(e, explorer.isFolder)}
+                  autoFocus
+                  placeholder={explorer.isFolder ? defaultNewDirectoryName : defaultNewFileName}
+                />
+                <div className="flex-break"></div>
+                <div className={"inputContainer--validSign" + " " + (isNameValid ? "__valid" : "__invalid")}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
                 </div>
             )}
             {explorer.items.map((exp: iExplorer) => {
@@ -203,7 +263,7 @@ const Tree = ({
               📄 {explorer.name}{" "}
             </span>
             <div 
-              onClick={(e) => onDelete(e, false)} 
+              onClick={onDelete} 
               className="file--function"
             >
               <img src={closeButton} alt="delete file" />

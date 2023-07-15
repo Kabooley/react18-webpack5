@@ -61,7 +61,7 @@
         margin-top: 5px;
     }
 
-    &__input {
+    &--input {
         margin: 6px 0 0px 0;
         padding: 5px;
         display: flex;
@@ -69,6 +69,19 @@
         align-items: center;
         justify-content: space-between;
         cursor: pointer;
+    }
+
+    &--validSign {
+
+        .__invalid {
+            background-color: red;
+            opacity: 0.8;
+        }
+
+        .__valid {
+            background-color: cyan;
+            opacity: 0.8;
+        }
     }
 }
   
@@ -99,4 +112,10 @@
         display: flex;
         flex-direction: column;
     }
+}
+
+
+.flex-break {
+    flex-basis: 100%;
+    height: 0;
 }
