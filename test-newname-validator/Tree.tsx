@@ -100,14 +100,16 @@ export default function Tree({explorer}:{
       style={{ display: "block", paddingLeft: 25 }}
     >
       <div className="inputContainer">
+        <div className="inputContainer--column">
         <span>{"📁"}</span>
         <input
           type="text"
-          className="inputContainer__input"
+          className={"inputContainer--input" + " " + (isNameValid ? "__valid" : "__invalid")}
           onKeyDown={(e) => onAddItem(e, "wherever")}
           onChange={(e) => handleNewItemNameInput(e, explorer.isFolder)}
           autoFocus
         />
+        </div>
         <div className={"inputContainer--validSign" + " " + (isNameValid ? "__valid" : "__invalid")}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
         </div>
       
@@ -138,4 +140,3 @@ export default function Tree({explorer}:{
     );
   }
 }
-
