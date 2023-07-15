@@ -13,7 +13,7 @@
   body {
 	margin: 0;
 	padding: 0;
-	background: darkblue;
+	background: grey;
 	min-height: 100%;
 	height: 100%;
 	color: white;
@@ -30,6 +30,9 @@
 .App {
   font-size: 1.6rem;
   font-family: sans-serif;
+  width: 300px;
+  background-color: darkgray;
+  height: 100vh;
 }
 
 .file-explorer {
@@ -85,13 +88,14 @@
 }
 
 
-/* --- */
+/*
+TODO: inputをinputcontainerの領域いっぱいまで広げるようにする
+TODO: そのうえで.inputContainer--validSignの配置場所を指定する
+
+*/
 
 .inputContainer {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-
+  display: block;
   position: relative;
 }
 
@@ -99,31 +103,48 @@
   margin-top: 5px;
 }
 
-.inputContainer--input {
-  margin: 6px 0 0px 0;
-  padding: 5px;
+.inputContainer--column {
   display: flex;
-  border: 1px solid lightgray;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  width: 100%;
+  gap: 5px;
 }
 
-.inputContainer--input.__valid {
+.inputContainer--input {
+  /* margin: 6px 0 0px 0; */
+  margin: 0;
+  padding: 0px;
+  border: 1px solid lightgray;
+  cursor: pointer;
+  /* paneいっぱいまで幅をとる */
+  width: 100%;
+  /* NOTE: 
+    heightを指定すると
+    border-boxを指定しても
+    inputが親領域いっぱいに拡がってくれない 
+  */
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+}
+
+.inputContainer--input:focus {
+  outline: none;
+}
+
+.inputContainer--input:focus.__valid {
   border: 1px solid cyan;
 }
 
-.inputContainer--input.__valid {
+.inputContainer--input:focus.__invalid {
   border: 1px solid red;
 }
 
 
 .inputContainer--validSign {
+  width: calc(100% - 2.7rem);
   position: absolute;
-  top: 3.0rem;
-  left: 2.5rem;
-
+  left: 2.7rem;
 }
 
 .inputContainer--validSign.__invalid {
