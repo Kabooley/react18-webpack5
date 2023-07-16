@@ -225,7 +225,7 @@ const Tree = ({
                       placeholder={explorer.isFolder ? defaultNewDirectoryName : defaultNewFileName}
                     />
                   </div>
-                  <div className={"inputContainer--validSign" + isNameValid ? "__valid" : "__invalid"}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
+                  <div className={"inputContainer--validSign" + (isNameValid ? "__valid" : "__invalid")}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
                 </div>
               </div>
             )}
@@ -246,7 +246,7 @@ const Tree = ({
                       placeholder={explorer.isFolder ? defaultNewDirectoryName : defaultNewFileName}
                     />
                   </div>
-                  <div className={"inputContainer--validSign" + isNameValid ? "__valid" : "__invalid"}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
+                  <div className={"inputContainer--validSign" + (isNameValid ? "__valid" : "__invalid")}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
                 </div>
               </div>
             )}

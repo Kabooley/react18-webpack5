@@ -94,19 +94,30 @@
 }
 
 /*
-なんか知らんがこのクラス名がjsの方で付与されていない。要確認。
+widthは.inputContainer--inputのwidthと一緒でないといかん
 
+(Pane width) - (
+    tree-column padding-left
+    + inputContainer padding-left
+    + inputContainer--input gap
+    + icon width
+) = inputContainer--input width
+
+tree-column padding-left:   ネストの深さによって動的に決まる
+inputContainer padding-left:上記の定義の通り(1rem - 2px)
+inputContainer--input gap:  上記の定義の通り5px
+icon width:                 どのアイコンかによる。これは固定したいので
 */ 
 .inputContainer--validSign {
-    width: calc(100% - 2.64rem - 8px);
+    width: calc(100% - 2.64rem - 8px - 5px);
     position: absolute;
     /* top等は指定しないこと */
-    margin-left: 2.64rem;
+    margin-left: calc(2.64rem + 8px + 5px);
     
     &__invalid {
         background-color: red;
         opacity: 0.8;
-        border: 1px solid black;
+        border: 1px solid pink;
     }
     
     &__valid {

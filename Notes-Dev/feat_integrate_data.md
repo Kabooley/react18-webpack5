@@ -1118,3 +1118,15 @@ const TreeFunctions = ({
   }
 };
 ```
+
+## div.inputContainer--validSignのmargin-leftを得るための計算値：
+
+Pane幅: xとして...
+
+div.tree-column padding-left: 32px 
+div.inputContainer: 8px 
+div.inputContainer--input: 5px (gap)
+icon width: 18.6 
+
+inputのleft合計: 32 + 8 + 5 + 18.6
+input width: x - (32 + 8 + 5 + 18.6) = 193.4
