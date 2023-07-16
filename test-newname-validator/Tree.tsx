@@ -14,7 +14,7 @@ export const isFilenameValid = (path: string): boolean => {
     return filenameRegexp.test(path);
 };
 
-const foldernmaeRegexp = /^[^\\\/?%*:|"'<>\.]+$/;
+const foldernmaeRegexp = /^[^\\\/?%*:|"'=^<>\.]+$/;
 
 export const isFolderNameValid = (name: string): boolean => {
     return foldernmaeRegexp.test(name);
@@ -117,6 +117,7 @@ export default function Tree({explorer, nestDepth}:{
         <div className="inputContainer--column">
         <span>{"📁"}</span>
         <input
+          placeholder="untitled"
           type="text"
           className={"inputContainer--input" + " " + (isNameValid ? "__valid" : "__invalid")}
           onKeyDown={(e) => onAddItem(e, "wherever")}
@@ -124,7 +125,9 @@ export default function Tree({explorer, nestDepth}:{
           autoFocus
         />
         </div>
-        <div className={"inputContainer--validSign" + " " + (isNameValid ? "__valid" : "__invalid")}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
+        <div 
+          className={"inputContainer--validSign" + " " + (isNameValid ? "__valid" : "__invalid")}    
+        >{isNameValid ? "Name is valid" : "Name is invalid"}</div>
       </div>
     </div>
     {explorer.items.map((exp: iExplorer) => {
@@ -158,4 +161,3 @@ export default function Tree({explorer, nestDepth}:{
     );
   }
 }
-
