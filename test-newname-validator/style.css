@@ -39,8 +39,10 @@
   font-size: 1.4rem;
 }
 
-.treeColumn {
-  /* padding-left: 3rem; */
+/* hoverで色 */
+.treeColumn {}
+.treeColumn:hover {
+  background-color: rgba(55, 147, 224, 0.25);
 }
 
 .folder {
@@ -51,41 +53,39 @@
   cursor: pointer;
   overflow-x: hidden;
 }
-.folder:hover {
+/* .folder:hover {
       background-color: rgba(55, 147, 224, 0.25);
-  }
+} */
 
-  .folder:hover .folder--function {
-      opacity: 1;
-  }
-
-  .folder > span {
-      /* margin: 0 5px; */
-      padding-left: calc(1rem - 2px);
-      border-right: 2px solid transparent;
-      min-height: 28px;
-      border-top-color: transparent;
-      border-bottom-color: transparent;
-      border-left-color: transparent;
-      white-space: nowrap;
-  }
-
-  .folder > div > button {
-      font-size: 15px;
-      background-color: white;
-  }
-
-  .folder--function {
-      display: flex;
-      flex-flow: row nowrap;
-      opacity: 0;
-  
-
-  }
-  
-  .folder:hover {
-    background-color: rgba(55, 147, 224, 0.25);
+.folder:hover .folder--function {
+    opacity: 1;
 }
+
+.folder > span {
+    /* margin: 0 5px; */
+    padding-left: calc(1rem - 2px);
+    border-right: 2px solid transparent;
+    min-height: 28px;
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+    border-left-color: transparent;
+    white-space: nowrap;
+}
+
+.folder > div > button {
+    font-size: 15px;
+    background-color: white;
+}
+
+.folder--function {
+    display: flex;
+    flex-flow: row nowrap;
+    opacity: 0;
+}
+
+/* .folder:hover {
+  background-color: rgba(55, 147, 224, 0.25);
+} */
 
 .folder > div {
     padding-left: 1rem;
@@ -141,25 +141,28 @@ TODO: そのうえで.inputContainer--validSignの配置場所を指定する
   border: 1px solid cyan;
 }
 
-.inputContainer--input:focus.__invalid {
+.inputContainer--input:not(:placeholder-shown).__invalid {
   border: 1px solid red;
 }
 
 
 .inputContainer--validSign {
-  width: calc(100% - 2.7rem);
+  width: calc(100% - 2.64rem - 8px);
   position: absolute;
-  left: 2.7rem;
+  /* top等は指定しないこと */
+  margin-left: 2.64rem;
 }
 
 .inputContainer--validSign.__invalid {
     background-color: red;
-    opacity: 0.1;
+    opacity: 0.8;
+    border: 1px solid black;
 }
 
 .inputContainer--validSign.__valid {
     background-color: cyan;
-    opacity: 0.1;
+    opacity: 0.8;
+    border: 1px solid blue;
 }
 
 
@@ -168,9 +171,9 @@ TODO: そのうえで.inputContainer--validSignの配置場所を指定する
   justify-content: space-between;
 }
 
-.file:hover {
+/* .file:hover {
   background-color: rgba(55, 147, 224, 0.25);
-}
+} */
 
 .file:hover .file--function {
   opacity: 1;
