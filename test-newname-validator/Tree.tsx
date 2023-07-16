@@ -27,7 +27,7 @@ const file_icon = "📄";
 
 export default function Tree({explorer, nestDepth}:{
   explorer: iExplorer,
-  nestDepth: number     // nestDepth - For pyramid styling
+  nestDepth: number    // nestDepth - For pyramid styling
 }) {
   const [expand, setExpand] = useState<boolean>(false);
   const [showInput, setShowInput] = useState({

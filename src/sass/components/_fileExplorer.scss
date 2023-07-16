@@ -1,6 +1,11 @@
-.file-explorer {
-    // editorのフォントサイズに準じる 
-    font-size: 1.4rem;
+/**
+    - ネストする際の幅は、アイコン一つ分くらいの間隔にしたい
+    - 
+
+***/ 
+
+.treeColumn:hover {
+    background-color: rgba(55, 147, 224, 0.25);
 }
 
 .folder {
@@ -11,16 +16,11 @@
     cursor: pointer;
     overflow-x: hidden;
 
-    &:hover {
-        background-color: rgba(55, 147, 224, 0.25);
-    }
-
     &:hover .folder--function {
         opacity: 1;
     }
 
-    > span {
-        /* margin: 0 5px; */
+    & > span {
         padding-left: calc(1rem - 2px);
         border-right: 2px solid transparent;
         min-height: 28px;
@@ -29,59 +29,90 @@
         border-left-color: transparent;
         white-space: nowrap;
     }
-
-    > div > button {
+    
+    & > div > button {
         font-size: 15px;
         background-color: white;
     }
-
+    
     &--function {
         display: flex;
         flex-flow: row nowrap;
         opacity: 0;
-    
-        &:hover {
-            background-color: rgba(55, 147, 224, 0.25);
-        }
-    
-        > div {
-            padding-left: 1rem;
-        }
     }
     
-  }
-  
-  
-.inputContainer{
-    display: flex;
-    align-items: center;
-    gap: 5px;
+    & > div {
+        padding-left: 1rem;
+    }
+}
 
-    > span {
+.inputContainer {
+    display: block;
+    position: relative;
+    padding-left: calc(1rem - 2px);
+
+    & > span {
         margin-top: 5px;
     }
-
-    &--input {
-        margin: 6px 0 0px 0;
-        padding: 5px;
+    
+    &--column {
         display: flex;
-        border: 1px solid lightgray;
-        align-items: center;
-        justify-content: space-between;
-        cursor: pointer;
+        gap: 5px;
     }
+    
+    /* NOTE: 
+        heightを指定すると
+        border-boxを指定しても
+        inputが親領域いっぱいに拡がってくれない 
 
-    &--validSign {
+        paneいっぱいまで幅をとる
+    */
+    &--input {
+        margin: 0;
+        padding: 0px;
+        border: 1px solid lightgray;
+        cursor: pointer;
+        width: 100%;
+        box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        -o-box-sizing: border-box;
+        -ms-box-sizing: border-box;
+    }
+    
+    &--input:focus {
+        outline: none;
+    }
+    
+    &--input:focus.__valid {
+        border: 1px solid cyan;
+    }
+    
+    &--input:not(:placeholder-shown).__invalid {
+        border: 1px solid red;
+    }
+}
 
-        .__invalid {
-            background-color: red;
-            opacity: 0.8;
-        }
+/*
+なんか知らんがこのクラス名がjsの方で付与されていない。要確認。
 
-        .__valid {
-            background-color: cyan;
-            opacity: 0.8;
-        }
+*/ 
+.inputContainer--validSign {
+    width: calc(100% - 2.64rem - 8px);
+    position: absolute;
+    /* top等は指定しないこと */
+    margin-left: 2.64rem;
+    
+    &__invalid {
+        background-color: red;
+        opacity: 0.8;
+        border: 1px solid black;
+    }
+    
+    &__valid {
+        background-color: cyan;
+        opacity: 0.8;
+        border: 1px solid blue;
     }
 }
   
@@ -90,23 +121,19 @@
     display: flex;
     justify-content: space-between;
 
-    &:hover {
-        background-color: rgba(55, 147, 224, 0.25);
-    }
-    
     &:hover .file--function {
         opacity: 1;
     }
-
-    > span {
+    
+    & > span {
         white-space: nowrap;
     }
-
+    
     &--function {
         margin: auto 0;
         opacity: 0;
     }
-
+    
     &--name {
         padding-left: calc(1rem - 2px);
         display: flex;
@@ -114,8 +141,126 @@
     }
 }
 
+// --- LEGACY ---
 
-.flex-break {
-    flex-basis: 100%;
-    height: 0;
-}
+// .file-explorer {
+//     // editorのフォントサイズに準じる 
+//     font-size: 1.4rem;
+// }
+
+// .folder {
+//     display: flex;
+//     flex-flow: row nowrap;
+//     align-items: center;
+//     justify-content: space-between;
+//     cursor: pointer;
+//     overflow-x: hidden;
+
+//     &:hover {
+//         background-color: rgba(55, 147, 224, 0.25);
+//     }
+
+//     &:hover .folder--function {
+//         opacity: 1;
+//     }
+
+//     > span {
+//         /* margin: 0 5px; */
+//         padding-left: calc(1rem - 2px);
+//         border-right: 2px solid transparent;
+//         min-height: 28px;
+//         border-top-color: transparent;
+//         border-bottom-color: transparent;
+//         border-left-color: transparent;
+//         white-space: nowrap;
+//     }
+
+//     > div > button {
+//         font-size: 15px;
+//         background-color: white;
+//     }
+
+//     &--function {
+//         display: flex;
+//         flex-flow: row nowrap;
+//         opacity: 0;
+    
+//         &:hover {
+//             background-color: rgba(55, 147, 224, 0.25);
+//         }
+    
+//         > div {
+//             padding-left: 1rem;
+//         }
+//     }
+    
+//   }
+  
+  
+// .inputContainer{
+//     display: flex;
+//     align-items: center;
+//     gap: 5px;
+
+//     > span {
+//         margin-top: 5px;
+//     }
+
+//     &--input {
+//         margin: 6px 0 0px 0;
+//         padding: 5px;
+//         display: flex;
+//         border: 1px solid lightgray;
+//         align-items: center;
+//         justify-content: space-between;
+//         cursor: pointer;
+//     }
+
+//     &--validSign {
+
+//         .__invalid {
+//             background-color: red;
+//             opacity: 0.8;
+//         }
+
+//         .__valid {
+//             background-color: cyan;
+//             opacity: 0.8;
+//         }
+//     }
+// }
+  
+
+// .file {
+//     display: flex;
+//     justify-content: space-between;
+
+//     &:hover {
+//         background-color: rgba(55, 147, 224, 0.25);
+//     }
+    
+//     &:hover .file--function {
+//         opacity: 1;
+//     }
+
+//     > span {
+//         white-space: nowrap;
+//     }
+
+//     &--function {
+//         margin: auto 0;
+//         opacity: 0;
+//     }
+
+//     &--name {
+//         padding-left: calc(1rem - 2px);
+//         display: flex;
+//         flex-direction: column;
+//     }
+// }
+
+
+// .flex-break {
+//     flex-basis: 100%;
+//     height: 0;
+// }

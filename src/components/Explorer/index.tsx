@@ -8,6 +8,7 @@ import { useFiles, useFilesDispatch } from "../../context/FilesContext";
 import { Types } from "../../context/FilesContext";
 
 
+
 export default function FileExplorer() {
 
   const files = useFiles();
@@ -188,6 +189,7 @@ export default function FileExplorer() {
           handleDeleteNode={handleDeleteNode}
           handleReorderNode={handleReorderNode}
           explorer={explorerData}
+          nestDepth={0}
         />
     </div>
   );
