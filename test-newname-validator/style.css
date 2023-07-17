@@ -1,51 +1,52 @@
-*, 
-*::before, 
+*,
+*::before,
 *::after {
-	margin: 0;
-	padding: 0;
-	box-sizing: border-box;
-  }
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-  html {
-    font-size: 62.5%;
-  }
-  
-  body {
-	margin: 0;
-	padding: 0;
-	background: grey;
-	min-height: 100%;
-	height: 100%;
-	color: white;
-  }
-  
-  #root {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	margin: 0;
-	color: #e6e6e6;
-  }
+html {
+  font-size: 62.5%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: black;
+  min-height: 100%;
+  height: 100%;
+  color: white;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0;
+  color: #e6e6e6;
+}
 
 .App {
-  font-size: 1.6rem;
-  font-family: sans-serif;
   width: 300px;
-  background-color: darkgray;
   height: 100vh;
+  background-color: gray;
+
+  /* IMPORTANT SETTING */
+  font-size: 1.6rem;
 }
 
-.file-explorer {
-  font-size: 1.4rem;
-}
+/* ---- */
 
-/* hoverで色 */
-.treeColumn {}
+
 .treeColumn:hover {
   background-color: rgba(55, 147, 224, 0.25);
 }
 
-.folder {
+
+
+
+.TreeItem {
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
@@ -53,79 +54,73 @@
   cursor: pointer;
   overflow-x: hidden;
 }
-/* .folder:hover {
-      background-color: rgba(55, 147, 224, 0.25);
-} */
 
-.folder:hover .folder--function {
-    opacity: 1;
+.TreeItem:hover .TreeItem--function {
+  opacity: 1;
 }
 
-.folder > span {
-    /* margin: 0 5px; */
-    padding-left: calc(1rem - 2px);
-    border-right: 2px solid transparent;
-    min-height: 28px;
-    border-top-color: transparent;
-    border-bottom-color: transparent;
-    border-left-color: transparent;
-    white-space: nowrap;
-}
-
-.folder > div > button {
-    font-size: 15px;
-    background-color: white;
-}
-
-.folder--function {
-    display: flex;
-    flex-flow: row nowrap;
-    opacity: 0;
-}
-
-/* .folder:hover {
-  background-color: rgba(55, 147, 224, 0.25);
-} */
-
-.folder > div {
-    padding-left: 1rem;
+.TreeItem > span {
+  padding-left: calc(1rem - 2px);
+  border-right: 2px solid transparent;
+  min-height: 28px;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  white-space: nowrap;
 }
 
 
-/*
-TODO: inputをinputcontainerの領域いっぱいまで広げるようにする
-TODO: そのうえで.inputContainer--validSignの配置場所を指定する
+.TreeItem--function {
+  display: flex;
+  flex-flow: row nowrap;
+  opacity: 0;
+}
 
-*/
+.TreeItem > div {
+  padding-left: 1rem;
+}
+
+
+
+.treeColumn-icon-name {
+  display: flex;
+  flex-direction: row;
+}
+
+.treeColumn-icon-name--icon {
+  width: 2.1rem;
+}
+
+.treeColumn-icon-name--name {
+  padding-left: 0.8rem;
+}
+
+
 
 .inputContainer {
   display: block;
   position: relative;
-  padding-left: calc(1rem - 2px);
-}
-
-.inputContainer > span {
-  margin-top: 5px;
+  padding-left: 1rem;
 }
 
 .inputContainer--column {
   display: flex;
-  gap: 5px;
+  gap: 0.8rem;
 }
 
+/* NOTE: 
+  heightを指定すると
+  border-boxを指定しても
+  inputが親領域いっぱいに拡がってくれない 
+
+  paneいっぱいまで幅をとる
+*/
 .inputContainer--input {
-  /* margin: 6px 0 0px 0; */
   margin: 0;
   padding: 0px;
   border: 1px solid lightgray;
   cursor: pointer;
-  /* paneいっぱいまで幅をとる */
   width: 100%;
-  /* NOTE: 
-    heightを指定すると
-    border-boxを指定しても
-    inputが親領域いっぱいに拡がってくれない 
-  */
   box-sizing: border-box;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -145,35 +140,46 @@ TODO: そのうえで.inputContainer--validSignの配置場所を指定する
   border: 1px solid red;
 }
 
+/* 
+width: 100% === inputContainerのpadding抜きの横幅
 
+margin-left === inputContainer gap + treeContainer-icon-name--icon width
+
+width: calc() === inputContainer gap + treeContainer-icon-name--icon width +
+inputContainer padding-left
+
+NOTE: ただし、treeContainer-icon-name--iconの幅は2.1指定しているのに適用されないからその分ずれる
+計算式は正しい。
+*/
 .inputContainer--validSign {
-  width: calc(100% - 2.64rem - 8px);
+  width: calc(100% - 2.1rem - 0.8rem - 1rem);
   position: absolute;
-  /* top等は指定しないこと */
-  margin-left: 2.64rem;
+  margin-left: calc(2.1rem + 0.8rem);
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  -ms-box-sizing: border-box;
 }
 
 .inputContainer--validSign.__invalid {
-    background-color: red;
-    opacity: 0.8;
-    border: 1px solid black;
+  background-color: red;
+  opacity: 0.8;
+  border: 1px solid pink;
 }
 
 .inputContainer--validSign.__valid {
-    background-color: cyan;
-    opacity: 0.8;
-    border: 1px solid blue;
+  background-color: cyan;
+  opacity: 0.8;
+  border: 1px solid blue;
 }
 
 
-.file {
+
+/* .file {
   display: flex;
   justify-content: space-between;
 }
-
-/* .file:hover {
-  background-color: rgba(55, 147, 224, 0.25);
-} */
 
 .file:hover .file--function {
   opacity: 1;
@@ -195,7 +201,72 @@ TODO: そのうえで.inputContainer--validSignの配置場所を指定する
 }
 
 
-.flex-break {
-  flex-basis: 100%;
-  height: 0;
+.folder {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  overflow-x: hidden;
 }
+
+.folder:hover .folder--function {
+  opacity: 1;
+}
+
+.folder > span {
+  padding-left: calc(1rem - 2px);
+  border-right: 2px solid transparent;
+  min-height: 28px;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  white-space: nowrap;
+}
+
+.folder > div > button {
+  font-size: 15px;
+  background-color: white;
+}
+
+.folder--function {
+  display: flex;
+  flex-flow: row nowrap;
+  opacity: 0;
+}
+
+.folder > div {
+  padding-left: 1rem;
+}
+ */
+
+
+ /* 
+               <div className="treeColumn" 
+                style={{ paddingLeft: `${nestDepth * 2.4}rem`}}
+              >
+                <div className="TreeItem" onClick={() => setExpand(!expand)}>
+                  <TreeColumnIconName explorer={explorer} />
+                  <div className="TreeItem--function">
+                    <div
+                      onClick={(e: React.MouseEvent<HTMLDivElement>) =>
+                        handleNewItem(e, true)
+                      }
+                    >
+                      <img src={addFolder} alt="add folder" />
+                    </div>
+                    <div
+                      onClick={(e: React.MouseEvent<HTMLDivElement>) =>
+                        handleNewItem(e, false)
+                      }
+                    >
+                    <img src={addFile} alt="add file" />
+                    </div>
+                    <div onClick={onDelete}>
+                      <img src={closeButton} alt="delete folder" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+ 
+ */
