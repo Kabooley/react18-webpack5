@@ -1119,14 +1119,42 @@ const TreeFunctions = ({
 };
 ```
 
-## div.inputContainer--validSignのmargin-leftを得るための計算値：
+## 実装：新規アイテム生成時のinputフォームバリデータ
 
 Pane幅: xとして...
 
-div.tree-column padding-left: 32px 
-div.inputContainer: 8px 
-div.inputContainer--input: 5px (gap)
-icon width: 18.6 
+---
 
-inputのleft合計: 32 + 8 + 5 + 18.6
-input width: x - (32 + 8 + 5 + 18.6) = 193.4
+NOTE: 大前提
+
+inputContainer--validSign width: 100% === div.inputContainer witdth
+
+例：
+
+inputContainer width: 168px
+
+inputContainer width = inputContainer padding-left 8px
+                     + icon element width 21.41px in thic case
+                     + gap 5px
+                     + inputContainer--input witdh 133.6px
+
+inputContainer widthはinputcontainer--validSign width 100%と同じとのことなので、
+
+```css
+/* これでうまくいった */
+
+/* 
+前提：width: 100% === inputContainer width
+0.8rem: inputCotnainer padding-left
+21.41px: icon element width
+5px: gap between icon element and input element
+*/
+.inputContainer--validSign {
+    width: calc(100% - 0.8rem - 21.41px - 5px);
+    position: absolute;
+    margin-left: calc(21.41px + 5px);
+```
+
+TODO: なぜかinputContainer--validSignにstyleが適用されない件の修正
+TODO: icon要素の追加とサイズの固定化
+TODO: file要素のfilenameが、paneをリサイズすると真ん中に配置されるのでこれを左詰めになるよう修正

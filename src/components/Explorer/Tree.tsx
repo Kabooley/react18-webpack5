@@ -217,7 +217,7 @@ const Tree = ({
                     <span>{showInput.isFolder ? "📁" : "📄"}</span>
                     <input
                       type="text"
-                      className="inputContainer--input"
+                      className={"inputContainer--input" + " " + (isNameValid ? "__valid" : "__invalid")}
                       onKeyDown={(e) => onAddItem(e, explorer.path)}
                       onBlur={() => setShowInput({ ...showInput, visible: false })}
                       onChange={(e) => handleNewItemNameInput(e, explorer.isFolder)}
@@ -238,7 +238,7 @@ const Tree = ({
                     <span>{showInput.isFolder ? "📁" : "📄"}</span>
                     <input
                       type="text"
-                      className="inputContainer--input"
+                      className={"inputContainer--input" + " " + (isNameValid ? "__valid" : "__invalid")}
                       onKeyDown={(e) => onAddItem(e, explorer.path)}
                       onBlur={() => setShowInput({ ...showInput, visible: false })}
                       onChange={(e) => handleNewItemNameInput(e, explorer.isFolder)}
@@ -246,7 +246,7 @@ const Tree = ({
                       placeholder={explorer.isFolder ? defaultNewDirectoryName : defaultNewFileName}
                     />
                   </div>
-                  <div className={"inputContainer--validSign" + (isNameValid ? "__valid" : "__invalid")}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
+                  <div className={"inputContainer--validSign" + " " + (isNameValid ? "__valid" : "__invalid")}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
                 </div>
               </div>
             )}
@@ -280,9 +280,8 @@ const Tree = ({
         >
           <div className="treeColumn" style={{ paddingLeft: `${nestDepth * 1.6}rem`}}>
             <div className="file">
-              <span className="file--name">
-                📄 {explorer.name}{" "}
-              </span>
+              <span>📄</span>
+              <span className="file--name">{explorer.name}</span>
               <div 
                 onClick={onDelete} 
                 className="file--function"
