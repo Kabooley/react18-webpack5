@@ -2,7 +2,7 @@
  * 
  * ************************************************/ 
 import React, { useState } from "react";
-import TreeColumnIconName from "./Icon";
+import TreeColumnIconName from "./TreeColumnIconName";
 
 // import {ReactComponebt as addFolder} from './add-folder.svg';
 // import {ReactComponebt as addFile} from './add-file.svg';
@@ -11,7 +11,9 @@ import TreeColumnIconName from "./Icon";
 // えらってるけど無視していいかも
 import addFolder from './add-folder.svg';
 import addFile from './add-file.svg';
-import closeButton from './close-file.svg';
+import closeButton from './close-button.svg';
+import textFileIcon from "./text-file.svg";
+import folderIcon from "./folder.svg";
 
 export interface iExplorer {
   id: string;
@@ -151,7 +153,9 @@ const Tree = ({
               >
                 <div className="inputContainer">
                   <div className="inputContainer--column">
-                    <span>{showInput.isFolder ? "📁" : "📄"}</span>
+                    <span className="treeColumn-icon-name--icon">
+                      {showInput.isFolder ? <img src={folderIcon} alt="folder icon" /> : <img src={textFileIcon} alt="text file icon" />}
+                    </span>
                     <input
                       type="text"
                       className={"inputContainer--input" + " " + (isNameValid ? "__valid" : "__invalid")}
@@ -172,7 +176,11 @@ const Tree = ({
               >
                 <div className="inputContainer">
                   <div className="inputContainer--column">
-                    <span className="treeColumn-icon-name--icon">{showInput.isFolder ? "📁" : "📄"}</span>
+      <div style={{ display: "inline-block", verticalAlign: "middle" }}>
+                    <span className="treeColumn-icon-name--icon">
+                      {showInput.isFolder ? <img src={folderIcon} alt="folder icon" /> : <img src={textFileIcon} alt="text file icon" />}
+                    </span>
+      </div>
                     <input
                       type="text"
                       className={"inputContainer--input" + " " + (isNameValid ? "__valid" : "__invalid")}
