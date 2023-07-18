@@ -27,6 +27,10 @@ body {
   color: #e6e6e6;
 }
 
+/* span {
+  display: inline-flex;
+} */
+
 .App {
   width: 300px;
   height: 100vh;
@@ -87,8 +91,9 @@ body {
   flex-direction: row;
 }
 
+/* iconを囲うspanに対してstyle={{display: inline-block}}にしているのでwidthが適用されない */
 .treeColumn-icon-name--icon {
-  width: 2.1rem;
+  /* width: 2.1rem; */
 }
 
 .treeColumn-icon-name--name {
@@ -98,7 +103,8 @@ body {
 
 
 .inputContainer {
-  display: block;
+  /* blockじゃなくていいなぁ */
+  /* display: block; */
   position: relative;
   padding-left: 1rem;
 }
@@ -175,98 +181,3 @@ NOTE: ただし、treeContainer-icon-name--iconの幅は2.1指定しているの
 }
 
 
-
-/* .file {
-  display: flex;
-  justify-content: space-between;
-}
-
-.file:hover .file--function {
-  opacity: 1;
-}
-
-.file > span {
-  white-space: nowrap;
-}
-
-.file--function {
-  margin: auto 0;
-  opacity: 0;
-}
-
-.file--name {
-  padding-left: calc(1rem - 2px);
-  display: flex;
-  flex-direction: column;
-}
-
-
-.folder {
-  display: flex;
-  flex-flow: row nowrap;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  overflow-x: hidden;
-}
-
-.folder:hover .folder--function {
-  opacity: 1;
-}
-
-.folder > span {
-  padding-left: calc(1rem - 2px);
-  border-right: 2px solid transparent;
-  min-height: 28px;
-  border-top-color: transparent;
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-  white-space: nowrap;
-}
-
-.folder > div > button {
-  font-size: 15px;
-  background-color: white;
-}
-
-.folder--function {
-  display: flex;
-  flex-flow: row nowrap;
-  opacity: 0;
-}
-
-.folder > div {
-  padding-left: 1rem;
-}
- */
-
-
- /* 
-               <div className="treeColumn" 
-                style={{ paddingLeft: `${nestDepth * 2.4}rem`}}
-              >
-                <div className="TreeItem" onClick={() => setExpand(!expand)}>
-                  <TreeColumnIconName explorer={explorer} />
-                  <div className="TreeItem--function">
-                    <div
-                      onClick={(e: React.MouseEvent<HTMLDivElement>) =>
-                        handleNewItem(e, true)
-                      }
-                    >
-                      <img src={addFolder} alt="add folder" />
-                    </div>
-                    <div
-                      onClick={(e: React.MouseEvent<HTMLDivElement>) =>
-                        handleNewItem(e, false)
-                      }
-                    >
-                    <img src={addFile} alt="add file" />
-                    </div>
-                    <div onClick={onDelete}>
-                      <img src={closeButton} alt="delete folder" />
-                    </div>
-                  </div>
-                </div>
-              </div>
- 
- */
