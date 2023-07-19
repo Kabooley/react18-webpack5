@@ -42,11 +42,15 @@ src/data/files.ts::files
 - 済）FileExplorerへReducer+Contextを導入したので完全に機能しているのかのテスト
 - 済）Tabs.tsxが`files`を直接インポートしているのでこれをcontext経由にさせる
 - 済）MonacoContainer.tsxが`files`を直接インポートしているのでこれをcontext経由にさせる
-- [Explorer: アイテム追加フォームへ入力している段階でファイル/フォルダ名が有効か無効を判断させる](#Explorer:-アイテム追加フォームへ入力している段階でファイル/フォルダ名が有効か無効を判断させる)
-- fileのsave機能
-- tabsでの変更のfilesへの反映
-- monaco-editorでの変更のfilesへの反映(file編集内容 --> File --> fileへ反映)
-- Explorerで開いているフォルダは開いていることがわかる見た目にする
+- 済) [Explorer: アイテム追加フォームへ入力している段階でファイル/フォルダ名が有効か無効を判断させる](#Explorer:-アイテム追加フォームへ入力している段階でファイル/フォルダ名が有効か無効を判断させる)
+
+- fileの保存機能：[file保存機能と関連機能](#file保存機能と関連機能)
+  Tabsではデフォルト表示ファイルと、ユーザが表示させたfileのみ表示させる
+    ともなってExplorer上ではカレントファイルをハイライトさせる
+  editorではデフォルト表示ファイルと、ユーザが表示させたfileのみ表示させる
+    ともなってTabsでの操作をeditor, fileへ反映させる
+  editorでの編集内容はfileへ反映させる（保存させる）
+
 - Explorerで変更が起こったら「整列」させる機能（新規フォルダ追加とか）
 - File.setPath()などするとき、既存のpathと被っていないか検査する
 - File.setPath()などするとき、path文字列が無効な文字列でないか検査する
@@ -63,6 +67,13 @@ src/data/files.ts::files
 - fileExplorerでアイテムを削除するときに確認をとる。（モーダル表示？）
 - previewのview決定
 - アンダーバーの追加(参考：snack)
+
+
+- stackoverflowへ投稿。addExtraLibとintelliscneseは仕事をしてくれ
+
+
+
+
 
 ## やったこと
 
@@ -1052,84 +1063,217 @@ fileのpath変更問題なし。
 
 ## Explorer: アイテム追加フォームへ入力している段階でファイル/フォルダ名が有効か無効を判断させる
 
-VSCodeの仕様に寄せる。
+#### 実装：新規アイテム生成時のinputフォームバリデータ
 
-- rootフォルダは通常のTreeとは異なるコンポーネントにする
-- file, folder共通のカラムコンポーネントを作る
-- 入力中はファイル名・フォルダ名が無効の時だけユーザ向けにエラー表示させる
-- 無効な入力の時はエンタキーを押しても反応させない。
-- 見た目はVSCodeと同じにする
-- 開いているフォルダ・閉じているフォルダの見た目もVSCodeと同じにする
+- ValidMessageは「入力が始まったら」表示される
+- ValidMessageは「フォームの入力が有効なら」表示されない
+- ValidMessageは「フォームの入力が無効なら」表示され、問題点を指摘するメッセージを映す
+- ValidMessageは「フォームの入力が空にされる」と、空文字列は受け付けないメッセージを表示する
+- `div.inputContainer--input`は入力内容が有効の時にborderが有効である色になる
 
-#### Create component common to file and folder
+上記を実現するために３つstateを追加した。
+
+`isInputBegun`, `isNameValid`, `isNameEmpty`
+
 
 ```TypeScript
-interface iTreeColumnProps{
-  explorer: iExplorer;
+import React from 'react';
+
+interface iProps {
+  isInputBegun: boolean;
+  isNameValid: boolean;
+  isNameEmpty: boolean;
 }
-const TreeColumn = ({
-  explorer,
-}: iTreeColumnProps) => {
 
-  const fileType = explorer.isFolder ? "folder" : "file";
+/**
+ * Valid Message for input form of New item on Explorer.
+ * 
+ * Appearence:
+ *    - Display nothing if `isInputBegun` is false.
+ *    - Display nothing if `isInputBegun` and `isNameValid` are true.
+ *    - Display if `isInputBegun` is false.
+ * 
+ * */ 
+const ValidMessage = ({
+  isInputBegun, isNameValid, isNameEmpty
+}: iProps) => {
+
+  const _className = "inputContainer--validSign" + " " + (isNameValid ? "__valid" : "__invalid");
+
+  const generateStyle = () => {
+    if(!isInputBegun) {
+      return { display: "none" };
+    }
+    else if(isInputBegun && isNameValid) {
+      return { display: "none" };
+    }
+    else if(isInputBegun && !isNameValid) {
+      return { display: "block" };
+    }
+  };
+
+
+  const generateMessage = () => {
+    if(isInputBegun && isNameEmpty) return "File or folder name is must be provided.";
+    if(isInputBegun && !isNameEmpty && !isNameValid) return "File or folder name is invalid.";
+    if(isInputBegun && isNameEmpty) return "File or folder name is must be provided.";
+  };
+
   return (
-    <div className={fileType}>
-      <TreeFunctions />
+    <div className={_className} style={generateStyle()}>
+      {generateMessage()}
     </div>
-  )
+  );
 };
 
-interface iTreeFunctionsProps {
-  explorer: iExplorer;
-  handleNewItem: (e: React.MouseEvent<HTMLDivElement>) => void;
-  onDelete: () => void;
-};
-
-const TreeFunctions = ({
-  explorer, handleNewItem, onDelete
-}: iTreeFunctionsProps) => {
-
-  if(explorer.isFolder) {
-    return (
-      <div className="folder--function">
-        <div
-          onClick={(e: React.MouseEvent<HTMLDivElement>) =>
-            handleNewItem(e, true)
-          }
-        >
-          <img src={addFolder} alt="add folder" />
-        </div>
-        <div
-          onClick={(e: React.MouseEvent<HTMLDivElement>) =>
-            handleNewItem(e, false)
-          }
-        >
-        <img src={addFile} alt="add file" />
-        </div>
-        <div onClick={onDelete}>
-          <img src={closeButton} alt="delete folder" />
-        </div>
-      </div>
-    );
-  }
-  else {
-    return (
-      <div 
-        onClick={onDelete} 
-        className="file--function"
-      >
-        <img src={closeButton} alt="delete file" />
-      </div>
-    );
-  }
-};
+export default ValidMessage;
 ```
 
-## 実装：新規アイテム生成時のinputフォームバリデータ
 
-TODO: あとでまとめ
+```TypeScript
+import React, { useState } from "react";
+import TreeColumnIconName from "./TreeColumnIconName";
+import ValidMessage from './ValidMessage';
+import DragNDrop from './DragNDrop';
+import { isFilenameValid, isFolderNameValid } from "../../utils";
+import type { iExplorer } from "../../data/types";
 
-## 新規アイテムネームinput時のvalidatorメッセージの状態管理
+
+const Tree = ({ 
+  explorer, nestDepth,
+  handleInsertNode, handleDeleteNode, handleReorderNode
+}: iProps) => {
+    const [expand, setExpand] = useState<boolean>(false);
+    const [showInput, setShowInput] = useState({
+      visible: false,
+      isFolder: false
+    });
+
+    // NOTE: ValidMessageのためのstates
+    // 
+    const [isInputBegun, setIsInputBegun] = useState<boolean>(false);
+    const [isNameValid, setIsNameValid] = useState<boolean>(false);
+    const [isNameEmpty, setIsNameEmpty] = useState<boolean>(false);
+
+    const handleNewItem = (
+      e: React.MouseEvent<HTMLDivElement>,
+      isFolder: boolean
+    ) => {
+      e.stopPropagation();
+      setExpand(true);
+      setShowInput({
+        visible: true,
+        isFolder
+      });
+    };
+
+
+    const onAddItem = (
+      e: React.KeyboardEvent<HTMLInputElement>,
+      addTo: string
+    ) => {
+      const requiredPath = addTo.length
+        ? addTo + "/" + e.currentTarget.value
+        : e.currentTarget.value;
+      if (e.keyCode === 13 && requiredPath && isNameValid) {
+        handleInsertNode(requiredPath, showInput.isFolder);
+        // Clear states
+        setShowInput({ ...showInput, visible: false });
+        setIsInputBegun(false);
+        setIsNameValid(false);
+        setIsNameEmpty(false);
+      }
+    };
+  
+
+    const handleNewItemNameInput = (
+      e: React.ChangeEvent<HTMLInputElement>,
+      isFolder: boolean
+    ) => {
+      // DEBUG:
+      console.log(`[handleNewItemNameInput] ${e.currentTarget.value}`);
+  
+      setIsInputBegun(true);
+  
+      // Check if input form is empty.
+      e.currentTarget.value.length ? setIsNameEmpty(false) : setIsNameEmpty(true);
+  
+      // Check if value is valid
+      if (isFolder && isFolderNameValid(e.currentTarget.value)) {
+        setIsNameValid(true);
+      } else if (isFilenameValid(e.currentTarget.value)) {
+        setIsNameValid(true);
+      } else {
+        setIsNameValid(false);
+      }
+    };
+
+    // ...
+
+    if (explorer.isFolder) {
+      return (
+        <div>
+          // ....省略...
+
+          <div style={{ display: expand ? "block" : "none" }}>
+            {showInput.visible && (
+              <div
+                className="treeColumn"
+                style={{ paddingLeft: `${nestDepth * 2.4}rem` }}
+              >
+                <div className="inputContainer">
+                  <div className="inputContainer--column">
+                    <span className="treeColumn-icon-name--icon">
+                      {showInput.isFolder ? (
+                        <img src={folderIcon} alt="folder icon" />
+                      ) : (
+                        <img src={textFileIcon} alt="text file icon" />
+                      )}
+                    </span>
+                    <input
+                      type="text"
+                      className={
+                        "inputContainer--input" +
+                        " " +
+                        (isNameValid ? "__valid" : "__invalid")
+                      }
+                      onKeyDown={(e) => onAddItem(e, explorer.path)}
+                      onBlur={() => {
+                        setIsInputBegun(false);
+                        setShowInput({ ...showInput, visible: false });
+                      }}
+                      onChange={(e) =>
+                        handleNewItemNameInput(e, explorer.isFolder)
+                      }
+                      autoFocus
+                      placeholder={
+                        explorer.isFolder
+                          ? defaultNewDirectoryName
+                          : defaultNewFileName
+                      }
+                    />
+                  </div>
+                  // NOTE: `ValidMessage`がフォームバリデータviewを提供する
+                  // 
+                  <ValidMessage isNameEmpty={isNameEmpty} isInputBegun={isInputBegun} isNameValid={isNameValid} />
+                </div>
+              </div>
+            )}
+            {explorer.items.map((exp: iExplorer) => {
+              // ...
+            })}
+          </div>
+        </div>
+      );
+    } else {
+        // ...
+    }
+  };
+
+```
+
+
+#### 新規アイテムネームinput時のvalidatorメッセージの状態管理
 
 ```JavaScript
   const [isInputBegun, setIsInputBegun] = useState<boolean>(false);
@@ -1174,74 +1318,18 @@ valid message表示
 有効ならvalid messageは表示しなくていいなぁ。無効の時だけ表示させる。
 
 
+## file保存機能と関連機能
 
-```TypeScript
+やることめも
 
-import React from 'react';
+  Tabsではデフォルト表示ファイルと、ユーザが表示させたfileのみ表示させる
+    ともなってExplorer上ではカレントファイルをハイライトさせる
+  editorではデフォルト表示ファイルと、ユーザが表示させたfileのみ表示させる
+    ともなってTabsでの操作をeditor, fileへ反映させる
+  editorでの編集内容はfileへ反映させる（保存させる）
 
-interface iProps {
-  isInputBegun: boolean;
-  isNameValid: boolean;
-  isNameEmpty: boolean;
-}
+何をどこへ保存すればいいのか
 
-/**
- * Valid Message
- * 
- * NOTE: This requires `isNameValid` TO BE TRUE as initialized valud.
- * 
- * Appearence:
- *    - display nothing if `isInputBegun` is false.
- *    - display nothing if `isInputBegun` and `isNameValid` are true.
- *    - display if `isInputBegun` is false.
- * 
- * */ 
-const ValidMessage = ({
-  isInputBegun, isNameValid, isNameEmpty
-}: iProps) => {
-
-  const _className = {
-    "inputContainer--validSign" +" " +(isNameValid ? "__valid" : "__invalid")
-  };
-
-  const generateStyle = () => {
-    if(!isInputBegun) {
-      return { display: "none" };
-    }
-    else if(isInputBegun && isNameValid) {
-      return { display: "none" };
-    }
-    else if(isInputBegun && !isNameValid) {
-      return { display: "block" };
-    }
-  };
-
-
-  const generateMessage = () => {
-    if(isInputBegun && isNameEmpty) return "File or folder name is must be provided.";
-    if(isInputBegun && !isNameEmpty && !isNameValid) return "File or folder name is invalid.";
-    if(isInputBegun && isNameEmpty) return "File or folder name is must be provided.";
-  };
-
-  return (
-    <div className={_className} style={generateStyle()}>
-      {generateMessage()}
-    </div>
-  );
-};
-
-export default ValidMessage;
-```
-
-#### Refactoring
-
-時間があれば
-
-コンポーネントを分割
-
-- `div.treeColum`の括りを一つのコンポーネントに
-- `div.inputContainer`の括りをひとつのコンポーネントに
-
-```TypeScript
-
-```
+editorの編集内容 --> model, file
+tabsの閉じる操作 --> editorの該当modelを表示中だった場合にそのmodelをeditorからunsetする、かつeditorの編集内容をmodeleへ保存する、かつfileへ反映
+fileをダブルクリックする --> editorへ該当modelを反映させる、かつtabsへ該当ファイルのtabを表示させる、fileへ保存してあった値をeditorへ表示させる

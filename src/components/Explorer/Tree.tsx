@@ -4,12 +4,11 @@
 import React, { useState } from "react";
 import TreeColumnIconName from "./TreeColumnIconName";
 import ValidMessage from './ValidMessage';
-import type { iExplorer } from "../../data/types";
 import DragNDrop from './DragNDrop';
 import { isFilenameValid, isFolderNameValid } from "../../utils";
+import type { iExplorer } from "../../data/types";
 
 // Icons
-// import editPencil from '../../assets/pencil-edit.svg';
 import addFolder from '../../assets/add-folder.svg';
 import addFile from '../../assets/add-file.svg';
 import closeButton from '../../assets/close-button.svg';
@@ -19,9 +18,7 @@ import folderIcon from "../../assets/folder.svg";
 interface iProps {
   nestDepth: number;
   explorer: iExplorer;
-  // handleInsertNode: (folderId: string, item: string, isFolder: boolean) => void;
   handleInsertNode: (requiredPath: string, isFolder: boolean) => void;
-  // handleDeleteNode: (itemId: string, isFolder: boolean) => void;
   handleDeleteNode: (explorer: iExplorer) => void;
   handleReorderNode: (droppedId: string, draggableId: string) => void;
 };
@@ -46,7 +43,6 @@ const Tree = ({
     const [isNameEmpty, setIsNameEmpty] = useState<boolean>(false);
     const [dragging, setDragging] = useState<boolean>(false);
 
-    // TODO: 名前が紛らわしいかも
     const handleNewItem = (
       e: React.MouseEvent<HTMLDivElement>,
       isFolder: boolean
@@ -204,11 +200,7 @@ const Tree = ({
                 </div>
               </div>
             </DragNDrop>
-          <div 
-            // temporary:
-            // style={{ display: expand ? "block" : "none" }}
-            style={{ display: "block" }}
-          >
+          <div style={{ display: expand ? "block" : "none" }}>
             {showInput.visible && (
               <div
                 className="treeColumn"
@@ -250,7 +242,8 @@ const Tree = ({
                 </div>
               </div>
             )}
-            {explorer.name === "temporary" && (
+            {/* In case test input Container. */}
+            {/* {explorer.name === "temporary" && (
               <div
                 className="treeColumn"
                 style={{ paddingLeft: `${nestDepth * 2.4}rem` }}
@@ -289,15 +282,12 @@ const Tree = ({
                           ? defaultNewDirectoryName
                           : defaultNewFileName
                       }
-                      // NOTE: experimental
-                      // https://stackoverflow.com/questions/31353905/is-an-input-field-valid-while-is-empty
-                      required
                     />
                   </div>
                   <ValidMessage isNameEmpty={isNameEmpty} isInputBegun={isInputBegun} isNameValid={isNameValid} />
                 </div>
               </div>
-            )}
+            )} */}
             {explorer.items.map((exp: iExplorer) => {
               const nd = nestDepth + 1;
               return (

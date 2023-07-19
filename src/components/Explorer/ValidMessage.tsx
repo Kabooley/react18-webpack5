@@ -10,9 +10,9 @@ interface iProps {
  * Valid Message for input form of New item on Explorer.
  * 
  * Appearence:
- *    - display nothing if `isInputBegun` is false.
- *    - display nothing if `isInputBegun` and `isNameValid` are true.
- *    - display if `isInputBegun` is false.
+ *    - Display nothing if `isInputBegun` is false.
+ *    - Display nothing if `isInputBegun` and `isNameValid` are true.
+ *    - Display if `isInputBegun` is false.
  * 
  * */ 
 const ValidMessage = ({
