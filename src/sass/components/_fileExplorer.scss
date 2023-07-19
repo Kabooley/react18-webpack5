@@ -1,152 +1,145 @@
-/**
-    - ネストする際の幅は、アイコン一つ分くらいの間隔にしたい
-    - 
-
-***/ 
+/* 
+MAKE SURE YOU'RE SETTING `font-size: 1.6rem;` 
+on parent element style. 
+*/
 
 .treeColumn:hover {
-    background-color: rgba(55, 147, 224, 0.25);
+  background-color: rgba(55, 147, 224, 0.25);
 }
 
-.folder {
+.TreeItem {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  overflow-x: hidden;
+
+  &:hover .TreeItem--function {
+    opacity: 1;
+  }
+  
+  & > span {
+    padding-left: calc(1rem - 2px);
+    border-right: 2px solid transparent;
+    min-height: 28px;
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+    border-left-color: transparent;
+    white-space: nowrap;
+  }
+  
+  &--function {
     display: flex;
     flex-flow: row nowrap;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    overflow-x: hidden;
+    opacity: 0;
+  }
+  
+  & > div {
+    padding-left: 1rem;
+  }
+}
 
-    &:hover .folder--function {
-        opacity: 1;
+
+
+.treeColumn-icon-name {
+  display: flex;
+  flex-direction: row;
+
+  /* iconを囲うspanに対してstyle={{display: inline-block}}にしているのでwidthが適用されない */
+    &--icon {
     }
 
-    & > span {
-        padding-left: calc(1rem - 2px);
-        border-right: 2px solid transparent;
-        min-height: 28px;
-        border-top-color: transparent;
-        border-bottom-color: transparent;
-        border-left-color: transparent;
-        white-space: nowrap;
-    }
-    
-    & > div > button {
-        font-size: 15px;
-        background-color: white;
-    }
-    
-    &--function {
-        display: flex;
-        flex-flow: row nowrap;
-        opacity: 0;
-    }
-    
-    & > div {
-        padding-left: 1rem;
+    &--name {
+    padding-left: 0.8rem;
     }
 }
 
+
+
 .inputContainer {
-    display: block;
-    position: relative;
-    padding-left: calc(1rem - 2px);
+  position: relative;
+  padding-left: 1rem;
+}
 
-    & > span {
-        margin-top: 5px;
-    }
-    
-    &--column {
-        display: flex;
-        gap: 5px;
-    }
-    
-    /* NOTE: 
-        heightを指定すると
-        border-boxを指定しても
-        inputが親領域いっぱいに拡がってくれない 
+.inputContainer--column {
+  display: flex;
+  gap: 0.8rem;
+}
 
-        paneいっぱいまで幅をとる
-    */
-    &--input {
-        margin: 0;
-        padding: 0px;
-        border: 1px solid lightgray;
-        cursor: pointer;
-        width: 100%;
-        box-sizing: border-box;
-        -webkit-box-sizing: border-box;
-        -moz-box-sizing: border-box;
-        -o-box-sizing: border-box;
-        -ms-box-sizing: border-box;
-    }
-    
-    &--input:focus {
-        outline: none;
-    }
-    
-    &--input:focus.__valid {
-        border: 1px solid cyan;
-    }
-    
-    &--input:not(:placeholder-shown).__invalid {
-        border: 1px solid red;
-    }
+/* NOTE: 
+  heightを指定すると
+  border-boxを指定しても
+  inputが親領域いっぱいに拡がってくれない 
+
+  paneいっぱいまで幅をとる
+*/
+.inputContainer--input {
+  margin: 0;
+  padding: 0px;
+  border: 1px solid lightgray;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+}
+
+.inputContainer--input:focus {
+  outline: none;
+}
+
+.inputContainer--input:focus.__valid {
+  border: 1px solid cyan;
+}
+
+.inputContainer--input:not(:placeholder-shown).__invalid {
+  border: 1px solid red;
 }
 
 /* 
-前提：width: 100% === inputContainer width
-0.8rem: inputCotnainer padding-left
-21.41px: icon element width
-5px: gap between icon element and input element
-*/
+  To fix width equal to input.inputCotainer--input,
+
+  - 100%: Equal to div.inputContainer element width ( Excluding its padding-left)
+  - 1.6rem: Equal to icon element width
+  - 0.8rem: Equal to gap of div.inputContainer--input
+  - 1rem: Equal to div.inputContainer padding-left
+  */
 .inputContainer--validSign {
-    width: calc(100% - 0.8rem - 21.41px - 5px);
-    position: absolute;
-    margin-left: calc(21.41px + 5px);
-    
-    &.__invalid {
-        background-color: red;
-        opacity: 0.8;
-        border: 1px solid pink;
-    }
-    
-    &.__valid {
-        background-color: cyan;
-        opacity: 0.8;
-        border: 1px solid blue;
-    }
-}
-  
-
-.file {
-    display: flex;
-    justify-content: space-between;
-
-    &:hover .file--function {
-        opacity: 1;
-    }
-    
-    & > span {
-        white-space: nowrap;
-    }
-    
-    &--function {
-        margin: auto 0;
-        opacity: 0;
-    }
-    
-    &--name {
-        padding-left: calc(1rem - 2px);
-        display: flex;
-        flex-direction: column;
-    }
+  width: calc(100% - 1.6rem - 0.8rem - 1rem);
+  position: absolute;
+  margin-left: calc(1.6rem + 0.8rem);
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  -ms-box-sizing: border-box;
 }
 
-// --- LEGACY ---
+.inputContainer--validSign:not(:placeholder-shown).__invalid {
+  background-color: red;
+  opacity: 0.8;
+  border: 1px solid pink;
+}
 
-// .file-explorer {
-//     // editorのフォントサイズに準じる 
-//     font-size: 1.4rem;
+.inputContainer--validSign.__valid {
+  background-color: cyan;
+  opacity: 0.8;
+  border: 1px solid blue;
+}
+
+
+
+// /**
+//     - ネストする際の幅は、アイコン一つ分くらいの間隔にしたい
+//     - 
+
+// ***/ 
+
+// .treeColumn:hover {
+//     background-color: rgba(55, 147, 224, 0.25);
 // }
 
 // .folder {
@@ -157,16 +150,11 @@
 //     cursor: pointer;
 //     overflow-x: hidden;
 
-//     &:hover {
-//         background-color: rgba(55, 147, 224, 0.25);
-//     }
-
 //     &:hover .folder--function {
 //         opacity: 1;
 //     }
 
-//     > span {
-//         /* margin: 0 5px; */
+//     & > span {
 //         padding-left: calc(1rem - 2px);
 //         border-right: 2px solid transparent;
 //         min-height: 28px;
@@ -175,59 +163,91 @@
 //         border-left-color: transparent;
 //         white-space: nowrap;
 //     }
-
-//     > div > button {
+    
+//     & > div > button {
 //         font-size: 15px;
 //         background-color: white;
 //     }
-
+    
 //     &--function {
 //         display: flex;
 //         flex-flow: row nowrap;
 //         opacity: 0;
-    
-//         &:hover {
-//             background-color: rgba(55, 147, 224, 0.25);
-//         }
-    
-//         > div {
-//             padding-left: 1rem;
-//         }
 //     }
     
-//   }
-  
-  
-// .inputContainer{
-//     display: flex;
-//     align-items: center;
-//     gap: 5px;
+//     & > div {
+//         padding-left: 1rem;
+//     }
+// }
 
-//     > span {
+// .inputContainer {
+//     display: block;
+//     position: relative;
+//     padding-left: calc(1rem - 2px);
+
+//     & > span {
 //         margin-top: 5px;
 //     }
-
-//     &--input {
-//         margin: 6px 0 0px 0;
-//         padding: 5px;
+    
+//     &--column {
 //         display: flex;
-//         border: 1px solid lightgray;
-//         align-items: center;
-//         justify-content: space-between;
-//         cursor: pointer;
+//         gap: 5px;
 //     }
+    
+//     /* NOTE: 
+//         heightを指定すると
+//         border-boxを指定しても
+//         inputが親領域いっぱいに拡がってくれない 
 
-//     &--validSign {
+//         paneいっぱいまで幅をとる
+//     */
+//     &--input {
+//         margin: 0;
+//         padding: 0px;
+//         border: 1px solid lightgray;
+//         cursor: pointer;
+//         width: 100%;
+//         box-sizing: border-box;
+//         -webkit-box-sizing: border-box;
+//         -moz-box-sizing: border-box;
+//         -o-box-sizing: border-box;
+//         -ms-box-sizing: border-box;
+//     }
+    
+//     &--input:focus {
+//         outline: none;
+//     }
+    
+//     &--input:focus.__valid {
+//         border: 1px solid cyan;
+//     }
+    
+//     &--input:not(:placeholder-shown).__invalid {
+//         border: 1px solid red;
+//     }
+// }
 
-//         .__invalid {
-//             background-color: red;
-//             opacity: 0.8;
-//         }
-
-//         .__valid {
-//             background-color: cyan;
-//             opacity: 0.8;
-//         }
+// /* 
+// 前提：width: 100% === inputContainer width
+// 0.8rem: inputCotnainer padding-left
+// 21.41px: icon element width
+// 5px: gap between icon element and input element
+// */
+// .inputContainer--validSign {
+//     width: calc(100% - 0.8rem - 21.41px - 5px);
+//     position: absolute;
+//     margin-left: calc(21.41px + 5px);
+    
+//     &.__invalid {
+//         background-color: red;
+//         opacity: 0.8;
+//         border: 1px solid pink;
+//     }
+    
+//     &.__valid {
+//         background-color: cyan;
+//         opacity: 0.8;
+//         border: 1px solid blue;
 //     }
 // }
   
@@ -236,32 +256,22 @@
 //     display: flex;
 //     justify-content: space-between;
 
-//     &:hover {
-//         background-color: rgba(55, 147, 224, 0.25);
-//     }
-    
 //     &:hover .file--function {
 //         opacity: 1;
 //     }
-
-//     > span {
+    
+//     & > span {
 //         white-space: nowrap;
 //     }
-
+    
 //     &--function {
 //         margin: auto 0;
 //         opacity: 0;
 //     }
-
+    
 //     &--name {
 //         padding-left: calc(1rem - 2px);
 //         display: flex;
 //         flex-direction: column;
 //     }
-// }
-
-
-// .flex-break {
-//     flex-basis: 100%;
-//     height: 0;
 // }

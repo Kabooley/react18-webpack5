@@ -2,6 +2,8 @@
  * 
  * ************************************************/ 
 import React, { useState } from "react";
+import TreeColumnIconName from "./TreeColumnIconName";
+import ValidMessage from './ValidMessage';
 import type { iExplorer } from "../../data/types";
 import DragNDrop from './DragNDrop';
 import { isFilenameValid, isFolderNameValid } from "../../utils";
@@ -11,6 +13,8 @@ import { isFilenameValid, isFolderNameValid } from "../../utils";
 import addFolder from '../../assets/add-folder.svg';
 import addFile from '../../assets/add-file.svg';
 import closeButton from '../../assets/close-button.svg';
+import textFileIcon from "../../assets/text-file.svg";
+import folderIcon from "../../assets/folder.svg";
 
 interface iProps {
   nestDepth: number;
@@ -37,7 +41,9 @@ const Tree = ({
     // NOTE: state管理じゃなくてもいい気がするなぁ let変数でもいいような
     // 
     // Use this state while being input form for new item.
+    const [isInputBegun, setIsInputBegun] = useState<boolean>(false);
     const [isNameValid, setIsNameValid] = useState<boolean>(false);
+    const [isNameEmpty, setIsNameEmpty] = useState<boolean>(false);
     const [dragging, setDragging] = useState<boolean>(false);
 
     // TODO: 名前が紛らわしいかも
@@ -53,49 +59,43 @@ const Tree = ({
       });
     };
 
-    const onAddItem = (e: React.KeyboardEvent<HTMLInputElement>, addTo: string) => {
-      const requiredPath = addTo.length ? addTo + '/' + e.currentTarget.value : e.currentTarget.value;
+
+    const onAddItem = (
+      e: React.KeyboardEvent<HTMLInputElement>,
+      addTo: string
+    ) => {
+      const requiredPath = addTo.length
+        ? addTo + "/" + e.currentTarget.value
+        : e.currentTarget.value;
       if (e.keyCode === 13 && requiredPath && isNameValid) {
-          handleInsertNode(requiredPath, showInput.isFolder);
-          setShowInput({ ...showInput, visible: false });
-          setIsNameValid(false);
+        handleInsertNode(requiredPath, showInput.isFolder);
+        // Clear states
+        setShowInput({ ...showInput, visible: false });
+        setIsInputBegun(false);
+        setIsNameValid(false);
+        setIsNameEmpty(false);
       }
     };
+  
 
-    // Check if input value is valid for file/folder name.
-    // 
-    // ref
-    // https://stackoverflow.com/questions/40676343/typescript-input-onchange-event-target-value
-    // 
-    // Accept: `A-Z`, `a-z`, `0-9`, `.`, `-`, `_`, `/`
-    // `/`はまだ実装先になるかも
-    // 
-    // Invalid:
-    // typ
-    // typing_.
-    // typing_.-
-    // typing_.-wor
-    // typing_.-worker
-    // typing_.-worker.
-    // (Any other characters without Accepted characters...)
-    // 
-    // Valid:
-    // typing_.-worker.js
-    // 
-    // 
     const handleNewItemNameInput = (
       e: React.ChangeEvent<HTMLInputElement>,
       isFolder: boolean
-      ) => {  
+    ) => {
       // DEBUG:
       console.log(`[handleNewItemNameInput] ${e.currentTarget.value}`);
-      if(isFolder && isFolderNameValid(e.currentTarget.value)) {
+  
+      setIsInputBegun(true);
+  
+      // Check if input form is empty.
+      e.currentTarget.value.length ? setIsNameEmpty(false) : setIsNameEmpty(true);
+  
+      // Check if value is valid
+      if (isFolder && isFolderNameValid(e.currentTarget.value)) {
         setIsNameValid(true);
-      }
-      else if(isFilenameValid(e.currentTarget.value)) {
+      } else if (isFilenameValid(e.currentTarget.value)) {
         setIsNameValid(true);
-      }
-      else {
+      } else {
         setIsNameValid(false);
       }
     };
@@ -176,12 +176,13 @@ const Tree = ({
               onDrop={(e) => onDrop(e, explorer.id)}
               onDragOver={onDragOver}
             >
-              <div className="treeColumn" 
-                style={{ paddingLeft: `${nestDepth * 1.6}rem`}}
+              <div
+                className="treeColumn"
+                style={{ paddingLeft: `${nestDepth * 2.4}rem` }}
               >
-                <div className="folder" onClick={() => setExpand(!expand)}>
-                  <span>📁 {explorer.name}</span>
-                  <div className="folder--function">
+                <div className="TreeItem" onClick={() => setExpand(!expand)}>
+                  <TreeColumnIconName explorer={explorer} />
+                  <div className="TreeItem--function">
                     <div
                       onClick={(e: React.MouseEvent<HTMLDivElement>) =>
                         handleNewItem(e, true)
@@ -194,7 +195,7 @@ const Tree = ({
                         handleNewItem(e, false)
                       }
                     >
-                    <img src={addFile} alt="add file" />
+                      <img src={addFile} alt="add file" />
                     </div>
                     <div onClick={onDelete}>
                       <img src={closeButton} alt="delete folder" />
@@ -209,44 +210,91 @@ const Tree = ({
             style={{ display: "block" }}
           >
             {showInput.visible && (
-              <div className="treeColumn"
-                style={{ paddingLeft: `${nestDepth * 1.6}rem`}}
+              <div
+                className="treeColumn"
+                style={{ paddingLeft: `${nestDepth * 2.4}rem` }}
               >
                 <div className="inputContainer">
                   <div className="inputContainer--column">
-                    <span>{showInput.isFolder ? "📁" : "📄"}</span>
+                    <span className="treeColumn-icon-name--icon">
+                      {showInput.isFolder ? (
+                        <img src={folderIcon} alt="folder icon" />
+                      ) : (
+                        <img src={textFileIcon} alt="text file icon" />
+                      )}
+                    </span>
                     <input
                       type="text"
-                      className={"inputContainer--input" + " " + (isNameValid ? "__valid" : "__invalid")}
+                      className={
+                        "inputContainer--input" +
+                        " " +
+                        (isNameValid ? "__valid" : "__invalid")
+                      }
                       onKeyDown={(e) => onAddItem(e, explorer.path)}
-                      onBlur={() => setShowInput({ ...showInput, visible: false })}
-                      onChange={(e) => handleNewItemNameInput(e, explorer.isFolder)}
+                      onBlur={() => {
+                        setIsInputBegun(false);
+                        setShowInput({ ...showInput, visible: false });
+                      }}
+                      onChange={(e) =>
+                        handleNewItemNameInput(e, explorer.isFolder)
+                      }
                       autoFocus
-                      placeholder={explorer.isFolder ? defaultNewDirectoryName : defaultNewFileName}
+                      placeholder={
+                        explorer.isFolder
+                          ? defaultNewDirectoryName
+                          : defaultNewFileName
+                      }
                     />
                   </div>
-                  <div className={"inputContainer--validSign" + (isNameValid ? "__valid" : "__invalid")}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
+                  <ValidMessage isNameEmpty={isNameEmpty} isInputBegun={isInputBegun} isNameValid={isNameValid} />
                 </div>
               </div>
             )}
             {explorer.name === "temporary" && (
-              <div className="treeColumn"
-                style={{ paddingLeft: `${nestDepth * 1.6}rem`}}
+              <div
+                className="treeColumn"
+                style={{ paddingLeft: `${nestDepth * 2.4}rem` }}
               >
                 <div className="inputContainer">
                   <div className="inputContainer--column">
-                    <span>{showInput.isFolder ? "📁" : "📄"}</span>
+                    <div
+                      style={{ display: "inline-block", verticalAlign: "middle" }}
+                    >
+                      <span className="treeColumn-icon-name--icon">
+                        {showInput.isFolder ? (
+                          <img src={folderIcon} alt="folder icon" />
+                        ) : (
+                          <img src={textFileIcon} alt="text file icon" />
+                        )}
+                      </span>
+                    </div>
                     <input
                       type="text"
-                      className={"inputContainer--input" + " " + (isNameValid ? "__valid" : "__invalid")}
+                      className={
+                        "inputContainer--input" +
+                        " " +
+                        (isNameValid ? "__valid" : "__invalid")
+                      }
                       onKeyDown={(e) => onAddItem(e, explorer.path)}
-                      onBlur={() => setShowInput({ ...showInput, visible: false })}
-                      onChange={(e) => handleNewItemNameInput(e, explorer.isFolder)}
+                      onBlur={() => {
+                        setIsInputBegun(false);
+                        setShowInput({ ...showInput, visible: false });
+                      }}
+                      onChange={(e) =>
+                        handleNewItemNameInput(e, explorer.isFolder)
+                      }
                       autoFocus
-                      placeholder={explorer.isFolder ? defaultNewDirectoryName : defaultNewFileName}
+                      placeholder={
+                        explorer.isFolder
+                          ? defaultNewDirectoryName
+                          : defaultNewFileName
+                      }
+                      // NOTE: experimental
+                      // https://stackoverflow.com/questions/31353905/is-an-input-field-valid-while-is-empty
+                      required
                     />
                   </div>
-                  <div className={"inputContainer--validSign" + " " + (isNameValid ? "__valid" : "__invalid")}>{isNameValid ? "Name is valid" : "Name is invalid"}</div>
+                  <ValidMessage isNameEmpty={isNameEmpty} isInputBegun={isInputBegun} isNameValid={isNameValid} />
                 </div>
               </div>
             )}
@@ -278,14 +326,13 @@ const Tree = ({
           onDrop={(e) => onDrop(e, explorer.id)}
           onDragOver={onDragOver}
         >
-          <div className="treeColumn" style={{ paddingLeft: `${nestDepth * 1.6}rem`}}>
-            <div className="file">
-              <span>📄</span>
-              <span className="file--name">{explorer.name}</span>
-              <div 
-                onClick={onDelete} 
-                className="file--function"
-              >
+          <div
+            className="treeColumn"
+            style={{ paddingLeft: `${nestDepth * 2.4}rem` }}
+          >
+            <div className="TreeItem">
+              <TreeColumnIconName explorer={explorer} />
+              <div onClick={onDelete} className="TreeItem--function">
                 <img src={closeButton} alt="delete file" />
               </div>
             </div>

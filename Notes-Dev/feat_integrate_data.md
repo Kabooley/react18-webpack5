@@ -8,6 +8,12 @@ FileExplorer, monaco-editor, tabsの変更はfilesへ反映され、
 
 全体が変更された`files`を基に再レンダリングされるようにする 
 
+## TEST
+
+codesandbox:
+
+https://codesandbox.io/s/new-filename-input-validation-0719-frrhkf
+
 ## やること
 
 - 次の通り`files: File[]`を基にレンダリングされるように各コンポーネントの状態管理を`files`に基づかせる。
@@ -1121,40 +1127,121 @@ const TreeFunctions = ({
 
 ## 実装：新規アイテム生成時のinputフォームバリデータ
 
-Pane幅: xとして...
+TODO: あとでまとめ
 
----
+## 新規アイテムネームinput時のvalidatorメッセージの状態管理
 
-NOTE: 大前提
-
-inputContainer--validSign width: 100% === div.inputContainer witdth
-
-例：
-
-inputContainer width: 168px
-
-inputContainer width = inputContainer padding-left 8px
-                     + icon element width 21.41px in thic case
-                     + gap 5px
-                     + inputContainer--input witdh 133.6px
-
-inputContainer widthはinputcontainer--validSign width 100%と同じとのことなので、
-
-```css
-/* これでうまくいった */
-
-/* 
-前提：width: 100% === inputContainer width
-0.8rem: inputCotnainer padding-left
-21.41px: icon element width
-5px: gap between icon element and input element
-*/
-.inputContainer--validSign {
-    width: calc(100% - 0.8rem - 21.41px - 5px);
-    position: absolute;
-    margin-left: calc(21.41px + 5px);
+```JavaScript
+  const [isInputBegun, setIsInputBegun] = useState<boolean>(false);
+  const [isNameValid, setIsNameValid] = useState<boolean>(false);
+  const [isNameEmpty, setIsNameEmpty] = useState<boolean>(false);
 ```
 
-TODO: なぜかinputContainer--validSignにstyleが適用されない件の修正
-TODO: icon要素の追加とサイズの固定化
-TODO: file要素のfilenameが、paneをリサイズすると真ん中に配置されるのでこれを左詰めになるよう修正
+`isInputBegun`入力が始まったらtrue(onChangeが初めて呼び出されたらtrue)、onblurまたはenterキー押下でfalse
+`isNameValid`入力内容が正しいか否か判定する、onblurまたはenterキー押下でfalse
+`inNameEmpty`NOTE: 初期値がfalseである。入力内容が空でないかどうか判定する、onblurまたはenterキー押下でfalse
+
+まだ入力が始まっていない：
+
+`!isInputBegun && !isNameValid && isNameEmpty`
+
+valid messageは表示しない
+
+入力が始まった：
+
+`isInputBegun && isNameEmpty`
+
+valid message表示
+
+入力内容が空になった：
+
+`isINputBegun && !isNameEmpty`
+
+valid message表示
+
+入力内容が無効または有効である:
+
+`isNameValid`
+
+valid message表示
+
+つまり、
+
+- `isInputBegun`がfalseの場合、valid messageは表示しない
+- message内容：`!isNameValid`「無効である」 `isNameValid`「有効である」
+- message内容：`!isNameEmpty`「空文字は無効である」
+
+有効ならvalid messageは表示しなくていいなぁ。無効の時だけ表示させる。
+
+
+
+```TypeScript
+
+import React from 'react';
+
+interface iProps {
+  isInputBegun: boolean;
+  isNameValid: boolean;
+  isNameEmpty: boolean;
+}
+
+/**
+ * Valid Message
+ * 
+ * NOTE: This requires `isNameValid` TO BE TRUE as initialized valud.
+ * 
+ * Appearence:
+ *    - display nothing if `isInputBegun` is false.
+ *    - display nothing if `isInputBegun` and `isNameValid` are true.
+ *    - display if `isInputBegun` is false.
+ * 
+ * */ 
+const ValidMessage = ({
+  isInputBegun, isNameValid, isNameEmpty
+}: iProps) => {
+
+  const _className = {
+    "inputContainer--validSign" +" " +(isNameValid ? "__valid" : "__invalid")
+  };
+
+  const generateStyle = () => {
+    if(!isInputBegun) {
+      return { display: "none" };
+    }
+    else if(isInputBegun && isNameValid) {
+      return { display: "none" };
+    }
+    else if(isInputBegun && !isNameValid) {
+      return { display: "block" };
+    }
+  };
+
+
+  const generateMessage = () => {
+    if(isInputBegun && isNameEmpty) return "File or folder name is must be provided.";
+    if(isInputBegun && !isNameEmpty && !isNameValid) return "File or folder name is invalid.";
+    if(isInputBegun && isNameEmpty) return "File or folder name is must be provided.";
+  };
+
+  return (
+    <div className={_className} style={generateStyle()}>
+      {generateMessage()}
+    </div>
+  );
+};
+
+export default ValidMessage;
+```
+
+#### Refactoring
+
+時間があれば
+
+コンポーネントを分割
+
+- `div.treeColum`の括りを一つのコンポーネントに
+- `div.inputContainer`の括りをひとつのコンポーネントに
+
+```TypeScript
+
+```
