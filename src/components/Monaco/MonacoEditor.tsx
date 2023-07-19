@@ -1,5 +1,8 @@
 /***********************************************************
  * Wrapper of monaco-editor 
+ * 
+ * NOTE: monaco-editor settings ref: 
+ * https://github.com/expo/snack/blob/main/website/src/client/components/Editor/MonacoEditor.tsx
  * *********************************************************/ 
 import React, { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
@@ -29,9 +32,6 @@ self.MonacoEnvironment = {
 	}
 };
 
-
-// NOTE: monaco-editor settings ref: 
-// https://github.com/expo/snack/blob/main/website/src/client/components/Editor/MonacoEditor.tsx
 
 // いまのとろこ独自テーマを設ける予定はない...
 // monaco.editor.defineTheme('light', light);
@@ -112,7 +112,6 @@ monaco.languages.typescript.javascriptDefaults.setCompilerOptions(compilerOption
 
 
 
-
 /**
  * - file information
  * - Monaco.editor.IStandaloneEditorConstructionOptions
@@ -121,7 +120,6 @@ monaco.languages.typescript.javascriptDefaults.setCompilerOptions(compilerOption
  * */ 
 interface iProps 
     extends Monaco.editor.IStandaloneEditorConstructionOptions {
-    // files: iFile[];
     files: File[];
     path: string;
     onValueChange: (v: string) => void;

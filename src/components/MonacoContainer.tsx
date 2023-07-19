@@ -3,11 +3,14 @@
  * ***************************************/
 import React from "react";
 import * as monaco from 'monaco-editor';
-import MonacoEditor from './Monaco/MonacoEditor';
 import Tabs from './Tabs';
 import type { iMessageBundleWorker } from "../worker/types";
 import type { File } from '../data/files';
 import { FilesContext } from "../context/FilesContext";
+
+
+// import MonacoEditor from './Monaco/MonacoEditor';
+import {MonacoEditor_} from './Monaco/MonacoEditor__2';
 
 
 interface iProps {
@@ -42,8 +45,7 @@ class MonacoContainer extends React.Component<iProps> {
     static contextType = FilesContext;
     context!: React.ContextType<typeof FilesContext>;
     state = {
-        value: "",
-        // currentFilePath: filesProxy.getFile(defaultFilePath).path
+        // value: "",
         currentFilePath: this.context.find(f => f.getPath() === defaultFilePath) === undefined ? "" : this.context.find(f => f.getPath() === defaultFilePath)!.getPath()
     };
     bundleWorker: Worker | undefined;
@@ -88,7 +90,8 @@ class MonacoContainer extends React.Component<iProps> {
         // DEBUG:
         console.log("[MonacoContainer] On value change.");
 
-        this.setState({value: v})
+        // this.setState({value: v})
+
     };
 
     
@@ -130,7 +133,7 @@ class MonacoContainer extends React.Component<iProps> {
         return (
             <div className="monaco-container">
                 <Tabs path={this.state.currentFilePath!} onChangeFile={this.onChangeFile}/>
-                <MonacoEditor 
+                <MonacoEditor_ 
                     files={files}
                     // 'react-typescript' as default path
                     path={this.state.currentFilePath!}   
