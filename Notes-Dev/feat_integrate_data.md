@@ -1333,3 +1333,63 @@ valid message表示
 editorの編集内容 --> model, file
 tabsの閉じる操作 --> editorの該当modelを表示中だった場合にそのmodelをeditorからunsetする、かつeditorの編集内容をmodeleへ保存する、かつfileへ反映
 fileをダブルクリックする --> editorへ該当modelを反映させる、かつtabsへ該当ファイルのtabを表示させる、fileへ保存してあった値をeditorへ表示させる
+
+MonacoEditor.tsx  class component化
+
+FilesContextを導入したのでリアルタイムにfileのvalueを更新する仕様になる
+
+そのためMonacoContainerは複数contextを抱える必要がある。
+
+そのためMonacoContainerは...
+
+- 関数コンポーネントに戻してbundling processをcontext化する
+- 複数コンテキストを扱うラッパーコンポーネントをMonacoContainerの上位に設ける
+
+のどちらかを選択する必要がある。
+
+#### 検証：Bundling processのcontext化
+
+Bundling processのおさらい:
+
+
+src/components/MOnacoContainer.tsx::現状ここからworker経由でコードをバンドルしてもらってprops.onBundledでLayout/index.tsxへバンドルされたコードを渡している
+src/Layout/index.tsx::bundledCodeをstate管理している
+src/Layout/PreviewSection.tsx::props.bundledCode --> Preview.tsxへprops.bundledCOdeを渡す
+src/components/Preview/Preview.tsx::props.bundledCode --> iframeへpostMessage(bundledCode);
+
+これをcontext化するとどうなるか...
+
+`FilesProvider`と同じコンポーネントを囲うproviderコンポーネントを生成することになる
+
+```TypeScript
+const Layout = (): JSX.Element => {
+
+  const [bundledCode, setBundledCode] = useState<string>("");
+
+  const onBundled = (code: string) => {
+    setBundledCode(code);
+  };
+  
+  return (
+    <>
+      <Header />
+      <MainContainer>
+        <NavigationSection />
+        <SplitPane>
+          <FilesProvider>
+            <Pane />
+            <EditorSection onBundled={onBundled} />
+            <PreviewSection bundledCode={bundledCode} />
+          </FilesProvider>
+        </SplitPane>
+      </MainContainer>
+    </>
+  );
+};
+```
+
+onvaluechange --> 
+
+dispatch(valueが変更されましたaction) to FilesContext, 
+dispatch(valueが変更されました) to Bundling context
+
