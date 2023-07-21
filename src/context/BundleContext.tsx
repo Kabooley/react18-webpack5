@@ -1,11 +1,12 @@
 /****
- * Dispatchいらんなぁ。
+ * bundledCodeを提供する。
+ * 更新されたbundledCodeを送信するdispatchを提供する。
  * 
  * */ 
-import React, { createContext, useContext, useReducer } from 'react';
+import React, { createContext, useContext, useReducer, Dispatch } from 'react';
 
 export enum Types {
-    Bundle = 'BUNDLE_CODE',
+    Update = 'UPDATE_BUNDLED_CODE',
 };
 
 
@@ -20,21 +21,21 @@ type ActionMap<M extends { [index: string]: any }> = {
         }
   };
   
-type iBundleActionPayload = {
-    [Types.Bundle]: {
-        code: string;
+type iBundledCodeActionsPayload = {
+    [Types.Update]: {
+        bundledCode: string;
     },
 };
   
-type iBundleActions = ActionMap<iBundleActionPayload>[keyof ActionMap<iBundleActionPayload>];
+type iBundledCodeActions = ActionMap<iBundledCodeActionsPayload>[keyof ActionMap<iBundledCodeActionsPayload>];
 
 const BundledCodeContext = createContext<string>("");
-const DispatchBundledContext = createContext<Dispatch<>>(() => null);
+const DispatchBundledCodeContext = createContext<Dispatch<iBundledCodeActions>>(() => null);
 
-function bundleReducer(bundledCode: string, action: iBundleActions) {
+function bundledCodeReducer(bundledCode: string, action: iBundledCodeActions) {
     switch(action.type) {
-        case 'BUNDLE_CODE': {
-
+        case Types.Update: {
+            return action.payload.bundledCode;
         }
         default: {
           throw Error('Unknown action: ' + action.type);
@@ -46,14 +47,14 @@ const initialBundledCode: string = "";
 
 export const BundledCodeProvider = ({ children }: { children: React.ReactNode}) => {
     const [bundledCode, dispatch] = useReducer(
-        bundleReducer, initialBundledCode
+        bundledCodeReducer, initialBundledCode
     );
 
     return (
         <BundledCodeContext.Provider value={bundledCode}>
-            <DispatchBundledContext.Provider value={dispatch}>
+            <DispatchBundledCodeContext.Provider value={dispatch}>
             {children}
-            </DispatchBundledContext.Provider>
+            </DispatchBundledCodeContext.Provider>
         </BundledCodeContext.Provider>
     );
 };
@@ -63,5 +64,5 @@ export function useBundledCode() {
 };
 
 export function useBundledCodeDispatch() {
-    return useContext(DispatchBundledContext);
+    return useContext(DispatchBundledCodeContext);
 };

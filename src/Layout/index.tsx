@@ -7,6 +7,8 @@ import NavigationSection from "./NavigationSection";
 import SplitPane from "./SplitPane";
 import Pane from "./PaneSection";
 import { FilesProvider } from "../context/FilesContext";
+import { BundledCodeProvider } from "../context/BundleContext";
+
 
 /***
  * FilesProvider provides `files` and its action `dispatch`.
@@ -30,9 +32,11 @@ const Layout = (): JSX.Element => {
         <NavigationSection />
         <SplitPane>
           <FilesProvider>
-            <Pane />
-            <EditorSection onBundled={onBundled} />
-            <PreviewSection bundledCode={bundledCode} />
+            <BundledCodeProvider>
+              <Pane />
+              <EditorSection onBundled={onBundled} />
+              <PreviewSection bundledCode={bundledCode} />
+            </BundledCodeProvider>
           </FilesProvider>
         </SplitPane>
       </MainContainer>
