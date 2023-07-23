@@ -1,3 +1,9 @@
+export enum OrderTypes {
+    Bundle = "bundle",
+    JsxHighlight = "jsxhighlight",
+    FetchLibs = "featch-libs"
+};
+
 type iOrder = "order" | "bundle" | "jsxhighlight" | "eslint" | "featch-libs";
 
 /***
@@ -8,15 +14,24 @@ type iOrder = "order" | "bundle" | "jsxhighlight" | "eslint" | "featch-libs";
  * */ 
 interface iMessage {
     order: iOrder;
-    err?: Error;
+};
+
+export interface iBuildResult {
+    bundledCode: string;
+    err: Error | null;
 };
 
 /***
- * @property {string} code - Code sent from main thread and about to be bundled.
- * @property {string} bundledCode - Bundled code to be send to main thread.
+ * Message through Main thread to bundle.worker.ts must be follow interface below.
  * 
+ * @property {string} rawCode - Code sent from main thread and about to be bundled.
+ * @property {string} bundledCode - Bundled code to be send to main thread.
+ * @property {Error | null} err - Error occured during bundling.
  * */ 
-export interface iMessageBundleWorker extends iMessage {
-    code?: string;
-    bundledCode?: string;
-}
+interface iOrderBundle extends iMessage {
+    rawCode: string;
+};
+
+// Message through bundle.worker.ts to main thread 
+// must be follow interface.
+export interface iOrderBundleResult extends iBuildResult {};

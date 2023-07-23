@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFiles } from '../context/FilesContext';
 import { getFilenameFromPath } from '../utils';
 
@@ -7,28 +7,31 @@ import { getFilenameFromPath } from '../utils';
 // 回避している
 interface iJSXNode extends Node {
     className?: string;
-};
+}
 
 interface iProps {
+    // Selected file path
     path: string;
-    onChangeFile: (path: string) => void;
-};
-
+    onChangeSelectedTab: (path: string) => void;
+}
 
 /***
- * 
- * */ 
-const Tabs = ({ path, onChangeFile }: iProps) => {
+ *
+ * */
+const Tabs = ({ path, onChangeSelectedTab }: iProps) => {
+    const [selectedTabs, setSelectedTabs] = useState<string[]>([path]);
     const files = useFiles();
     const _refTabArea = useRef<HTMLDivElement>(null);
     const _refTabs = useRef(
         files.map(() => React.createRef<HTMLSpanElement>())
     );
 
-    const changeTab = (selectedTabNode: HTMLSpanElement, desiredFilePath: string) => {
+    const changeTab = (
+        selectedTabNode: HTMLSpanElement,
+        desiredFilePath: string
+    ) => {
         // 一旦すべてのtabのclassNameを'tab'にする
         for (var i = 0; i < _refTabArea.current!.childNodes.length; i++) {
-
             var child: iJSXNode = _refTabArea.current!.childNodes[i];
             if (/tab/.test(child.className!)) {
                 child.className = 'tab';
@@ -36,19 +39,25 @@ const Tabs = ({ path, onChangeFile }: iProps) => {
         }
         // 選択されたtabのみclassName='tab active'にする
         selectedTabNode.className = 'tab active';
-        onChangeFile(desiredFilePath);
+        onChangeSelectedTab(desiredFilePath);
     };
 
     return (
         <div className="tabs-area" ref={_refTabArea}>
             {
+                //
                 files.map((file, index) => {
                     const _path = file.getPath();
-                    return (
-                        <span 
-                            className={_path === path ? "tab active": "tab"}
+                    return file.isFolder() ? null : (
+                        <span
+                            className={_path === path ? 'tab active' : 'tab'}
                             ref={_refTabs.current[index]}
-                            onClick={() => changeTab(_refTabs.current[index].current!, _path)}
+                            onClick={() =>
+                                changeTab(
+                                    _refTabs.current[index].current!,
+                                    _path
+                                )
+                            }
                             key={index}
                         >
                             {getFilenameFromPath(_path)}

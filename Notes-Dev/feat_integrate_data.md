@@ -1393,3 +1393,19 @@ onvaluechange -->
 dispatch(valueが変更されましたaction) to FilesContext, 
 dispatch(valueが変更されました) to Bundling context
 
+
+https://stackoverflow.com/questions/63431873/using-multiple-context-in-a-class-component
+
+
+## [別件] 複数モジュールをバンドリングする方法の模索
+
+そういえば講義で扱っていたのは「一つのファイルだけ」だった。
+
+codesandboxみたいに完全にweb上の統合開発環境とするには、
+
+複数のファイルのバンドリングが必要であるが、その方法を知らない。
+
+参考情報：
+
+https://github.com/evanw/esbuild/issues/1952
+

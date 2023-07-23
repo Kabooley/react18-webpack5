@@ -1,11 +1,12 @@
+/********************************************************
+ * TODO: 修正が必要なのはBundledCode.tsxだけど、Bundling processが失敗したときの場合に対応したaction.payloadに変更すること。
+ *
+ *
+ * ******************************************************/
 import React, { useRef, useEffect } from 'react';
+import { useBundledCode } from '../../context/BundleContext';
 
-interface iProps {
-    bundledCode: string;
-    err?: string;
-};
-
-const allowedOrigin = "http://localhost:8080";
+// const allowedOrigin = "http://localhost:8080";
 
 const html: string = `
     <html>
@@ -38,16 +39,20 @@ const html: string = `
     </html>
   `;
 
-const Preview = ({ bundledCode, err }: iProps) => {
+const Preview = () => {
+    const bundledCode = useBundledCode();
     const _refIframe = useRef<HTMLIFrameElement>(null);
 
     useEffect(() => {
-        // DEBUG: 
-        console.log("[Preview] got bundled code");
-        
+        // DEBUG:
+
         _refIframe.current && (_refIframe.current.srcdoc = html);
         setTimeout(() => {
-            _refIframe.current && _refIframe.current.contentWindow!.postMessage(bundledCode, "*")
+            _refIframe.current &&
+                _refIframe.current.contentWindow!.postMessage(
+                    bundledCode.bundledCode,
+                    '*'
+                );
         }, 50);
     }, [bundledCode]);
 
@@ -59,7 +64,9 @@ const Preview = ({ bundledCode, err }: iProps) => {
                 sandbox="allow-scripts"
                 srcDoc={html}
             />
-            {err && <div className="preview-error">{err}</div>}
+            {bundledCode.error && (
+                <div className="preview-error">{bundledCode.error.message}</div>
+            )}
         </div>
     );
 };

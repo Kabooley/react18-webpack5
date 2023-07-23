@@ -5,6 +5,11 @@
  * */ 
 import React, { createContext, useContext, useReducer, Dispatch } from 'react';
 
+interface iBundledState {
+    bundledCode: string;
+    error: Error | null;
+};
+
 export enum Types {
     Update = 'UPDATE_BUNDLED_CODE',
 };
@@ -24,18 +29,22 @@ type ActionMap<M extends { [index: string]: any }> = {
 type iBundledCodeActionsPayload = {
     [Types.Update]: {
         bundledCode: string;
+        error: Error | null;
     },
 };
   
-type iBundledCodeActions = ActionMap<iBundledCodeActionsPayload>[keyof ActionMap<iBundledCodeActionsPayload>];
+export type iBundledCodeActions = ActionMap<iBundledCodeActionsPayload>[keyof ActionMap<iBundledCodeActionsPayload>];
 
-const BundledCodeContext = createContext<string>("");
+const BundledCodeContext = createContext<iBundledState>({ bundledCode: "", error: null });
 const DispatchBundledCodeContext = createContext<Dispatch<iBundledCodeActions>>(() => null);
 
-function bundledCodeReducer(bundledCode: string, action: iBundledCodeActions) {
+function bundledCodeReducer(bundledCode: iBundledState, action: iBundledCodeActions) {
     switch(action.type) {
         case Types.Update: {
-            return action.payload.bundledCode;
+            const { bundledCode, error } = action.payload;
+            return {
+                bundledCode: bundledCode, error: error
+            };
         }
         default: {
           throw Error('Unknown action: ' + action.type);
@@ -43,7 +52,7 @@ function bundledCodeReducer(bundledCode: string, action: iBundledCodeActions) {
     }
 };
 
-const initialBundledCode: string = "";
+const initialBundledCode: iBundledState = { bundledCode: "", error: null };
 
 export const BundledCodeProvider = ({ children }: { children: React.ReactNode}) => {
     const [bundledCode, dispatch] = useReducer(

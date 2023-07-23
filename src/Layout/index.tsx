@@ -16,15 +16,6 @@ import { BundledCodeProvider } from "../context/BundleContext";
  * 
  * */ 
 const Layout = (): JSX.Element => {
-
-  // NOTE: temporary, manage bundledcode here.
-  // TODO: move this logic to reducer and context.
-  const [bundledCode, setBundledCode] = useState<string>("");
-
-  const onBundled = (code: string) => {
-    setBundledCode(code);
-  };
-  
   return (
     <>
       <Header />
@@ -34,8 +25,8 @@ const Layout = (): JSX.Element => {
           <FilesProvider>
             <BundledCodeProvider>
               <Pane />
-              <EditorSection onBundled={onBundled} />
-              <PreviewSection bundledCode={bundledCode} />
+              <EditorSection />
+              <PreviewSection />
             </BundledCodeProvider>
           </FilesProvider>
         </SplitPane>

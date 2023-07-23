@@ -1,15 +1,10 @@
 import React, { useState, useRef } from "react";
-import MonacoContainer from "../components/MonacoContainer";
 import { ResizableBox } from "react-resizable";
 import type { ResizeCallbackData } from "react-resizable";
+import EditorContext from "../context/BundledConsumer";
 
 
-// NOTE: onBundled is temporarily til react-redux.
-interface iProps {
-  onBundled: (code: string) => void;
-};
-
-const EditorSection = ({ onBundled }: iProps): JSX.Element => {
+const EditorSection = (): JSX.Element => {
   const [editorSectionWidth, setEditorSectionWidth] = useState<number>(500);
 
   const onEditorSecResize: (
@@ -34,7 +29,7 @@ const EditorSection = ({ onBundled }: iProps): JSX.Element => {
         className="editor-section"
         style={{ width: editorSectionWidth }}
       >
-        <MonacoContainer onBundled={onBundled}/>
+        <EditorContext />
       </div>
     </ResizableBox>
   );

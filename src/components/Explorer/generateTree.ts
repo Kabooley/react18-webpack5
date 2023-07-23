@@ -1,18 +1,14 @@
 import type { iExplorer } from '../../data/types';
 import { File } from '../../data/files';
 
-
-
 export const generateTreeNodeData = (
-    entries: File[] = [], 
-    root: string = "root"
+    entries: File[] = [],
+    root: string = 'root'
 ): iExplorer => {
-
-
-    entries.sort(function(a: File, b: File) {
+    entries.sort(function (a: File, b: File) {
         let aPath = a.getPath().toLowerCase(); // ignore upper and lowercase
         let bPath = b.getPath().toLowerCase(); // ignore upper and lowercase
-        if (aPath < bPath)  return -1;
+        if (aPath < bPath) return -1;
         if (aPath > bPath) return 1;
         return 0;
     });
@@ -23,35 +19,33 @@ export const generateTreeNodeData = (
         name: root,
         isFolder: true,
         items: [],
-        path: ""
+        path: '',
     };
-
 
     //create the folders
     entries.forEach((entry: File) => {
-        
-        if(entry.isFolder()) return;
+        if (entry.isFolder()) return;
 
         const pathArr = entry.getPath().split('/');
         const pathLen = pathArr.length;
-        let current: iExplorer = rootNode;  
+        let current: iExplorer = rootNode;
 
-        for(let i = 0; i < pathLen; i++){
+        for (let i = 0; i < pathLen; i++) {
             let name = pathArr[i];
             let index = i;
-            
+
             // If the child node doesn't exist, create it
-            let child = current.items.find(item => item.name === name);
+            let child = current.items.find((item) => item.name === name);
 
             // if(child === undefined && index < ( pathLen - 1) && entry.isFolder()){
-            if(child === undefined && index < ( pathLen - 1)){
+            if (child === undefined && index < pathLen - 1) {
                 currentKey = currentKey += 1;
                 child = {
                     id: `${currentKey}`,
                     name: name,
                     isFolder: true,
                     items: [],
-                    path: pathArr.slice(0, index + 1).join('/')
+                    path: pathArr.slice(0, index + 1).join('/'),
                 };
                 current.items.push(child);
             }
@@ -59,17 +53,15 @@ export const generateTreeNodeData = (
         }
     });
 
-
     //create the files
     entries.forEach((entry: File) => {
+        if (entry.isFolder()) return;
 
-        if(entry.isFolder()) return;
-    
         const pathArr = entry.getPath().split('/');
         const pathLen = pathArr.length;
-        let current: iExplorer = rootNode; 
-    
-        if(pathLen === 1){
+        let current: iExplorer = rootNode;
+
+        if (pathLen === 1) {
             let name = pathArr[0];
             currentKey = currentKey += 1;
             let node = {
@@ -77,31 +69,28 @@ export const generateTreeNodeData = (
                 name: name,
                 isFolder: false,
                 items: [],
-                path: pathArr[0]
+                path: pathArr[0],
             };
             current.items.push(node);
             return;
-        }  
-        
-        pathArr.forEach( (name, index) => {
-            let child = current.items.find(item => item.name === name);
+        }
 
-            if(child === undefined && index === ( pathLen - 1)){
+        pathArr.forEach((name, index) => {
+            let child = current.items.find((item) => item.name === name);
+
+            if (child === undefined && index === pathLen - 1) {
                 currentKey = currentKey += 1;
                 child = {
                     id: `${currentKey}`,
                     name: name,
                     isFolder: false,
                     items: [],
-                    path: pathArr.slice(0, index + 1).join('/')
+                    path: pathArr.slice(0, index + 1).join('/'),
                 };
                 current.items.push(child);
-            }
-            else if( child === undefined ){
+            } else if (child === undefined) {
                 return;
-            }
-            else
-            {
+            } else {
                 current = child;
             }
         });
@@ -109,78 +98,62 @@ export const generateTreeNodeData = (
 
     /**
      * Generate empty folders.
-     * 
+     *
      * NOTE: Run below loop after finishing generate non-empty folders and files.
-     *  
-     * */ 
+     *
+     * */
     entries.forEach((entry: File) => {
+        if (!entry.isFolder()) return;
 
-        if(!entry.isFolder()) return;
-    
         const pathArr = entry.getPath().split('/');
         const pathLen = pathArr.length;
-        let current: iExplorer = rootNode; 
-    
+        let current: iExplorer = rootNode;
+
         // DEBUG:
-        console.log("[generateTreeNode] generating empty folder");
-        console.log("entry");
-        console.log(entry);
-        console.log("pathArr:");
-        console.log(pathArr);
-        console.log("current:");
-        console.log(current);
 
-        pathArr.forEach( (name, index) => {
+        pathArr.forEach((name, index) => {
+            let child: iExplorer | undefined = current.items.find(
+                (item) => item.name === name
+            );
 
-            let child: iExplorer | undefined = current.items.find(item => item.name === name);
-
-            if(child === undefined && index === ( pathLen - 1)){
+            if (child === undefined && index === pathLen - 1) {
                 currentKey = currentKey += 1;
                 child = {
                     id: `${currentKey}`,
                     name: !index ? pathArr[0] : pathArr[index],
-                    isFolder: true,             // As this is folder.
+                    isFolder: true, // As this is folder.
                     items: [],
-                    path: pathArr.slice(0, index + 1).join('/')
+                    path: pathArr.slice(0, index + 1).join('/'),
                 };
                 current.items.push(child);
-                console.log("child:");
-                console.log(child);
-            }
-            else if( child === undefined ){
+            } else if (child === undefined) {
                 return;
-            }
-            else
-            {
+            } else {
                 current = child;
             }
         });
     });
 
     // DEBUG:
-    console.log("[generateTreeNode] generated:");
-    console.log(rootNode);
 
     return rootNode;
 };
 
-
 // /***
 //  * TODO: - path情報だけを基に生成しないで、File[]から生成する
 //  * TODO: - 空フォルダを認める
-//  * 
-//  * */ 
+//  *
+//  * */
 // export const generateTreeNodeData = (
-//     entries: File[] = [], 
+//     entries: File[] = [],
 //     root: string = "root"
 // ): iExplorer => {
-
 
 //     /**
 //      * return -1 then sort a after b
 //      * return 1 then sort a before b
-//      * 
-//      * */ 
+//      *
+//      * */
 //     entries.sort(function(a: File, b: File) {
 //         let aPath = a.getPath().toLowerCase(); // ignore upper and lowercase
 //         let bPath = b.getPath().toLowerCase(); // ignore upper and lowercase
@@ -198,18 +171,17 @@ export const generateTreeNodeData = (
 //         path: "/"
 //     };
 
-
 //     //create the folders
 //     entries.forEach((entry: File) => {
 
 //         const pathArr = entry.getPath().split('/');
 //         const pathLen = pathArr.length;
-//         let current: iExplorer = rootNode;  
+//         let current: iExplorer = rootNode;
 
 //         for(let i = 0; i < pathLen; i++){
 //             let name = pathArr[i];
 //             let index = i;
-            
+
 //             // If the child node doesn't exist, create it
 //             let child = current.items.find(item => item.name === name);
 
@@ -228,16 +200,15 @@ export const generateTreeNodeData = (
 //         }
 //     });
 
-
 //     //create the files
 //     entries.forEach((entry: File) => {
 
 //         if(entry.isFolder()) return;
-    
+
 //         const pathArr = entry.getPath().split('/');
 //         const pathLen = pathArr.length;
-//         let current: iExplorer = rootNode; 
-    
+//         let current: iExplorer = rootNode;
+
 //         if(pathLen === 1){
 //             let name = pathArr[0];
 //             currentKey = currentKey += 1;
@@ -250,8 +221,8 @@ export const generateTreeNodeData = (
 //             };
 //             current.items.push(node);
 //             return;
-//         }  
-        
+//         }
+
 //         pathArr.forEach( (name, index) => {
 //             let child = current.items.find(item => item.name === name);
 
@@ -279,11 +250,11 @@ export const generateTreeNodeData = (
 // };
 
 // export const generateTreeNodeData = (
-//     entries: string[] = [], 
+//     entries: string[] = [],
 //     root: string = "root"
 // ): iExplorer => {
-// 
-// 
+//
+//
 //     entries.sort(function(a, b) {
 //         a = a.toLowerCase(); // ignore upper and lowercase
 //         b = b.toLowerCase(); // ignore upper and lowercase
@@ -301,18 +272,17 @@ export const generateTreeNodeData = (
 //         path: "/"
 //     };
 
-
 //     //create the folders
 //     entries.forEach(pathStr => {
 
 //         const pathArr = pathStr.split('/');
 //         const pathLen = pathArr.length;
-//         let current: iExplorer = rootNode;  
+//         let current: iExplorer = rootNode;
 
 //         for(let i = 0; i < pathLen; i++){
 //             let name = pathArr[i];
 //             let index = i;
-            
+
 //             // If the child node doesn't exist, create it
 //             let child = current.items.find(item => item.name === name);
 
@@ -331,14 +301,13 @@ export const generateTreeNodeData = (
 //         }
 //     });
 
-
 //     //create the files
 //     entries.forEach(pathStr => {
-    
+
 //         const pathArr = pathStr.split('/');
 //         const pathLen = pathArr.length;
-//         let current: iExplorer = rootNode; 
-    
+//         let current: iExplorer = rootNode;
+
 //         if(pathLen === 1){
 //             let name = pathArr[0];
 //             currentKey = currentKey += 1;
@@ -351,8 +320,8 @@ export const generateTreeNodeData = (
 //             };
 //             current.items.push(node);
 //             return;
-//         }  
-        
+//         }
+
 //         pathArr.forEach( (name, index) => {
 //             let child = current.items.find(item => item.name === name);
 

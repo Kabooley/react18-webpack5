@@ -95,6 +95,9 @@ export class File {
       private _value: string,
       private _language: string,
       private _isFolder: boolean,
+
+      // NOTE: experimental
+      private _selected: boolean = false
   ){};
 
   _isPathValid(path: string): boolean {
@@ -131,6 +134,18 @@ export class File {
   // temporary
   getLanguage(): string {
     return this._language;
+  };
+
+  setSelected(): void {
+    this._selected = true;
+  };
+
+  unselected(): void {
+    this._selected = false;
+  };
+  
+  isSelected(): boolean {
+    return this._selected;
   };
 };
 
