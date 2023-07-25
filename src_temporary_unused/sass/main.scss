@@ -1,0 +1,45 @@
+@import "abstracts/functions";
+@import "abstracts/mixins";
+@import "abstracts/variables";
+
+
+@import "base/animations";
+@import "base/base";
+@import "base/typography";
+@import "base/utilities";
+
+
+@import "layout/main";
+
+
+@import "components/editor";
+@import "components/fileExplorer";
+@import "components/header";
+@import "components/preview";
+
+// どこのふぁいるにわければいいのかわからんからひとまずここに。
+
+/* custom handle of resize */
+.custom-handle {
+	position: absolute;
+  }
+  .custom-handle:hover {
+	transition: all 0.3s ease;
+	opacity: 0.4;
+  }
+  
+  .custom-handle-e {
+	top: 0;
+	right: 0;
+	width: 11px;
+	height: 100%;
+	margin: 0 -5px;
+	border-left: 5px solid transparent;
+	border-right: 5px solid transparent;
+	cursor: col-resize;
+  }
+  
+  
+  .custom-handle-e:hover {
+	width: 12px;
+  }
