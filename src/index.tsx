@@ -1,15 +1,12 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-// import "./index.css";
-import "./sass/main.scss";
-import App from "./App";
-import reportWebVitals from './reportWebVitals';
+import './index.css';
 
-const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Editor } from './components/Editor';
+
+ReactDOM.render(
+	<React.StrictMode>
+		<Editor />
+	</React.StrictMode>,
+	document.getElementById('root')
 );
-
-reportWebVitals();
